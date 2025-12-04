@@ -1,0 +1,145 @@
+/* Header.css - Complete responsive version */
+
+/* Basic Header Styles */
+.custom-header {
+  position: relative;
+  z-index: 50;
+}
+
+/* Logo Styles */
+.logo-container .logo-image {
+  height: 3rem; /* Matches h-12 from component */
+  width: auto;
+}
+
+/* Navigation base styles */
+.nav-link {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Dropdown Menu Styles */
+.dropdown-menu {
+  animation: fadeIn 0.2s ease-out forwards;
+}
+
+/* Fade-in animation for dropdowns and mobile menu */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.2s ease-out forwards;
+}
+
+/* Custom scrollbar for dropdown menus */
+.dropdown-menu .max-h-96::-webkit-scrollbar {
+  width: 4px;
+}
+
+.dropdown-menu .max-h-96::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 2px;
+}
+
+.dropdown-menu .max-h-96::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 2px;
+}
+
+.dropdown-menu .max-h-96::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Mobile menu scrollbar */
+.overflow-y-auto::-webkit-scrollbar {
+  width: 4px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-track {
+  background: #f9f9f9;
+  border-radius: 2px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 2px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* Focus states for better accessibility */
+.nav-link:focus {
+  outline: 2px solid #58335e;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Button focus state enhancement */
+button:focus {
+  outline: none;
+}
+
+/* Mobile hamburger menu animation */
+.hamburger-line {
+  transition: all 0.3s ease-out;
+}
+
+/* Mobile menu overlay backdrop blur effect */
+.mobile-menu-overlay {
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  .custom-header nav {
+    display: none;
+  }
+  
+  .custom-header {
+    padding: 1rem 1.5rem;
+  }
+  
+  /* Adjust logo size on mobile */
+  .logo-container .logo-image {
+    height: 2.5rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .custom-header {
+    padding: 1rem;
+  }
+  
+  /* Mobile menu takes full width on small screens */
+  .mobile-menu-panel {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+}
+
+/* Prevent body scroll when mobile menu is open */
+body.mobile-menu-open {
+  overflow: hidden;
+}
+
+/* Smooth transitions for all interactive elements */
+* {
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Custom purple-25 color for hover states */
+.hover\:bg-purple-25:hover {
+  background-color: #faf7ff;
+}

@@ -1,0 +1,57 @@
+/* project-details.css */
+
+/* Global overrides or additions */
+
+/* Brochure Viewer (Optional style for iframe) */
+.brochure-viewer {
+  border: 2px solid #3a3a3a;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+/* Callback button hover enhancement */
+.request-callback-btn {
+  transition: all 0.3s ease;
+}
+
+.request-callback-btn:hover {
+  background-color: #1e40af; /* darker blue */
+}
+
+.ui-bg{
+  border: 3px solid #474545;
+  background-color: #080918;
+}
+
+/* Floor plan card custom hover effect */
+.floor-plan-card {
+  transition: transform 0.3s ease;
+}
+
+.floor-plan-card:hover {
+  transform: scale(1.02);
+}
+
+/* Facility icons styling (if you use icons later) */
+.facility-icon {
+  width: 40px;
+  height: 40px;
+  margin-bottom: 0.5rem;
+}
+
+/* Location cards */
+.location-card {
+  border-radius: 0.5rem;
+  transition: box-shadow 0.2s ease;
+}
+
+.location-card:hover {
+  box-shadow: 0 4px 14px rgba(174, 174, 174, 0.07);
+}
+
+/* Responsive fixes for brochure image */
+@media (max-width: 640px) {
+  .brochure-viewer {
+    height: 400px;
+  }
+}

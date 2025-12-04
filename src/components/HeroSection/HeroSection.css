@@ -1,0 +1,51 @@
+.hero-section {
+  background-image: url('/path-to-your-hero-image.jpg');
+  background-size: cover;
+  background-position: center;
+  padding: 60px 20px;
+  color: #fff;
+  text-align: center;
+}
+
+.hero-content h1 {
+  font-size: 48px;
+  margin-bottom: 10px;
+}
+
+.hero-content p {
+  font-size: 18px;
+  margin-bottom: 30px;
+}
+
+.search-bar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+.search-bar input{
+  padding: 10px;
+  font-size: 16px;
+  width: 200px;
+  color: rgb(255, 255, 255);
+}
+.search-bar select {
+  padding: 10px;
+  font-size: 16px;
+  width: 200px;
+  color: rgb(255, 255, 255);
+}
+
+.search-bar button {
+  padding: 10px 20px;
+  font-size: 16px;
+  background-color: #ff5a5f;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+}
+
+.search-bar button:hover {
+  background-color: #e14b4f;
+}

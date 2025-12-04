@@ -1,0 +1,160 @@
+/* src/pages/BookSiteVisit.css */
+
+.book-visit-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+  padding: 2rem;
+}
+
+.ui-bg {
+  border: 3px solid #474545;
+  background-color: #080918;
+}
+
+.form-section {
+  flex: 1 1 60%;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+}
+
+.form-section h2 {
+  color: #ffffff;
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-bottom: 2.5rem;
+  margin-top: 0.5rem;
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid #d1c4e9;
+}
+
+.form-section form label {
+  display: block;
+  margin-bottom: 1rem;
+  color: #ffffff;
+  font-weight: 500;
+}
+
+.form-section form input,
+.form-section form textarea {
+  width: 100%;
+  padding: 0.6rem;
+  margin-top: 0.25rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 1rem;
+  background-color: #232323;
+}
+
+textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.visit-duration {
+  margin: 1.5rem 0;
+}
+
+.duration-box {
+  background-color: #242424;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-top: 0.5rem;
+  font-weight: bold;
+  border: 1px solid #d1c4e9;
+  color: #9e4efb;
+}
+
+.payment-method {
+  margin: 1.5rem 0;
+}
+
+.payment-method label {
+  margin-right: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.payment-method input[type="radio"] {
+  margin-right: 0.3rem;
+}
+
+.gpay-section {
+  margin: 1rem 0;
+  text-align: center;
+  background: #383838;
+  padding: 1rem;
+  border-radius: 8px;
+}
+
+.qr-code {
+  width: 160px;
+  height: 160px;
+  margin-top: 0.5rem;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.form-actions button {
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+button[type='submit'] {
+  background-color: #4caf50;
+  color: white;
+}
+
+button[type='submit']:hover {
+  background-color: #43a047;
+}
+
+button:not([type='submit']) {
+  background-color: #eee;
+  color: #333;
+}
+
+button:not([type='submit']):hover {
+  background-color: #ddd;
+}
+
+.info-section {
+  flex: 1 1 35%;
+  padding: 2rem;
+  border-radius: 8px;
+  line-height: 1.6;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+  font-size: 1rem;
+  color: #ffffff;
+}
+
+.info-section h3 {
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+  margin-top: 0.5rem;
+  color: #b53ffe;
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid #d1c4e9;
+}
+
+@media (max-width: 768px) {
+  .book-visit-container {
+    flex-direction: column;
+  }
+}

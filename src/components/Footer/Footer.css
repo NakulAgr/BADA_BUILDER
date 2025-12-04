@@ -1,0 +1,32 @@
+/* Footer.css */
+.social-icon {
+    color: #9ca3af; /* Tailwind's gray-400 */
+    font-size: 1.125rem; /* text-lg */
+    transition: color 0.3s ease;
+  }
+  
+  .social-icon:hover {
+    color: #ffffff;
+  }
+  
+  .footer-link {
+    display: block;
+    transition: color 0.2s ease;
+    color: #9ca3af; /* gray-400 */
+    text-decoration: none;
+  }
+  
+  .footer-link:hover {
+    color: #ffffff;
+  }
+  
+  .footer-logo-link {
+    display: block;
+    height: 100%;
+  }
+  
+  .footer-logo-image {
+    height: 50%;
+    width: auto;
+    object-fit: contain;
+  }
