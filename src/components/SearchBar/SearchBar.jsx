@@ -97,11 +97,85 @@ const SearchBar = ({ variant = 'default' }) => {
           <input
             id="location"
             type="text"
-            placeholder="Location"
+            placeholder="Enter or Select Location"
             value={location}
             onChange={(e) => setLocation(e.target.value)}
             className="search-input"
+            list="location-list"
           />
+          <datalist id="location-list">
+            <option value="PAN India" />
+            <option value="Mumbai" />
+            <option value="Delhi" />
+            <option value="Bangalore" />
+            <option value="Hyderabad" />
+            <option value="Ahmedabad" />
+            <option value="Chennai" />
+            <option value="Kolkata" />
+            <option value="Pune" />
+            <option value="Vadodara" />
+            <option value="Surat" />
+            <option value="Rajkot" />
+            <option value="Gandhinagar" />
+            <option value="Bhavnagar" />
+            <option value="Jamnagar" />
+            <option value="Anand" />
+            <option value="Navi Mumbai" />
+            <option value="Thane" />
+            <option value="Nagpur" />
+            <option value="Nashik" />
+            <option value="Aurangabad" />
+            <option value="Mysore" />
+            <option value="Mangalore" />
+            <option value="Hubli" />
+            <option value="Coimbatore" />
+            <option value="Madurai" />
+            <option value="Tiruchirappalli" />
+            <option value="Warangal" />
+            <option value="Nizamabad" />
+            <option value="Visakhapatnam" />
+            <option value="Vijayawada" />
+            <option value="Guntur" />
+            <option value="Kochi" />
+            <option value="Thiruvananthapuram" />
+            <option value="Kozhikode" />
+            <option value="Howrah" />
+            <option value="Durgapur" />
+            <option value="Siliguri" />
+            <option value="Jaipur" />
+            <option value="Jodhpur" />
+            <option value="Udaipur" />
+            <option value="Kota" />
+            <option value="Indore" />
+            <option value="Bhopal" />
+            <option value="Jabalpur" />
+            <option value="Gwalior" />
+            <option value="Noida" />
+            <option value="Ghaziabad" />
+            <option value="Lucknow" />
+            <option value="Kanpur" />
+            <option value="Agra" />
+            <option value="Varanasi" />
+            <option value="Chandigarh" />
+            <option value="Ludhiana" />
+            <option value="Amritsar" />
+            <option value="Jalandhar" />
+            <option value="Gurgaon" />
+            <option value="Faridabad" />
+            <option value="Panipat" />
+            <option value="Patna" />
+            <option value="Gaya" />
+            <option value="Bhubaneswar" />
+            <option value="Cuttack" />
+            <option value="Ranchi" />
+            <option value="Jamshedpur" />
+            <option value="Raipur" />
+            <option value="Bhilai" />
+            <option value="Dehradun" />
+            <option value="Haridwar" />
+            <option value="Panaji" />
+            <option value="Margao" />
+          </datalist>
         </div>
 
         <button type="submit" className="search-btn-full">
