@@ -14,7 +14,7 @@
     "@heroicons/react": "^2.2.0",
     "@tailwindcss/vite": "^4.1.7",
     "firebase": "^11.8.1",
-    "framer-motion": "^12.23.25",
+    "framer-motion": "^12.23.26",
     "katex": "^0.16.22",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
