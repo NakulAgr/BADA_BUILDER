@@ -27,6 +27,7 @@ import ByDeveloper from './pages/Exhibition/ByDeveloper';
 import ByBadaBuilder from './pages/Exhibition/ByBadaBuilder';
 import LiveGrouping from './pages/Exhibition/LiveGrouping';
 import LiveGroupingDetails from './pages/Exhibition/LiveGroupingDetails';
+import AdminLiveGrouping from './pages/Admin/AdminLiveGrouping';
 import LAM from './pages/Report Data/LAM';
 import MarketInvestmentAnalysis from './pages/Report Data/MarketInvestmentAnalysis';
 import RealEstateFinancialModelling from './pages/Report Data/RealEstateFinancialModelling';
@@ -99,6 +100,7 @@ function App() {
         <Route path="/report" element={<Working />} />
         <Route path="/subscription-plans" element={<SubscriptionPlans />} />
         <Route path="/post-property" element={<PostProperty />} />
+        <Route path="/admin/live-grouping" element={<AdminLiveGrouping />} />
 
         {/* Learn */}
         <Route path="/learn/lease-and-asset-management" element = {<LAM/>}></Route>

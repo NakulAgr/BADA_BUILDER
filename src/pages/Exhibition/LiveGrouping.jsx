@@ -23,15 +23,23 @@ const LiveGrouping = () => {
         id: doc.id,
         ...doc.data()
       }));
-      setLiveGroups(groupsData);
+      
+      // If no properties in database, use fallback data
+      if (groupsData.length === 0) {
+        setLiveGroups(fallbackGroups);
+      } else {
+        setLiveGroups(groupsData);
+      }
     } catch (error) {
       console.error('Error fetching live groups:', error);
+      // Use fallback data on error
+      setLiveGroups(fallbackGroups);
     } finally {
       setLoading(false);
     }
   };
 
-  // Fallback data if no properties in database
+  // Fallback example properties
   const fallbackGroups = [
     {
       id: 1,
@@ -187,10 +195,6 @@ const LiveGrouping = () => {
           {loading ? (
             <p style={{ textAlign: 'center', padding: '40px', gridColumn: '1 / -1' }}>
               Loading properties...
-            </p>
-          ) : liveGroups.length === 0 ? (
-            <p style={{ textAlign: 'center', padding: '40px', gridColumn: '1 / -1' }}>
-              No live grouping properties available at the moment.
             </p>
           ) : (
             liveGroups.map((group, index) => (

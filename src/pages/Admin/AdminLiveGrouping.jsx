@@ -38,7 +38,7 @@ const AdminLiveGrouping = () => {
     description: '',
     advantages: '',
     tokenAmount: '',
-    refundPolicy: '100% refund if group doesn't fill',
+    refundPolicy: "100% refund if group doesn't fill",
     closingDate: '',
     expectedCompletion: ''
   });
@@ -239,7 +239,7 @@ const AdminLiveGrouping = () => {
       description: '',
       advantages: '',
       tokenAmount: '',
-      refundPolicy: '100% refund if group doesn't fill',
+      refundPolicy: "100% refund if group doesn't fill",
       closingDate: '',
       expectedCompletion: ''
     });

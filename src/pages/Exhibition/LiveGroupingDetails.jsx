@@ -1,13 +1,52 @@
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../../firebase';
 import './LiveGroupingDetails.css';
 
 const LiveGroupingDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [property, setProperty] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // Mock data - in production, fetch from database
-  const liveGroups = {
+  useEffect(() => {
+    fetchProperty();
+  }, [id]);
+
+  const fetchProperty = async () => {
+    try {
+      const docRef = doc(db, 'live_grouping_properties', id);
+      const docSnap = await getDoc(docRef);
+      
+      if (docSnap.exists()) {
+        setProperty({ id: docSnap.id, ...docSnap.data() });
+      } else {
+        // If not found in database, check fallback data
+        const fallbackProperty = fallbackData[id];
+        if (fallbackProperty) {
+          setProperty(fallbackProperty);
+        } else {
+          setProperty(null);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching property:', error);
+      // On error, try fallback data
+      const fallbackProperty = fallbackData[id];
+      if (fallbackProperty) {
+        setProperty(fallbackProperty);
+      } else {
+        setProperty(null);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fallback example data
+  const fallbackData = {
     1: {
       id: 1,
       title: "Skyline Towers - Group Buy",
@@ -115,7 +154,13 @@ const LiveGroupingDetails = () => {
     }
   };
 
-  const property = liveGroups[id];
+  if (loading) {
+    return (
+      <div className="loading-container">
+        <h2>Loading property details...</h2>
+      </div>
+    );
+  }
 
   if (!property) {
     return (
