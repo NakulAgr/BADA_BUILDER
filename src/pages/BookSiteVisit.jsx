@@ -64,40 +64,33 @@ const BookSiteVisit = () => {
         status: 'pending'
       };
 
-      await addDoc(collection(db, 'bookings'), bookingData);
+      const docRef = await addDoc(collection(db, 'bookings'), bookingData);
+      
+      // Add booking ID to data
+      bookingData.booking_id = docRef.id;
+      bookingData.property_location = property?.location || 'N/A';
 
-      // Email notification (console log for MVP)
-      const emailBody = `
-        ========================================
-        NEW SITE VISIT BOOKING
-        ========================================
-        
-        Property: ${property?.title || 'Unknown Property'}
-        Property ID: ${property?.id || 'N/A'}
-        
-        User Details:
-        - Email: ${currentUser.email}
-        - User ID: ${currentUser.uid}
-        
-        Visit Details:
-        - Date: ${formData.date}
-        - Time: ${formData.time}
-        - Number of People: ${formData.people}
-        - Person 1: ${formData.person1}
-        ${formData.person2 ? `- Person 2: ${formData.person2}` : ''}
-        ${formData.person3 ? `- Person 3: ${formData.person3}` : ''}
-        
-        Pickup Address:
-        ${formData.address}
-        
-        Payment Method: ${formData.paymentMethod}
-        
-        ========================================
-      `;
+      // Send email and SMS notifications to admin
+      try {
+        const response = await fetch('http://localhost:3002/api/notify-booking', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(bookingData)
+        });
 
-      console.log('📧 EMAIL NOTIFICATION TO ADMIN:', emailBody);
+        const result = await response.json();
+        
+        if (result.success) {
+          console.log('✅ Notifications sent to admin successfully');
+        } else {
+          console.warn('⚠️ Notification sending failed:', result.error);
+        }
+      } catch (notificationError) {
+        console.error('❌ Error sending notifications:', notificationError);
+        // Continue even if notification fails
+      }
 
-      alert('Your site visit has been booked successfully!');
+      alert('Your site visit has been booked successfully!\n\nYou will receive a confirmation shortly.');
       navigate('/');
     } catch (error) {
       console.error('Error booking site visit:', error);
@@ -122,24 +115,53 @@ const BookSiteVisit = () => {
           </label>
           <label>
             Number of People (Max 3):
-            <input type="number" name="people" value={formData.people} onChange={handleChange} min="1" max="3" required />
+            <select name="people" value={formData.people} onChange={handleChange} required>
+              <option value="1">1 Person</option>
+              <option value="2">2 People</option>
+              <option value="3">3 People</option>
+            </select>
           </label>
-          <label>
-            1st Person Name:
-            <input type="text" name="person1" value={formData.person1} onChange={handleChange} required />
-          </label>
-          {formData.people >= 2 && (
+
+          <div className="people-details">
+            <h4>👥 Visitor Details</h4>
             <label>
-              2nd Person Name:
-              <input type="text" name="person2" value={formData.person2} onChange={handleChange} />
+              1st Person Name: *
+              <input 
+                type="text" 
+                name="person1" 
+                value={formData.person1} 
+                onChange={handleChange} 
+                placeholder="Enter first person's name"
+                required 
+              />
             </label>
-          )}
-          {formData.people === 3 && (
-            <label>
-              3rd Person Name:
-              <input type="text" name="person3" value={formData.person3} onChange={handleChange} />
-            </label>
-          )}
+            {formData.people >= 2 && (
+              <label className="additional-person">
+                2nd Person Name: {parseInt(formData.people) >= 2 ? '*' : ''}
+                <input 
+                  type="text" 
+                  name="person2" 
+                  value={formData.person2} 
+                  onChange={handleChange}
+                  placeholder="Enter second person's name"
+                  required={parseInt(formData.people) >= 2}
+                />
+              </label>
+            )}
+            {formData.people == 3 && (
+              <label className="additional-person">
+                3rd Person Name: *
+                <input 
+                  type="text" 
+                  name="person3" 
+                  value={formData.person3} 
+                  onChange={handleChange}
+                  placeholder="Enter third person's name"
+                  required
+                />
+              </label>
+            )}
+          </div>
           <label>
             Pickup Address:
             <textarea name="address" value={formData.address} onChange={handleChange} required />
@@ -185,7 +207,7 @@ const BookSiteVisit = () => {
               {loading ? 'Booking...' : 'Book'}
             </button>
             <button type="button" onClick={() => alert('Reschedule functionality coming soon!')}>Reschedule</button>
-            <button type="button" onClick={() => alert('Cancel functionality coming soon!')}>Cancel</button>
+            <button type="button" className="cancel-btn" onClick={() => navigate(-1)}>Cancel</button>
           </div>
         </form>
       </div>
