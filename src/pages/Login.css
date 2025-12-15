@@ -179,3 +179,8 @@
     font-size: 15px;
   }
 }
+/* Login & Register buttons */
+.submit-btn,
+.register-btn {
+  color: white !important; /* Text color white */
+}
