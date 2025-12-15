@@ -4,6 +4,9 @@ import logo from '../../assets/logo.png';
 import UserTypeModal from '../UserTypeModal/UserTypeModal';
 import SearchBar from '../SearchBar/SearchBar';
 import './Header.css';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { auth } from '../../firebase';
+import { useNavigate } from 'react-router-dom';
 
 const calcdropdownItems = [
   { label: "Funds from Operations (FFO)", href: "/calculator/FFO" },
@@ -45,13 +48,52 @@ const Header = () => {
   const [mobileLearnOpen, setMobileLearnOpen] = useState(false);
   const [mobileCalcOpen, setMobileCalcOpen] = useState(false);
   const [isUserTypeModalOpen, setIsUserTypeModalOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const timeoutRef = useRef(null);
   const calctimeoutRef = useRef(null);
+  const navigate = useNavigate();
+
+  // Firebase Auth Listener
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setIsLoggedIn(!!user);
+      setLoading(false);
+      console.log('Firebase user:', user ? 'Logged in' : 'Logged out');
+    });
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      if (calctimeoutRef.current) clearTimeout(calctimeoutRef.current);
+    };
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      navigate('/');
+      setIsMobileMenuOpen(false);
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
+
+  if (loading) {
+    return (
+      <header className="custom-header flex justify-between items-center px-4 md:px-8 py-4 bg-white shadow-sm sticky top-0 z-50">
+        <div className="flex-1 flex justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#58335e]"></div>
+        </div>
+      </header>
+    );
+  }
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
-    // Close mobile submenus when main menu closes
     if (isMobileMenuOpen) {
       setMobileLearnOpen(false);
       setMobileCalcOpen(false);
@@ -88,13 +130,6 @@ const Header = () => {
     }, 150);
   };
 
-  useEffect(() => {
-    return () => {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-      if (calctimeoutRef.current) clearTimeout(calctimeoutRef.current);
-    };
-  }, []);
-
   return (
     <>
       <header className="custom-header flex justify-between items-center px-4 md:px-8 py-4 bg-white shadow-sm sticky top-0 z-50 backdrop-blur-sm bg-opacity-95">
@@ -121,7 +156,7 @@ const Header = () => {
             Services
           </Link>
 
-          {/* Learn Reit's Dropdown menu */}
+          {/* Learn Reit's Dropdown */}
           <div
             className="relative inline-block text-left"
             onMouseEnter={handleMouseEnter}
@@ -151,7 +186,7 @@ const Header = () => {
             )}
           </div>
 
-          {/* Calculator Dropdown menu */}
+          {/* Calculator Dropdown */}
           <div
             className="relative inline-block text-left"
             onMouseEnter={calchandleMouseEnter}
@@ -204,16 +239,24 @@ const Header = () => {
           >
             Post Property
           </button>
-          <Link to="/login">
-            <button className="bg-[#58335e] text-white px-6 py-2.5 rounded-full shadow-md hover:shadow-lg hover:bg-opacity-90 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#58335e] focus:ring-opacity-50 font-medium text-sm tracking-wide transform hover:scale-105 active:scale-95 whitespace-nowrap">
-              Login
+          {isLoggedIn ? (
+            <button 
+              onClick={handleLogout}
+              className="bg-red-600 hover:bg-red-700 text-white px-6 py-2.5 rounded-full shadow-md hover:shadow-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50 font-medium text-sm tracking-wide transform hover:scale-105 active:scale-95 whitespace-nowrap"
+            >
+              Logout
             </button>
-          </Link>
+          ) : (
+            <Link to="/login">
+              <button className="bg-[#58335e] text-white px-6 py-2.5 rounded-full shadow-md hover:shadow-lg hover:bg-opacity-90 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#58335e] focus:ring-opacity-50 font-medium text-sm tracking-wide transform hover:scale-105 active:scale-95 whitespace-nowrap">
+                Login
+              </button>
+            </Link>
+          )}
         </div>
 
         {/* Mobile Menu Button */}
         <div className="lg:hidden flex items-center">
-          {/* Hamburger Menu */}
           <button
             onClick={toggleMobileMenu}
             className="p-2 rounded-md text-gray-700 hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-[#58335e] transition-all duration-200"
@@ -251,14 +294,19 @@ const Header = () => {
             {/* Mobile Menu Content */}
             <div className="mobile-menu-content">
               <nav className="mobile-nav">
-                {/* Login Button - Prominent */}
-                <Link 
-                  to="/login" 
-                  onClick={toggleMobileMenu}
-                  className="mobile-login-btn"
-                >
-                  🔐 Login / Sign Up
-                </Link>
+                {/* Mobile Login/Logout */}
+                {isLoggedIn ? (
+                  <button 
+                    onClick={handleLogout}
+                    className="mobile-login-btn bg-red-600 hover:bg-red-700 text-white"
+                  >
+                    🚪 Logout
+                  </button>
+                ) : (
+                  <Link to="/login" onClick={toggleMobileMenu} className="mobile-login-btn">
+                    🔐 Login / Sign Up
+                  </Link>
+                )}
 
                 {/* Post Property Button */}
                 <button 
@@ -273,28 +321,17 @@ const Header = () => {
                 </button>
 
                 {/* Regular Menu Items */}
-                <Link 
-                  to="/exhibition" 
-                  onClick={toggleMobileMenu}
-                  className="mobile-menu-item"
-                >
+                <Link to="/exhibition" onClick={toggleMobileMenu} className="mobile-menu-item">
                   Exhibition
                 </Link>
                 
-                <Link 
-                  to="/services" 
-                  onClick={toggleMobileMenu}
-                  className="mobile-menu-item"
-                >
+                <Link to="/services" onClick={toggleMobileMenu} className="mobile-menu-item">
                   Services
                 </Link>
 
                 {/* Mobile Learn Reit's Dropdown */}
                 <div className="mobile-dropdown">
-                  <button
-                    onClick={toggleMobileLearn}
-                    className="mobile-dropdown-btn"
-                  >
+                  <button onClick={toggleMobileLearn} className="mobile-dropdown-btn">
                     <span>Learn Reit's</span>
                     <span className={`mobile-dropdown-icon ${mobileLearnOpen ? 'rotate' : ''}`}>
                       ▾
@@ -319,10 +356,7 @@ const Header = () => {
 
                 {/* Mobile Calculator Dropdown */}
                 <div className="mobile-dropdown">
-                  <button
-                    onClick={toggleMobileCalc}
-                    className="mobile-dropdown-btn"
-                  >
+                  <button onClick={toggleMobileCalc} className="mobile-dropdown-btn">
                     <span>Calculator</span>
                     <span className={`mobile-dropdown-icon ${mobileCalcOpen ? 'rotate' : ''}`}>
                       ▾
@@ -345,19 +379,11 @@ const Header = () => {
                   )}
                 </div>
 
-                <Link 
-                  to="/contact" 
-                  onClick={toggleMobileMenu}
-                  className="mobile-menu-item"
-                >
+                <Link to="/contact" onClick={toggleMobileMenu} className="mobile-menu-item">
                   Contact Us
                 </Link>
                 
-                <Link 
-                  to="/about" 
-                  onClick={toggleMobileMenu}
-                  className="mobile-menu-item"
-                >
+                <Link to="/about" onClick={toggleMobileMenu} className="mobile-menu-item">
                   Who are we
                 </Link>
               </nav>

@@ -12,15 +12,16 @@ import { useNavigate, useLocation } from "react-router-dom";
 const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
-
   const from = location.state?.from || "/";
 
   const [mode, setMode] = useState("login"); // login | register
+  const [showPassword, setShowPassword] = useState(false);
 
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: "",
+    confirmPassword: "",
   });
 
   const [errors, setErrors] = useState({});
@@ -53,6 +54,14 @@ const Login = () => {
       newErrors.password = "Password should be at least 6 characters.";
     }
 
+    if (mode === "register") {
+      if (!formData.confirmPassword) {
+        newErrors.confirmPassword = "Please confirm your password.";
+      } else if (formData.password !== formData.confirmPassword) {
+        newErrors.confirmPassword = "Passwords do not match.";
+      }
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -67,10 +76,8 @@ const Login = () => {
       navigate(from, { replace: true });
     } catch (error) {
       let msg = "Login failed";
-
       if (error.code === "auth/user-not-found") msg = "User not found";
       if (error.code === "auth/wrong-password") msg = "Wrong password";
-
       setErrors({ submit: msg });
     } finally {
       setLoading(false);
@@ -97,14 +104,16 @@ const Login = () => {
         created_at: new Date().toISOString(),
       });
 
-      navigate(from, { replace: true });
+      setMode("login");
+      setFormData({ name: "", email: "", password: "", confirmPassword: "" });
+      setErrors({
+        submit: "Registration successful! Please login with your credentials.",
+      });
     } catch (error) {
       let msg = "Registration failed";
-
       if (error.code === "auth/email-already-in-use") {
         msg = "Email already registered";
       }
-
       setErrors({ submit: msg });
     } finally {
       setLoading(false);
@@ -114,7 +123,6 @@ const Login = () => {
   // ------------------ SUBMIT ------------------
   const handleSubmit = (e) => {
     e.preventDefault();
-
     if (!validate()) return;
 
     if (mode === "login") {
@@ -129,6 +137,8 @@ const Login = () => {
     setMode((prev) => (prev === "login" ? "register" : "login"));
     setErrors({});
   };
+
+  const togglePassword = () => setShowPassword((prev) => !prev);
 
   // ------------------ UI ------------------
   return (
@@ -166,29 +176,66 @@ const Login = () => {
           {errors.email && <p className="error">{errors.email}</p>}
 
           <label>Password</label>
-          <input
-            name="password"
-            type="password"
-            value={formData.password}
-            onChange={handleChange}
-          />
+          <div className="password-wrapper">
+            <input
+              name="password"
+              type={showPassword ? "text" : "password"}
+              value={formData.password}
+              onChange={handleChange}
+              className="password-input"
+            />
+            <button type="button" className="eye-btn" onClick={togglePassword}>
+              <i
+                className={`far ${
+                  showPassword ? "fa-eye" : "fa-eye-slash"
+                }`}
+              ></i>
+            </button>
+          </div>
           {errors.password && <p className="error">{errors.password}</p>}
+
+          {mode === "register" && (
+            <>
+              <label>Confirm Password</label>
+              <div className="password-wrapper">
+                <input
+                  name="confirmPassword"
+                  type={showPassword ? "text" : "password"}
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  className="password-input"
+                />
+                <button type="button" className="eye-btn" onClick={togglePassword}>
+                  <i
+                    className={`far ${
+                      showPassword ? "fa-eye" : "fa-eye-slash"
+                    }`}
+                  ></i>
+                </button>
+              </div>
+              {errors.confirmPassword && (
+                <p className="error">{errors.confirmPassword}</p>
+              )}
+            </>
+          )}
 
           {errors.submit && (
             <p className="error submit-error">{errors.submit}</p>
           )}
 
           <button
-            className={`submit-btn ${mode === "register" ? "register-btn" : ""}`}
+            className={`submit-btn ${
+              mode === "register" ? "register-btn" : ""
+            }`}
             disabled={loading}
           >
-            {loading
-              ? mode === "login"
-                ? "Logging in..."
-                : "Creating account..."
-              : mode === "login"
-                ? "Login"
-                : "Register"}
+            {loading ? (
+              <span className="spinner"></span>
+            ) : mode === "login" ? (
+              "Login"
+            ) : (
+              "Register"
+            )}
           </button>
         </form>
 
