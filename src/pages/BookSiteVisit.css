@@ -123,13 +123,31 @@ button[type='submit']:hover {
   background-color: #43a047;
 }
 
-button:not([type='submit']) {
+button:not([type='submit']):not(.cancel-btn) {
   background-color: #eee;
   color: #333;
 }
 
-button:not([type='submit']):hover {
+button:not([type='submit']):not(.cancel-btn):hover {
   background-color: #ddd;
+}
+
+/* Cancel Button Styling */
+.cancel-btn {
+  background-color: #dc2626 !important;
+  color: white !important;
+}
+
+.cancel-btn:hover {
+  background-color: #b91c1c !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+}
+
+.cancel-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .info-section {
@@ -153,8 +171,71 @@ button:not([type='submit']):hover {
   border: 1px solid #d1c4e9;
 }
 
+/* People Details Section */
+.people-details {
+  background: #1a1a2e;
+  padding: 1.5rem;
+  border-radius: 12px;
+  margin: 1.5rem 0;
+  border: 2px solid #d1c4e9;
+}
+
+.people-details h4 {
+  color: #9e4efb;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.people-details label {
+  margin-bottom: 1rem;
+  display: block;
+}
+
+.additional-person {
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.form-section form select {
+  width: 100%;
+  padding: 0.6rem;
+  margin-top: 0.25rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 1rem;
+  background-color: #232323;
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.form-section form select:focus,
+.form-section form input:focus,
+.form-section form textarea:focus {
+  outline: none;
+  border-color: #9e4efb;
+  box-shadow: 0 0 0 3px rgba(158, 78, 251, 0.1);
+}
+
 @media (max-width: 768px) {
   .book-visit-container {
     flex-direction: column;
+  }
+  
+  .people-details {
+    padding: 1rem;
   }
 }

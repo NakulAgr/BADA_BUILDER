@@ -1,13 +1,46 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '../../firebase';
 import './Exhibition.css';
 import './LiveGrouping.css';
 
 const LiveGrouping = () => {
+  const navigate = useNavigate();
   const [selectedGroup, setSelectedGroup] = useState(null);
+  const [liveGroups, setLiveGroups] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const liveGroups = [
+  useEffect(() => {
+    fetchLiveGroups();
+  }, []);
+
+  const fetchLiveGroups = async () => {
+    try {
+      const querySnapshot = await getDocs(collection(db, 'live_grouping_properties'));
+      const groupsData = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      
+      // If no properties in database, use fallback data
+      if (groupsData.length === 0) {
+        setLiveGroups(fallbackGroups);
+      } else {
+        setLiveGroups(groupsData);
+      }
+    } catch (error) {
+      console.error('Error fetching live groups:', error);
+      // Use fallback data on error
+      setLiveGroups(fallbackGroups);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fallback example properties
+  const fallbackGroups = [
     {
       id: 1,
       title: "Skyline Towers - Group Buy",
@@ -159,7 +192,12 @@ const LiveGrouping = () => {
 
         {/* Live Groups Grid */}
         <div className="properties-grid">
-          {liveGroups.map((group, index) => (
+          {loading ? (
+            <p style={{ textAlign: 'center', padding: '40px', gridColumn: '1 / -1' }}>
+              Loading properties...
+            </p>
+          ) : (
+            liveGroups.map((group, index) => (
             <motion.div
               key={group.id}
               className={`property-card live-group-card ${group.status}`}
@@ -167,6 +205,8 @@ const LiveGrouping = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
               whileHover={{ y: -8 }}
+              onClick={() => navigate(`/exhibition/live-grouping/${group.id}`)}
+              style={{ cursor: 'pointer' }}
             >
               <div className="property-image">
                 <img src={group.image} alt={group.title} />
@@ -230,7 +270,10 @@ const LiveGrouping = () => {
                 {/* Action Button */}
                 <button 
                   className={`join-group-btn ${group.status}`}
-                  onClick={() => handleJoinGroup(group)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleJoinGroup(group);
+                  }}
                   disabled={group.status === 'closed'}
                 >
                   {group.status === 'closing' ? '⚡ Join Now - Closing Soon!' : 
@@ -239,7 +282,8 @@ const LiveGrouping = () => {
                 </button>
               </div>
             </motion.div>
-          ))}
+            ))
+          )}
         </div>
 
         {/* FAQ Section */}
