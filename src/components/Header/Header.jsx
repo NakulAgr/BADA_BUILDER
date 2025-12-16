@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import logo from '../../assets/logo.png';
 import UserTypeModal from '../UserTypeModal/UserTypeModal';
 import SearchBar from '../SearchBar/SearchBar';
@@ -54,6 +54,7 @@ const Header = () => {
   const timeoutRef = useRef(null);
   const calctimeoutRef = useRef(null);
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Firebase Auth Listener
   useEffect(() => {
@@ -80,6 +81,16 @@ const Header = () => {
     } catch (error) {
       console.error('Logout error:', error);
     }
+  };
+
+  // Handle login click - reset form if already on login page
+  const handleLoginClick = (e) => {
+    if (location.pathname === '/login') {
+      e.preventDefault();
+      // Trigger form reset by navigating with state
+      navigate('/login', { state: { resetForm: true } });
+    }
+    setIsMobileMenuOpen(false);
   };
 
   if (loading) {
@@ -247,7 +258,7 @@ const Header = () => {
               Logout
             </button>
           ) : (
-            <Link to="/login">
+            <Link to="/login" onClick={handleLoginClick}>
               <button className="bg-[#58335e] text-white px-6 py-2.5 rounded-full shadow-md hover:shadow-lg hover:bg-opacity-90 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#58335e] focus:ring-opacity-50 font-medium text-sm tracking-wide transform hover:scale-105 active:scale-95 whitespace-nowrap">
                 Login
               </button>
@@ -303,7 +314,7 @@ const Header = () => {
                     🚪 Logout
                   </button>
                 ) : (
-                  <Link to="/login" onClick={toggleMobileMenu} className="mobile-login-btn">
+                  <Link to="/login" onClick={handleLoginClick} className="mobile-login-btn">
                     🔐 Login / Sign Up
                   </Link>
                 )}
