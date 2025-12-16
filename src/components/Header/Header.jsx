@@ -7,6 +7,7 @@ import './Header.css';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { auth } from '../../firebase';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 
 const calcdropdownItems = [
   { label: "Funds from Operations (FFO)", href: "/calculator/FFO" },
@@ -48,28 +49,28 @@ const Header = () => {
   const [mobileLearnOpen, setMobileLearnOpen] = useState(false);
   const [mobileCalcOpen, setMobileCalcOpen] = useState(false);
   const [isUserTypeModalOpen, setIsUserTypeModalOpen] = useState(false);
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const timeoutRef = useRef(null);
   const calctimeoutRef = useRef(null);
+  const profileTimeoutRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
+  const { currentUser, userProfile, loading: authLoading } = useAuth();
 
-  // Firebase Auth Listener
+  // Use AuthContext instead of direct Firebase listener
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setIsLoggedIn(!!user);
-      setLoading(false);
-      console.log('Firebase user:', user ? 'Logged in' : 'Logged out');
-    });
-    return () => unsubscribe();
-  }, []);
+    setIsLoggedIn(!!currentUser);
+    setLoading(authLoading);
+  }, [currentUser, authLoading]);
 
   useEffect(() => {
     return () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
       if (calctimeoutRef.current) clearTimeout(calctimeoutRef.current);
+      if (profileTimeoutRef.current) clearTimeout(profileTimeoutRef.current);
     };
   }, []);
 
@@ -139,6 +140,57 @@ const Header = () => {
     timeoutRef.current = setTimeout(() => {
       setShowDropdown(false);
     }, 150);
+  };
+
+  // Profile dropdown handlers
+  const handleProfileMouseEnter = () => {
+    if (profileTimeoutRef.current) clearTimeout(profileTimeoutRef.current);
+    setShowProfileDropdown(true);
+  };
+
+  const handleProfileMouseLeave = () => {
+    profileTimeoutRef.current = setTimeout(() => {
+      setShowProfileDropdown(false);
+    }, 150);
+  };
+
+  // Generate user initials for avatar
+  const getUserInitials = () => {
+    if (userProfile?.name) {
+      return userProfile.name
+        .split(' ')
+        .map(name => name.charAt(0))
+        .join('')
+        .toUpperCase()
+        .slice(0, 2);
+    }
+    if (currentUser?.displayName) {
+      return currentUser.displayName
+        .split(' ')
+        .map(name => name.charAt(0))
+        .join('')
+        .toUpperCase()
+        .slice(0, 2);
+    }
+    if (currentUser?.email) {
+      return currentUser.email.charAt(0).toUpperCase();
+    }
+    return 'U';
+  };
+
+  // Get user display name
+  const getUserDisplayName = () => {
+    return userProfile?.name || currentUser?.displayName || 'User';
+  };
+
+  // Get user email
+  const getUserEmail = () => {
+    return userProfile?.email || currentUser?.email || '';
+  };
+
+  // Get user phone
+  const getUserPhone = () => {
+    return userProfile?.phone || 'Not provided';
   };
 
   return (
@@ -251,12 +303,64 @@ const Header = () => {
             Post Property
           </button>
           {isLoggedIn ? (
-            <button 
-              onClick={handleLogout}
-              className="bg-red-600 hover:bg-red-700 text-white px-6 py-2.5 rounded-full shadow-md hover:shadow-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50 font-medium text-sm tracking-wide transform hover:scale-105 active:scale-95 whitespace-nowrap"
+            <div 
+              className="relative"
+              onMouseEnter={handleProfileMouseEnter}
+              onMouseLeave={handleProfileMouseLeave}
             >
-              Logout
-            </button>
+              <button className="profile-avatar">
+                <span className="profile-initials">
+                  {getUserInitials()}
+                </span>
+              </button>
+              
+              {showProfileDropdown && (
+                <div className="profile-dropdown">
+                  <div className="profile-dropdown-header">
+                    <div className="profile-dropdown-avatar">
+                      {getUserInitials()}
+                    </div>
+                    <div className="profile-dropdown-info">
+                      <div className="profile-dropdown-name">
+                        {getUserDisplayName()}
+                      </div>
+                      <div className="profile-dropdown-email">
+                        {getUserEmail()}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="profile-dropdown-divider"></div>
+                  
+                  <div className="profile-dropdown-details">
+                    <div className="profile-detail-item">
+                      <span className="profile-detail-label">Name:</span>
+                      <span className="profile-detail-value">{getUserDisplayName()}</span>
+                    </div>
+                    <div className="profile-detail-item">
+                      <span className="profile-detail-label">Email:</span>
+                      <span className="profile-detail-value">{getUserEmail()}</span>
+                    </div>
+                    <div className="profile-detail-item">
+                      <span className="profile-detail-label">Phone:</span>
+                      <span className="profile-detail-value">{getUserPhone()}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="profile-dropdown-divider"></div>
+                  
+                  <button 
+                    onClick={handleLogout}
+                    className="profile-dropdown-logout"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                    Logout
+                  </button>
+                </div>
+              )}
+            </div>
           ) : (
             <Link to="/login" onClick={handleLoginClick}>
               <button className="bg-[#58335e] text-white px-6 py-2.5 rounded-full shadow-md hover:shadow-lg hover:bg-opacity-90 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#58335e] focus:ring-opacity-50 font-medium text-sm tracking-wide transform hover:scale-105 active:scale-95 whitespace-nowrap">
@@ -305,14 +409,48 @@ const Header = () => {
             {/* Mobile Menu Content */}
             <div className="mobile-menu-content">
               <nav className="mobile-nav">
-                {/* Mobile Login/Logout */}
+                {/* Mobile Login/Profile */}
                 {isLoggedIn ? (
-                  <button 
-                    onClick={handleLogout}
-                    className="mobile-login-btn bg-red-600 hover:bg-red-700 text-white"
-                  >
-                    🚪 Logout
-                  </button>
+                  <div className="mobile-profile-section">
+                    <div className="mobile-profile-header">
+                      <div className="mobile-profile-avatar">
+                        {getUserInitials()}
+                      </div>
+                      <div className="mobile-profile-info">
+                        <div className="mobile-profile-name">
+                          {getUserDisplayName()}
+                        </div>
+                        <div className="mobile-profile-email">
+                          {getUserEmail()}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="mobile-profile-details">
+                      <div className="mobile-profile-detail">
+                        <span className="mobile-detail-label">Name:</span>
+                        <span className="mobile-detail-value">{getUserDisplayName()}</span>
+                      </div>
+                      <div className="mobile-profile-detail">
+                        <span className="mobile-detail-label">Email:</span>
+                        <span className="mobile-detail-value">{getUserEmail()}</span>
+                      </div>
+                      <div className="mobile-profile-detail">
+                        <span className="mobile-detail-label">Phone:</span>
+                        <span className="mobile-detail-value">{getUserPhone()}</span>
+                      </div>
+                    </div>
+                    
+                    <button 
+                      onClick={handleLogout}
+                      className="mobile-logout-btn"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                      </svg>
+                      Logout
+                    </button>
+                  </div>
                 ) : (
                   <Link to="/login" onClick={handleLoginClick} className="mobile-login-btn">
                     🔐 Login / Sign Up

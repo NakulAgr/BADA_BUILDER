@@ -615,6 +615,31 @@ button:not([type='submit']):not(.cancel-btn):hover {
   background-color: #444;
 }
 
+.pin-instructions {
+  padding: 1rem 1.5rem;
+  background-color: #232338;
+  border-bottom: 1px solid #444;
+}
+
+.instruction-item {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-bottom: 0.6rem;
+  color: #b0b0b0;
+  font-size: 0.85rem;
+}
+
+.instruction-item:last-child {
+  margin-bottom: 0;
+}
+
+.instruction-icon {
+  font-size: 1rem;
+  width: 20px;
+  text-align: center;
+}
+
 /* Map Controls */
 .map-controls {
   padding: 1rem 1.5rem;
@@ -694,10 +719,153 @@ button:not([type='submit']):not(.cancel-btn):hover {
   font-style: italic;
 }
 
+.location-help {
+  padding: 0.8rem 1rem;
+  background-color: #1a1a2e;
+  border-radius: 6px;
+  border-left: 3px solid #4caf50;
+  margin-top: 0.5rem;
+}
+
+.location-help small {
+  color: #b0b0b0;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.location-help strong {
+  color: #4caf50;
+}
+
+.quick-locations {
+  margin-top: 1rem;
+  padding: 0.8rem;
+  background-color: #232338;
+  border-radius: 6px;
+}
+
+.quick-locations-label {
+  color: #9e4efb;
+  font-size: 0.8rem;
+  font-weight: 500;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.quick-location-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.quick-location-btn {
+  background-color: #444;
+  color: #ffffff;
+  border: 1px solid #666;
+  padding: 0.4rem 0.8rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.quick-location-btn:hover {
+  background-color: #9e4efb;
+  border-color: #9e4efb;
+  transform: translateY(-1px);
+}
+
+/* Enhanced location pinning styles */
+.location-success-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  padding: 0.8rem;
+  background-color: #2a4a2a;
+  border-radius: 6px;
+  border-left: 4px solid #4caf50;
+}
+
+.location-success-header .success-icon {
+  font-size: 1.2rem;
+  animation: pulse 2s infinite;
+}
+
+.location-success-header strong {
+  color: #4caf50;
+  font-size: 1rem;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+.selected-address {
+  margin-bottom: 0.8rem;
+}
+
+.selected-address strong {
+  color: #9e4efb;
+  display: block;
+  margin-bottom: 0.3rem;
+}
+
+.selected-address p {
+  color: #ffffff;
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.pin-actions {
+  margin-top: 1rem;
+  padding: 0.6rem;
+  background-color: #232338;
+  border-radius: 4px;
+  border: 1px solid #444;
+}
+
+.pin-actions small {
+  color: #b0b0b0;
+  font-size: 0.8rem;
+  font-style: italic;
+}
+
 .map-container {
   flex: 1;
   min-height: 450px;
   position: relative;
+}
+
+.map-overlay-tooltip {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(158, 78, 251, 0.9);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  pointer-events: none;
+  z-index: 1000;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.map-container:hover .map-overlay-tooltip {
+  opacity: 1;
+}
+
+.tooltip-text {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
 }
 
 .google-map {
@@ -705,6 +873,11 @@ button:not([type='submit']):not(.cancel-btn):hover {
   height: 100%;
   min-height: 450px;
   border-radius: 0;
+  cursor: crosshair;
+}
+
+.google-map:hover {
+  cursor: crosshair;
 }
 
 .map-modal-footer {

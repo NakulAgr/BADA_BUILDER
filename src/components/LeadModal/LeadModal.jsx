@@ -26,7 +26,7 @@ const LeadModal = ({ isOpen, onClose }) => {
   const phoneRef = useRef(null);
   const modalBodyRef = useRef(null);
 
-  // Auto-scroll function to next field
+  // Simplified auto-scroll function
   const scrollToNextField = (currentField) => {
     if (!modalBodyRef.current) return;
 
@@ -36,7 +36,6 @@ const LeadModal = ({ isOpen, onClose }) => {
     if (currentField === 'name') {
       nextField = 'requirementType';
     } else if (currentField === 'requirementType') {
-      // If BHK type should be shown, go to BHK, otherwise go to budget
       const showBhkType = ['Flat', 'House', 'Villa'].includes(formData.requirementType);
       nextField = showBhkType ? 'bhkType' : 'budget';
     } else if (currentField === 'bhkType') {
@@ -47,36 +46,19 @@ const LeadModal = ({ isOpen, onClose }) => {
       nextField = 'phone';
     }
 
-    // Scroll to next field with delay to allow for animations
+    // Simple scroll without heavy animations
     if (nextField) {
-      setTimeout(() => {
+      requestAnimationFrame(() => {
         const nextElement = document.getElementById(nextField);
-        const nextFormGroup = nextElement?.closest('.form-group');
-        
-        if (nextElement && nextFormGroup && modalBodyRef.current) {
-          // Add highlight animation to the form group
-          nextFormGroup.classList.add('auto-scroll-target');
-          setTimeout(() => {
-            nextFormGroup.classList.remove('auto-scroll-target');
-          }, 600);
-
-          // Calculate scroll position
-          const containerRect = modalBodyRef.current.getBoundingClientRect();
-          const elementRect = nextFormGroup.getBoundingClientRect();
-          const relativeTop = elementRect.top - containerRect.top + modalBodyRef.current.scrollTop;
-          
-          // Scroll to position with some offset for better visibility
-          modalBodyRef.current.scrollTo({
-            top: Math.max(0, relativeTop - 60), // 60px offset from top
-            behavior: 'smooth'
+        if (nextElement && modalBodyRef.current) {
+          nextElement.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'center' 
           });
-
-          // Focus the next field after scroll completes
-          setTimeout(() => {
-            nextElement.focus();
-          }, 400);
+          // Focus after a short delay
+          setTimeout(() => nextElement.focus(), 200);
         }
-      }, 350); // Delay to allow for field animations
+      });
     }
   };
 
@@ -86,17 +68,17 @@ const LeadModal = ({ isOpen, onClose }) => {
     // If property type changes, reset BHK type and budget
     if (name === 'requirementType') {
       setFormData(prev => ({ ...prev, [name]: value, bhkType: '', budget: '' }));
-      if (value) scrollToNextField(name); // Auto-scroll after selection
+      if (value) scrollToNextField(name);
     } 
     // If BHK type changes, reset budget
     else if (name === 'bhkType') {
       setFormData(prev => ({ ...prev, [name]: value, budget: '' }));
-      if (value) scrollToNextField(name); // Auto-scroll after selection
+      if (value) scrollToNextField(name);
     } 
     else {
       setFormData(prev => ({ ...prev, [name]: value }));
-      // Auto-scroll for other fields when they have a value
-      if (value && ['name', 'budget', 'location', 'phone'].includes(name)) {
+      // Only auto-scroll for select fields to reduce performance impact
+      if (value && ['budget'].includes(name)) {
         scrollToNextField(name);
       }
     }
@@ -112,54 +94,26 @@ const LeadModal = ({ isOpen, onClose }) => {
     !showBhkType || (showBhkType && formData.bhkType)
   );
 
-  // Auto-scroll when new fields appear
+  // Simplified auto-scroll when new fields appear
   useEffect(() => {
     if (showBhkType && formData.requirementType && !formData.bhkType) {
-      // BHK field just appeared, scroll to it
-      setTimeout(() => {
+      requestAnimationFrame(() => {
         const bhkElement = document.getElementById('bhkType');
-        if (bhkElement && modalBodyRef.current) {
-          const formGroup = bhkElement.closest('.form-group');
-          if (formGroup) {
-            formGroup.classList.add('auto-scroll-target');
-            setTimeout(() => formGroup.classList.remove('auto-scroll-target'), 600);
-          }
-          
-          const containerRect = modalBodyRef.current.getBoundingClientRect();
-          const elementRect = bhkElement.getBoundingClientRect();
-          const relativeTop = elementRect.top - containerRect.top + modalBodyRef.current.scrollTop;
-          
-          modalBodyRef.current.scrollTo({
-            top: Math.max(0, relativeTop - 60),
-            behavior: 'smooth'
-          });
+        if (bhkElement) {
+          bhkElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
-      }, 400); // Wait for animation to complete
+      });
     }
   }, [showBhkType, formData.requirementType]);
 
   useEffect(() => {
     if (showBudget && ((showBhkType && formData.bhkType) || (!showBhkType && formData.requirementType)) && !formData.budget) {
-      // Budget field just appeared, scroll to it
-      setTimeout(() => {
+      requestAnimationFrame(() => {
         const budgetElement = document.getElementById('budget');
-        if (budgetElement && modalBodyRef.current) {
-          const formGroup = budgetElement.closest('.form-group');
-          if (formGroup) {
-            formGroup.classList.add('auto-scroll-target');
-            setTimeout(() => formGroup.classList.remove('auto-scroll-target'), 600);
-          }
-          
-          const containerRect = modalBodyRef.current.getBoundingClientRect();
-          const elementRect = budgetElement.getBoundingClientRect();
-          const relativeTop = elementRect.top - containerRect.top + modalBodyRef.current.scrollTop;
-          
-          modalBodyRef.current.scrollTo({
-            top: Math.max(0, relativeTop - 60),
-            behavior: 'smooth'
-          });
+        if (budgetElement) {
+          budgetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
-      }, 400); // Wait for animation to complete
+      });
     }
   }, [showBudget, formData.bhkType, formData.requirementType]);
 
@@ -503,10 +457,10 @@ const LeadModal = ({ isOpen, onClose }) => {
 
                   <button type="submit" className="submit-button" disabled={loading}>
                     {loading ? (
-                      <span className="flex items-center justify-center gap-2">
+                      <>
                         <span className="spinner"></span>
                         Submitting...
-                      </span>
+                      </>
                     ) : (
                       'Submit'
                     )}

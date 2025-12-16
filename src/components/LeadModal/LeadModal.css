@@ -169,36 +169,9 @@
   outline: none;
   border-color: #58335e;
   box-shadow: 0 0 0 3px rgba(88, 51, 94, 0.1);
-  transform: scale(1.02);
-  transition: all 0.3s ease;
 }
 
-.form-group {
-  transition: all 0.3s ease;
-}
-
-.form-group.auto-scroll-target {
-  animation: highlightField 0.6s ease-in-out;
-}
-
-@keyframes highlightField {
-  0% {
-    transform: translateX(0);
-    background-color: transparent;
-  }
-  25% {
-    transform: translateX(5px);
-    background-color: rgba(88, 51, 94, 0.05);
-  }
-  75% {
-    transform: translateX(-5px);
-    background-color: rgba(88, 51, 94, 0.05);
-  }
-  100% {
-    transform: translateX(0);
-    background-color: transparent;
-  }
-}
+/* Removed heavy animations to improve performance */
 
 .form-group select {
   cursor: pointer;
@@ -241,13 +214,16 @@
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s;
+  transition: box-shadow 0.2s ease;
   width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 .submit-button:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(88, 51, 94, 0.3);
+  box-shadow: 0 4px 12px rgba(88, 51, 94, 0.25);
 }
 
 .submit-button:disabled {
@@ -261,7 +237,8 @@
   border: 2px solid rgba(255, 255, 255, 0.3);
   border-top-color: white;
   border-radius: 50%;
-  animation: spin 0.6s linear infinite;
+  animation: spin 0.8s linear infinite;
+  flex-shrink: 0;
 }
 
 @keyframes spin {
