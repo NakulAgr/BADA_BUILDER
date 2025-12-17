@@ -1,6 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './SearchBar.css';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Search, X } from 'lucide-react';
+
+// Shadcn UI
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 const SearchBar = ({ variant = 'default' }) => {
   const navigate = useNavigate();
@@ -8,9 +13,29 @@ const SearchBar = ({ variant = 'default' }) => {
   const [propertyType, setPropertyType] = useState('');
   const [bhkType, setBhkType] = useState('');
   const [location, setLocation] = useState('');
+  const [searchExpanded, setSearchExpanded] = useState(false);
+  const searchInputRef = useRef(null);
 
   // Check if BHK type should be shown
   const showBhkType = ['flat', 'house', 'villa'].includes(propertyType);
+
+  // Focus input when expanded
+  useEffect(() => {
+    if (searchExpanded && searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, [searchExpanded]);
+
+  // Close search on click outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (searchExpanded && !e.target.closest('.search-container')) {
+        setSearchExpanded(false);
+      }
+    };
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [searchExpanded]);
 
   // Handle property type change
   const handlePropertyTypeChange = (e) => {
@@ -35,62 +60,84 @@ const SearchBar = ({ variant = 'default' }) => {
     
     // Navigate to search results page
     navigate(`/search?${params.toString()}`);
+    setSearchExpanded(false);
   };
 
-  // Compact version for header
+  // Expandable search for header (compact variant)
   if (variant === 'compact') {
     return (
-      <form onSubmit={handleSearch} className="search-bar-compact">
-        <div className="search-input-wrapper">
-          <svg className="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-          <input
-            type="text"
-            placeholder="Search properties..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="search-input-compact"
-          />
-          <button type="submit" className="search-btn-compact">
-            Search
-          </button>
-        </div>
-      </form>
+      <div className="search-container flex items-center justify-center">
+        <AnimatePresence mode="wait">
+          {searchExpanded ? (
+            <motion.form
+              key="expanded"
+              initial={{ width: 48, opacity: 0 }}
+              animate={{ width: 500, opacity: 1 }}
+              exit={{ width: 48, opacity: 0 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+              onSubmit={handleSearch}
+              className="flex items-center gap-2 bg-white border border-gray-200 rounded-full px-4 py-2 shadow-lg"
+            >
+              <Search className="w-5 h-5 text-gray-900 shrink-0" />
+              <Input
+                ref={searchInputRef}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search properties..."
+                className="flex-1 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 p-0 h-8 text-gray-900"
+              />
+              <Button type="submit" size="sm" className="bg-gray-900 text-white hover:bg-gray-800 rounded-full h-8 px-4">
+                Search
+              </Button>
+              <button 
+                type="button" 
+                onClick={() => setSearchExpanded(false)}
+                className="p-1 hover:bg-gray-100 rounded-full"
+              >
+                <X className="w-4 h-4 text-gray-500" />
+              </button>
+            </motion.form>
+          ) : (
+            <motion.button
+              key="collapsed"
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              onClick={(e) => { e.stopPropagation(); setSearchExpanded(true); }}
+              className="flex w-10 h-10 items-center justify-center cursor-pointer"
+              aria-label="Search"
+            >
+              <Search className="w-6 h-6 text-gray-900" strokeWidth={2} />
+            </motion.button>
+          )}
+        </AnimatePresence>
+      </div>
     );
   }
 
   // Full version for hero section and pages
   return (
-    <form onSubmit={handleSearch} className="search-bar-full">
-      <div className="search-bar-container">
-        <div className="search-field">
-          <label htmlFor="search-query">
-            <svg className="field-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-          </label>
-          <input
-            id="search-query"
-            type="text"
-            placeholder="Search by property name, location..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="search-input"
-          />
-        </div>
+    <form onSubmit={handleSearch} className="w-full max-w-3xl mx-auto">
+      <div className="bg-white rounded-full p-2 shadow-lg border border-gray-200">
+        <div className="flex items-center gap-2">
+          {/* Search Input */}
+          <div className="flex-1 relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-900" />
+            <input
+              type="text"
+              placeholder="Search by property name, location..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full h-12 pl-12 pr-4 bg-transparent border-0 outline-none text-gray-900 placeholder:text-gray-500"
+            />
+          </div>
 
-        <div className="search-field">
-          <label htmlFor="property-type">
-            <svg className="field-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-            </svg>
-          </label>
+          {/* Property Type Select */}
           <select
-            id="property-type"
             value={propertyType}
             onChange={handlePropertyTypeChange}
-            className="search-select"
+            className="h-12 px-4 bg-gray-50 border border-gray-200 rounded-full text-sm text-gray-700 outline-none"
           >
             <option value="">Property Type</option>
             <option value="flat">Flat/Apartment</option>
@@ -101,21 +148,13 @@ const SearchBar = ({ variant = 'default' }) => {
             <option value="shop">Shop</option>
             <option value="office">Office</option>
           </select>
-        </div>
 
-        {/* BHK Type - Only show for flat, house, villa */}
-        {showBhkType && (
-          <div className="search-field">
-            <label htmlFor="bhk-type">
-              <svg className="field-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-              </svg>
-            </label>
+          {/* BHK Type - Only show for flat, house, villa */}
+          {showBhkType && (
             <select
-              id="bhk-type"
               value={bhkType}
               onChange={(e) => setBhkType(e.target.value)}
-              className="search-select"
+              className="h-12 px-4 bg-gray-50 border border-gray-200 rounded-full text-sm text-gray-700 outline-none"
             >
               <option value="">BHK Type</option>
               <option value="1RK">1 RK</option>
@@ -123,27 +162,18 @@ const SearchBar = ({ variant = 'default' }) => {
               <option value="2BHK">2 BHK</option>
               <option value="3BHK">3 BHK</option>
               <option value="4BHK">4 BHK</option>
-              <option value="5BHK">5 BHK</option>
-              <option value="6BHK">6+ BHK</option>
+              <option value="5BHK">5+ BHK</option>
             </select>
-          </div>
-        )}
+          )}
 
-        <div className="search-field">
-          <label htmlFor="location">
-            <svg className="field-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-          </label>
+          {/* Location Input */}
           <input
-            id="location"
             type="text"
-            placeholder="Enter or Select Location"
+            placeholder="Location"
             value={location}
             onChange={(e) => setLocation(e.target.value)}
-            className="search-input"
             list="location-list"
+            className="h-12 px-4 bg-gray-50 border border-gray-200 rounded-full text-sm text-gray-700 outline-none w-40"
           />
           <datalist id="location-list">
             <option value="PAN India" />
@@ -155,77 +185,16 @@ const SearchBar = ({ variant = 'default' }) => {
             <option value="Chennai" />
             <option value="Kolkata" />
             <option value="Pune" />
-            <option value="Vadodara" />
-            <option value="Surat" />
-            <option value="Rajkot" />
-            <option value="Gandhinagar" />
-            <option value="Bhavnagar" />
-            <option value="Jamnagar" />
-            <option value="Anand" />
-            <option value="Navi Mumbai" />
-            <option value="Thane" />
-            <option value="Nagpur" />
-            <option value="Nashik" />
-            <option value="Aurangabad" />
-            <option value="Mysore" />
-            <option value="Mangalore" />
-            <option value="Hubli" />
-            <option value="Coimbatore" />
-            <option value="Madurai" />
-            <option value="Tiruchirappalli" />
-            <option value="Warangal" />
-            <option value="Nizamabad" />
-            <option value="Visakhapatnam" />
-            <option value="Vijayawada" />
-            <option value="Guntur" />
-            <option value="Kochi" />
-            <option value="Thiruvananthapuram" />
-            <option value="Kozhikode" />
-            <option value="Howrah" />
-            <option value="Durgapur" />
-            <option value="Siliguri" />
             <option value="Jaipur" />
-            <option value="Jodhpur" />
-            <option value="Udaipur" />
-            <option value="Kota" />
-            <option value="Indore" />
-            <option value="Bhopal" />
-            <option value="Jabalpur" />
-            <option value="Gwalior" />
-            <option value="Noida" />
-            <option value="Ghaziabad" />
-            <option value="Lucknow" />
-            <option value="Kanpur" />
-            <option value="Agra" />
-            <option value="Varanasi" />
-            <option value="Chandigarh" />
-            <option value="Ludhiana" />
-            <option value="Amritsar" />
-            <option value="Jalandhar" />
-            <option value="Gurgaon" />
-            <option value="Faridabad" />
-            <option value="Panipat" />
-            <option value="Patna" />
-            <option value="Gaya" />
-            <option value="Bhubaneswar" />
-            <option value="Cuttack" />
-            <option value="Ranchi" />
-            <option value="Jamshedpur" />
-            <option value="Raipur" />
-            <option value="Bhilai" />
-            <option value="Dehradun" />
-            <option value="Haridwar" />
-            <option value="Panaji" />
-            <option value="Margao" />
+            <option value="Surat" />
           </datalist>
-        </div>
 
-        <button type="submit" className="search-btn-full">
-          <svg className="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-          Search
-        </button>
+          {/* Search Button */}
+          <Button type="submit" className="h-12 px-8 bg-gray-900 text-white hover:bg-gray-800 rounded-full gap-2">
+            <Search className="w-4 h-4" />
+            Search
+          </Button>
+        </div>
       </div>
     </form>
   );

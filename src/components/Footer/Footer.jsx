@@ -32,7 +32,7 @@ const Footer = () => {
 
   return (
     <footer className="mx-4 mb-4">
-      {/* CTA Section */}
+      {/* CTA Section - Rounded top */}
       <div className="bg-gray-900 rounded-t-3xl py-16">
         <div className="max-w-4xl mx-auto px-6 text-center">
           <p className="text-gray-400 italic mb-4">— Available to work —</p>
@@ -51,7 +51,7 @@ const Footer = () => {
         </div>
       </div>
       
-      {/* Main Footer */}
+      {/* Main Footer - Rounded bottom */}
       <div className="bg-gray-900 rounded-b-3xl">
         <div className="max-w-7xl mx-auto px-6 py-16">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">

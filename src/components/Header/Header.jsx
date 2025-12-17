@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
-import { Menu, X, User, LogOut, Plus, ChevronDown, Calculator, GraduationCap, Home, Building2, Phone, Users, Search } from 'lucide-react';
+import { Menu, X, User, LogOut, Plus, ChevronDown, Calculator, Search } from 'lucide-react';
 
 // Shadcn UI
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 
 import logo from '../../assets/logo.png';
+import SearchBar from '../SearchBar/SearchBar';
 
 const Header = () => {
   const navigate = useNavigate();
@@ -19,7 +20,9 @@ const Header = () => {
   const { userData, isAuthenticated, logout, isSubscribed } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [searchExpanded, setSearchExpanded] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const searchInputRef = useRef(null);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -29,7 +32,25 @@ const Header = () => {
 
   useEffect(() => {
     setMobileMenuOpen(false);
+    setSearchExpanded(false);
   }, [location.pathname]);
+
+  useEffect(() => {
+    if (searchExpanded && searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, [searchExpanded]);
+
+  // Close search on click outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (searchExpanded && !e.target.closest('.search-container')) {
+        setSearchExpanded(false);
+      }
+    };
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [searchExpanded]);
 
   const handleLogout = async () => {
     try {
@@ -54,6 +75,7 @@ const Header = () => {
     e.preventDefault();
     if (searchQuery.trim()) {
       navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
+      setSearchExpanded(false);
     }
   };
 
@@ -75,11 +97,11 @@ const Header = () => {
   ];
 
   return (
-    <header className="sticky top-0 z-50 bg-white">
+    <header className="sticky top-5 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        {/* Main Nav Row */}
+        {/* Main Nav Row - Pill shaped */}
         <div className={cn(
-          "flex items-center justify-between h-16 px-6 my-2 rounded-full transition-all duration-300",
+          "relative flex items-center justify-between h-16 px-6 my-2 rounded-full transition-all duration-300",
           scrolled ? "bg-white shadow-lg border border-gray-100" : "bg-gray-50"
         )}>
           {/* Logo */}
@@ -87,98 +109,118 @@ const Header = () => {
             <img src={logo} alt="Bada Builder" className="h-8" />
           </Link>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center gap-1">
-            {navLinks.map((link) => (
-              <NavLink
-                key={link.to}
-                to={link.to}
-                className={({ isActive }) => cn(
-                  "px-4 py-2 text-sm font-medium rounded-full transition-colors",
-                  isActive 
-                    ? "border border-gray-900 text-gray-900" 
-                    : "text-gray-600 hover:text-gray-900"
-                )}
+          {/* Desktop Navigation - Hidden when search expanded */}
+          <AnimatePresence>
+            {!searchExpanded && (
+              <motion.nav 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="hidden lg:flex items-center gap-1"
               >
-                {link.label}
-              </NavLink>
-            ))}
-
-            {/* Learn Dropdown */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-1 px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
-                  Learn <ChevronDown className="w-4 h-4" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="bg-white border border-gray-200 shadow-lg rounded-xl">
-                {learnLinks.map((link) => (
-                  <DropdownMenuItem key={link.to} asChild>
-                    <Link to={link.to} className="text-gray-700 hover:text-gray-900">{link.label}</Link>
-                  </DropdownMenuItem>
+                {navLinks.map((link) => (
+                  <NavLink
+                    key={link.to}
+                    to={link.to}
+                    className={({ isActive }) => cn(
+                      "px-4 py-2 text-sm font-medium rounded-full transition-colors",
+                      isActive 
+                        ? "border border-gray-900 text-gray-900" 
+                        : "text-gray-600 hover:text-gray-900"
+                    )}
+                  >
+                    {link.label}
+                  </NavLink>
                 ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
 
-            {/* Calculator Dropdown */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-1 px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
-                  <Calculator className="w-4 h-4" /> Calculator <ChevronDown className="w-4 h-4" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="bg-white border border-gray-200 shadow-lg rounded-xl">
-                {calculatorLinks.map((link) => (
-                  <DropdownMenuItem key={link.to} asChild>
-                    <Link to={link.to} className="text-gray-700 hover:text-gray-900">{link.label}</Link>
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </nav>
+                {/* Learn Dropdown */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="flex items-center gap-1 px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
+                      Learn <ChevronDown className="w-4 h-4" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="bg-white border border-gray-200 shadow-lg rounded-xl">
+                    {learnLinks.map((link) => (
+                      <DropdownMenuItem key={link.to} asChild>
+                        <Link to={link.to} className="text-gray-700 hover:text-gray-900">{link.label}</Link>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                {/* Calculator Dropdown */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="flex items-center gap-1 px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
+                      <Calculator className="w-4 h-4" /> Calculator <ChevronDown className="w-4 h-4" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="bg-white border border-gray-200 shadow-lg rounded-xl">
+                    {calculatorLinks.map((link) => (
+                      <DropdownMenuItem key={link.to} asChild>
+                        <Link to={link.to} className="text-gray-700 hover:text-gray-900">{link.label}</Link>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </motion.nav>
+            )}
+          </AnimatePresence>
 
           {/* Right Actions */}
           <div className="flex items-center gap-3">
-            <Button 
-              onClick={handlePostProperty}
-              className="hidden sm:flex gap-2 bg-gray-900 text-white hover:bg-gray-800 rounded-full"
-            >
-              <Plus className="w-4 h-4" />
-              Post Property
-            </Button>
+            <AnimatePresence>
+              {!searchExpanded && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="flex items-center gap-3"
+                >
+                  <Button 
+                    onClick={handlePostProperty}
+                    className="hidden sm:flex gap-2 bg-gray-900 text-white hover:bg-gray-800 rounded-full"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Post Property
+                  </Button>
 
-            {isAuthenticated ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className="flex items-center gap-2 p-1 rounded-full hover:bg-gray-100 transition-colors">
-                    <Avatar className="h-8 w-8 bg-gray-900 text-white">
-                      <AvatarFallback className="bg-gray-900 text-white text-sm">
-                        {userData?.name?.charAt(0) || 'U'}
-                      </AvatarFallback>
-                    </Avatar>
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="bg-white border border-gray-200 shadow-lg rounded-xl">
-                  <DropdownMenuItem className="text-gray-700">
-                    <User className="w-4 h-4 mr-2" />
-                    {userData?.name || 'User'}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleLogout} className="text-red-600 hover:text-red-700">
-                    <LogOut className="w-4 h-4 mr-2" />
-                    Logout
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : (
-              <Button 
-                variant="ghost" 
-                onClick={() => navigate('/login')}
-                className="gap-2 text-gray-700 hover:bg-gray-100 rounded-full"
-              >
-                <User className="w-4 h-4" />
-                <span className="hidden sm:inline">Login</span>
-              </Button>
-            )}
+                  {isAuthenticated ? (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button className="flex items-center gap-2 p-1 rounded-full hover:bg-gray-100 transition-colors">
+                          <Avatar className="h-8 w-8 bg-gray-900 text-white">
+                            <AvatarFallback className="bg-gray-900 text-white text-sm">
+                              {userData?.name?.charAt(0) || 'U'}
+                            </AvatarFallback>
+                          </Avatar>
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="bg-white border border-gray-200 shadow-lg rounded-xl">
+                        <DropdownMenuItem className="text-gray-700">
+                          <User className="w-4 h-4 mr-2" />
+                          {userData?.name || 'User'}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={handleLogout} className="text-red-600 hover:text-red-700">
+                          <LogOut className="w-4 h-4 mr-2" />
+                          Logout
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  ) : (
+                    <Button 
+                      variant="ghost" 
+                      onClick={() => navigate('/login')}
+                      className="gap-2 text-gray-700 hover:bg-gray-100 rounded-full"
+                    >
+                      <User className="w-4 h-4" />
+                      <span className="hidden sm:inline">Login</span>
+                    </Button>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* Mobile Menu Button */}
             <button 
@@ -188,24 +230,6 @@ const Header = () => {
               {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
           </div>
-        </div>
-
-        {/* Search Bar Row */}
-        <div className="hidden md:flex items-center justify-center pb-4">
-          <form onSubmit={handleSearch} className="flex items-center gap-2 w-full max-w-xl">
-            <div className="relative flex-1">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <Input
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search properties..."
-                className="pl-10 h-10 bg-gray-50 border-gray-200 rounded-full"
-              />
-            </div>
-            <Button type="submit" className="bg-gray-900 text-white hover:bg-gray-800 rounded-full h-10 px-6">
-              Search
-            </Button>
-          </form>
         </div>
       </div>
 
@@ -219,6 +243,22 @@ const Header = () => {
             className="lg:hidden bg-white border-t border-gray-100"
           >
             <div className="px-4 py-4 space-y-2">
+              {/* Mobile Search */}
+              <form onSubmit={handleSearch} className="flex items-center gap-2 mb-4">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Input
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search..."
+                    className="pl-10 bg-gray-50 border-gray-200 rounded-full"
+                  />
+                </div>
+                <Button type="submit" size="sm" className="bg-gray-900 text-white rounded-full">
+                  Search
+                </Button>
+              </form>
+
               {navLinks.map((link) => (
                 <NavLink
                   key={link.to}

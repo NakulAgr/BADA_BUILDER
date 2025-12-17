@@ -7,8 +7,8 @@ const GlobalSearchBar = () => {
   const location = useLocation();
   const [serviceSearch, setServiceSearch] = useState('');
   
-  // Don't show on these pages
-  if (location.pathname === '/search' || location.pathname === '/') {
+  // Don't show on search results page
+  if (location.pathname === '/search') {
     return null;
   }
 
