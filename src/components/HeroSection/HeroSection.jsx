@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
-import { Search, MapPin, Home, ChevronDown } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { Search, MapPin, Home, ChevronDown, Check, X } from 'lucide-react';
 
 // Shadcn UI Components
 import { Button } from '@/components/ui/button';
@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils';
 
 const HeroSection = () => {
   const navigate = useNavigate();
+  const locationState = useLocation();
   const [location, setLocation] = useState('');
   const [propertyType, setPropertyType] = useState('');
   const [bhkType, setBhkType] = useState('');
@@ -17,8 +18,28 @@ const HeroSection = () => {
   const [locationOpen, setLocationOpen] = useState(false);
   const [propertyOpen, setPropertyOpen] = useState(false);
   const [possessionOpen, setPossessionOpen] = useState(false);
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
 
   const showBhkType = ['Flat', 'House', 'Villa'].includes(propertyType);
+
+  // Handle success message from booking redirect
+  useEffect(() => {
+    if (locationState.state?.successMessage) {
+      setSuccessMessage(locationState.state.successMessage);
+      setShowSuccessMessage(true);
+      
+      // Auto-hide after 5 seconds
+      const timer = setTimeout(() => {
+        setShowSuccessMessage(false);
+      }, 5000);
+      
+      // Clear the state to prevent showing again on refresh
+      navigate('/', { replace: true });
+      
+      return () => clearTimeout(timer);
+    }
+  }, [locationState.state, navigate]);
 
   const handlePropertyTypeChange = (value) => {
     setPropertyType(value);
@@ -108,6 +129,29 @@ const HeroSection = () => {
 
   return (
     <section className="relative min-h-[70vh] flex items-center justify-center bg-gray-100">
+      {/* Success Message */}
+      <AnimatePresence>
+        {showSuccessMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: -50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -50 }}
+            className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-green-500 text-white px-6 py-4 rounded-lg shadow-lg flex items-center gap-3 max-w-md"
+          >
+            <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center">
+              <Check className="w-4 h-4 text-green-500" />
+            </div>
+            <p className="text-sm font-medium">{successMessage}</p>
+            <button
+              onClick={() => setShowSuccessMessage(false)}
+              className="ml-2 text-white hover:text-gray-200 transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      
       <div className="relative z-10 container mx-auto px-4 text-center">
         {/* Tagline */}
         <motion.p

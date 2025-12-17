@@ -33,8 +33,8 @@ export const performanceMonitor = {
     }
   },
 
-  // Simple retry mechanism for failed operations
-  retryOperation: async (operation, maxRetries = 2, delay = 1000) => {
+  // Enhanced retry mechanism for failed operations
+  retryOperation: async (operation, maxRetries = 2, delay = 500) => {
     let lastError;
     
     for (let attempt = 1; attempt <= maxRetries + 1; attempt++) {
@@ -43,14 +43,45 @@ export const performanceMonitor = {
       } catch (error) {
         lastError = error;
         
+        // Don't retry certain errors
+        if (error.code === 'auth/invalid-credential' || 
+            error.code === 'auth/user-not-found' ||
+            error.code === 'auth/wrong-password' ||
+            error.code === 'auth/email-already-in-use') {
+          throw error;
+        }
+        
         if (attempt <= maxRetries) {
-          console.warn(`Retry attempt ${attempt}/${maxRetries} after ${delay}ms`);
+          console.warn(`Retry attempt ${attempt}/${maxRetries} after ${delay}ms for:`, error.code || error.message);
           await new Promise(resolve => setTimeout(resolve, delay));
-          delay *= 1.5; // Exponential backoff
+          delay *= 1.2; // Moderate exponential backoff
         }
       }
     }
     
     throw lastError;
+  },
+
+  // Optimize network requests with timeout
+  timeoutPromise: (promise, timeoutMs = 10000) => {
+    return Promise.race([
+      promise,
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Operation timed out')), timeoutMs)
+      )
+    ]);
+  },
+
+  // Batch multiple operations to reduce overhead
+  batchOperations: async (operations, batchSize = 3) => {
+    const results = [];
+    
+    for (let i = 0; i < operations.length; i += batchSize) {
+      const batch = operations.slice(i, i + batchSize);
+      const batchResults = await Promise.allSettled(batch.map(op => op()));
+      results.push(...batchResults);
+    }
+    
+    return results;
   }
 };

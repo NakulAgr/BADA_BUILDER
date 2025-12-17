@@ -12,17 +12,19 @@ import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 
 import logo from '../../assets/logo.png';
-import SearchBar from '../SearchBar/SearchBar';
+import './Header.css';
 
 const Header = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { userData, isAuthenticated, logout, isSubscribed } = useAuth();
+  const { userData, isAuthenticated, logout, isSubscribed, currentUser } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [searchExpanded, setSearchExpanded] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const searchInputRef = useRef(null);
+  const profileDropdownRef = useRef(null);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -41,24 +43,48 @@ const Header = () => {
     }
   }, [searchExpanded]);
 
-  // Close search on click outside
+  // Close search and profile dropdown on click outside
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (searchExpanded && !e.target.closest('.search-container')) {
         setSearchExpanded(false);
       }
+      if (showProfileDropdown && profileDropdownRef.current && !profileDropdownRef.current.contains(e.target)) {
+        setShowProfileDropdown(false);
+      }
     };
     document.addEventListener('click', handleClickOutside);
     return () => document.removeEventListener('click', handleClickOutside);
-  }, [searchExpanded]);
+  }, [searchExpanded, showProfileDropdown]);
 
   const handleLogout = async () => {
     try {
       await logout();
+      setShowProfileDropdown(false);
       navigate('/');
     } catch (error) {
       console.error('Logout failed:', error);
     }
+  };
+
+  // Helper functions for user data
+  const getUserInitials = () => {
+    if (userData?.name) {
+      return userData.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+    }
+    return currentUser?.email?.[0]?.toUpperCase() || 'U';
+  };
+
+  const getUserDisplayName = () => {
+    return userData?.name || currentUser?.displayName || 'User';
+  };
+
+  const getUserEmail = () => {
+    return userData?.email || currentUser?.email || 'No email';
+  };
+
+  const getUserPhone = () => {
+    return userData?.phone || currentUser?.phoneNumber || 'Not provided';
   };
 
   const handlePostProperty = () => {
@@ -187,27 +213,77 @@ const Header = () => {
                   </Button>
 
                   {isAuthenticated ? (
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <button className="flex items-center gap-2 p-1 rounded-full hover:bg-gray-100 transition-colors">
-                          <Avatar className="h-8 w-8 bg-gray-900 text-white">
-                            <AvatarFallback className="bg-gray-900 text-white text-sm">
-                              {userData?.name?.charAt(0) || 'U'}
-                            </AvatarFallback>
-                          </Avatar>
-                        </button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="bg-white border border-gray-200 shadow-lg rounded-xl">
-                        <DropdownMenuItem className="text-gray-700">
-                          <User className="w-4 h-4 mr-2" />
-                          {userData?.name || 'User'}
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={handleLogout} className="text-red-600 hover:text-red-700">
-                          <LogOut className="w-4 h-4 mr-2" />
-                          Logout
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <div className="relative" ref={profileDropdownRef}>
+                      <button 
+                        onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+                        className="flex items-center gap-2 p-1 rounded-full hover:bg-gray-100 transition-colors"
+                      >
+                        <Avatar className="h-8 w-8 bg-gray-900 text-white">
+                          <AvatarFallback className="bg-gray-900 text-white text-sm">
+                            {getUserInitials()}
+                          </AvatarFallback>
+                        </Avatar>
+                      </button>
+
+                      <AnimatePresence>
+                        {showProfileDropdown && (
+                          <motion.div 
+                            initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                            transition={{ duration: 0.2 }}
+                            className="profile-dropdown absolute right-0 mt-2 w-80 bg-white border border-gray-200 shadow-lg rounded-xl z-50"
+                          >
+                          <div className="profile-dropdown-header p-4 border-b border-gray-100">
+                            <div className="flex items-center gap-3">
+                              <div className="profile-dropdown-avatar w-12 h-12 bg-gray-900 text-white rounded-full flex items-center justify-center font-semibold">
+                                {getUserInitials()}
+                              </div>
+                              <div className="profile-dropdown-info flex-1">
+                                <div className="profile-dropdown-name font-semibold text-gray-900">
+                                  {getUserDisplayName()}
+                                </div>
+                                <div className="profile-dropdown-email text-sm text-gray-600">
+                                  {getUserEmail()}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="profile-dropdown-divider"></div>
+
+                          <div className="profile-dropdown-details p-4 space-y-3">
+                            <div className="profile-detail-item flex justify-between">
+                              <span className="profile-detail-label text-sm font-medium text-gray-500">Name:</span>
+                              <span className="profile-detail-value text-sm text-gray-900">{getUserDisplayName()}</span>
+                            </div>
+                            <div className="profile-detail-item flex justify-between">
+                              <span className="profile-detail-label text-sm font-medium text-gray-500">Email:</span>
+                              <span className="profile-detail-value text-sm text-gray-900">{getUserEmail()}</span>
+                            </div>
+                            <div className="profile-detail-item flex justify-between">
+                              <span className="profile-detail-label text-sm font-medium text-gray-500">Phone:</span>
+                              <span className="profile-detail-value text-sm text-gray-900">{getUserPhone()}</span>
+                            </div>
+                          </div>
+
+                          <div className="profile-dropdown-divider border-t border-gray-100"></div>
+
+                          <div className="p-2">
+                            <button 
+                              onClick={handleLogout}
+                              className="profile-dropdown-logout w-full flex items-center gap-2 px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                              </svg>
+                              Logout
+                            </button>
+                          </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
                   ) : (
                     <Button 
                       variant="ghost" 
@@ -275,6 +351,44 @@ const Header = () => {
                 <Plus className="w-4 h-4 mr-2" />
                 Post Property
               </Button>
+
+              {/* Mobile Profile Section */}
+              {isAuthenticated && (
+                <div className="mt-4 p-4 bg-gray-50 rounded-xl">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 bg-gray-900 text-white rounded-full flex items-center justify-center font-semibold text-sm">
+                      {getUserInitials()}
+                    </div>
+                    <div>
+                      <div className="font-semibold text-gray-900 text-sm">{getUserDisplayName()}</div>
+                      <div className="text-xs text-gray-600">{getUserEmail()}</div>
+                    </div>
+                  </div>
+                  <div className="space-y-2 text-xs">
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Phone:</span>
+                      <span className="text-gray-900">{getUserPhone()}</span>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={handleLogout}
+                    className="w-full mt-3 flex items-center justify-center gap-2 px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors text-sm"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Logout
+                  </button>
+                </div>
+              )}
+
+              {!isAuthenticated && (
+                <Button 
+                  onClick={() => navigate('/login')}
+                  className="w-full mt-4 bg-gray-100 text-gray-900 hover:bg-gray-200 rounded-full"
+                >
+                  <User className="w-4 h-4 mr-2" />
+                  Login
+                </Button>
+              )}
             </div>
           </motion.div>
         )}

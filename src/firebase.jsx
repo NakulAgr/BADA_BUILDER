@@ -1,7 +1,7 @@
 
 import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
-import { getFirestore, enableNetwork } from "firebase/firestore";
+import { getAuth, connectAuthEmulator } from "firebase/auth";
+import { getFirestore, enableNetwork, connectFirestoreEmulator } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
 
@@ -25,12 +25,20 @@ const storage = getStorage(app);
 
 // Optimize Firebase performance
 if (typeof window !== 'undefined') {
+  // Enable auth persistence for faster subsequent loads
+  auth.settings = {
+    appVerificationDisabledForTesting: false
+  };
+  
   // Enable network for faster connections
   try {
     enableNetwork(db);
   } catch (error) {
     console.warn('Network optimization not applied:', error);
   }
+  
+  // Preload auth state to reduce initial buffering
+  auth.onAuthStateChanged(() => {}, () => {});
 }
 
 export {

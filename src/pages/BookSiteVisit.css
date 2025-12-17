@@ -1082,3 +1082,853 @@ button:not([type='submit']):not(.cancel-btn):hover {
     font-size: 0.8rem;
   }
 }
+
+/* Custom DatePicker Styles */
+.react-datepicker-wrapper {
+  width: 100%;
+  display: block;
+}
+
+.react-datepicker__input-container {
+  width: 100%;
+  display: block;
+}
+
+.react-datepicker__input-container input {
+  width: 100% !important;
+  height: 42px !important;
+  padding: 0.5rem 1rem 0.5rem 2.5rem !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 0.5rem !important;
+  background-color: #f9fafb !important;
+  font-size: 0.875rem !important;
+  transition: all 0.2s !important;
+  box-sizing: border-box !important;
+  line-height: 1.25rem !important;
+}
+
+.react-datepicker__input-container input:focus {
+  outline: none !important;
+  box-shadow: 0 0 0 2px #111827 !important;
+  border-color: #111827 !important;
+}
+
+.react-datepicker__input-container input::placeholder {
+  color: #9ca3af !important;
+  font-size: 0.875rem !important;
+}
+
+.react-datepicker {
+  font-family: inherit;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.react-datepicker__header {
+  background-color: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+  border-radius: 0.75rem 0.75rem 0 0;
+  padding: 1rem;
+}
+
+.react-datepicker__current-month {
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 0.5rem;
+}
+
+.react-datepicker__day-names {
+  margin-bottom: 0.5rem;
+}
+
+.react-datepicker__day-name {
+  color: #6b7280;
+  font-weight: 500;
+  font-size: 0.75rem;
+}
+
+.react-datepicker__day {
+  color: #374151;
+  border-radius: 0.375rem;
+  transition: all 0.2s;
+  margin: 0.125rem;
+  width: 2rem;
+  height: 2rem;
+  line-height: 2rem;
+}
+
+.react-datepicker__day:hover {
+  background-color: #f3f4f6;
+  color: #111827;
+}
+
+.react-datepicker__day--selected {
+  background-color: #111827 !important;
+  color: white !important;
+}
+
+.react-datepicker__day--today {
+  background-color: #dbeafe;
+  color: #1e40af;
+  font-weight: 600;
+}
+
+.react-datepicker__day--disabled {
+  color: #d1d5db !important;
+  cursor: not-allowed;
+}
+
+.react-datepicker__day--disabled:hover {
+  background-color: transparent !important;
+}
+
+.react-datepicker__navigation {
+  top: 1.25rem;
+}
+
+.react-datepicker__navigation--previous {
+  left: 1rem;
+}
+
+.react-datepicker__navigation--next {
+  right: 1rem;
+}
+
+.react-datepicker__navigation-icon::before {
+  border-color: #6b7280;
+  border-width: 2px 2px 0 0;
+}
+
+.react-datepicker__navigation:hover .react-datepicker__navigation-icon::before {
+  border-color: #111827;
+}
+
+/* Google Maps Modal Styles */
+.gm-style-iw {
+  border-radius: 0.5rem;
+}
+
+.gm-style .gm-style-iw-c {
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* Custom marker styles */
+.custom-marker {
+  background-color: #ef4444;
+  border: 3px solid white;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Date Time Grid Layout */
+.date-time-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+/* Modern UI styling for date-time section */
+.date-time-grid > div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.date-time-grid .relative {
+  position: relative;
+  width: 100%;
+}
+
+.date-time-grid input,
+.date-time-grid [data-radix-select-trigger] {
+  height: 42px !important;
+  min-height: 42px !important;
+  border-radius: 0.5rem !important;
+  border: 1px solid #e5e7eb !important;
+  background-color: #f9fafb !important;
+  font-size: 0.875rem !important;
+  transition: all 0.2s ease !important;
+  box-sizing: border-box !important;
+}
+
+.date-time-grid input:focus,
+.date-time-grid [data-radix-select-trigger]:focus {
+  outline: none !important;
+  border-color: #111827 !important;
+  box-shadow: 0 0 0 2px rgba(17, 24, 39, 0.1) !important;
+}
+
+/* Fix for date/time picker layout issues */
+.space-y-2 > * + * {
+  margin-top: 0.5rem;
+}
+
+.space-y-4 > * + * {
+  margin-top: 1rem;
+}
+
+/* Ensure proper spacing for form sections */
+.form-section-spacing {
+  margin-bottom: 1.5rem;
+}
+
+.form-section-spacing:last-child {
+  margin-bottom: 0;
+}
+
+/* Fix for select dropdown positioning */
+.relative .absolute {
+  position: absolute;
+}
+
+/* Ensure icons don't interfere with input */
+.pointer-events-none {
+  pointer-events: none;
+}
+
+/* Fix for grid layout on mobile */
+@media (max-width: 768px) {
+  .date-time-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+}
+
+/* Ensure proper height for all form inputs */
+.form-input-height {
+  height: 42px !important;
+  box-sizing: border-box !important;
+}
+
+/* Fix for select trigger width */
+.w-full {
+  width: 100% !important;
+}
+
+/* Prevent text overflow in small containers */
+.text-xs {
+  font-size: 0.75rem;
+  line-height: 1rem;
+  margin-top: 0.25rem;
+}
+
+/* Fix for label spacing */
+.text-sm.font-medium {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+/* Additional Select Component Styling for Consistency */
+[data-radix-select-trigger] {
+  height: 42px !important;
+  min-height: 42px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 0.5rem 1rem 0.5rem 2.5rem !important;
+  font-size: 0.875rem !important;
+  line-height: 1.25rem !important;
+  box-sizing: border-box !important;
+}
+
+/* Specific styling for time select trigger */
+.time-select-trigger[data-radix-select-trigger] {
+  padding: 0.5rem 2.5rem 0.5rem 0.75rem !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.75rem !important;
+  cursor: pointer !important;
+  justify-content: flex-start !important;
+}
+
+/* Ensure consistent styling for both date and time inputs */
+.date-time-grid .relative {
+  position: relative;
+  width: 100%;
+}
+
+.date-time-grid .space-y-2 {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.date-time-grid label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #4b5563;
+  margin-bottom: 0.5rem;
+}
+
+/* Ensure icons are properly positioned */
+.date-time-grid .absolute {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 20;
+  pointer-events: none;
+  color: #9ca3af;
+  width: 1rem;
+  height: 1rem;
+}
+
+/* Ensure proper padding for time select trigger */
+.date-time-grid .time-select-trigger {
+  padding: 0.5rem 2.5rem 0.5rem 0.75rem !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.75rem !important;
+  cursor: pointer !important;
+  justify-content: flex-start !important;
+}
+
+/* Help text styling */
+.date-time-grid .text-xs {
+  font-size: 0.75rem;
+  line-height: 1rem;
+  color: #6b7280;
+  margin-top: 0.25rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .date-time-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .date-time-grid .space-y-2 {
+    margin-bottom: 1rem;
+  }
+  
+  .date-time-grid .space-y-2:last-child {
+    margin-bottom: 0;
+  }
+}
+/* Modern Date-Time Picker UI Enhancements */
+.date-time-grid {
+  background: #ffffff;
+  padding: 0;
+  border-radius: 0;
+  border: none;
+}
+
+.date-time-grid label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #4b5563;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+/* Ensure consistent input styling */
+.date-time-grid .react-datepicker__input-container input {
+  height: 42px !important;
+  padding: 0.5rem 1rem 0.5rem 2.5rem !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 0.5rem !important;
+  background-color: #f9fafb !important;
+  font-size: 0.875rem !important;
+  line-height: 1.25rem !important;
+  transition: all 0.2s ease !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+}
+
+.date-time-grid .time-select-trigger {
+  height: 42px !important;
+  padding: 0.5rem 2.5rem 0.5rem 0.75rem !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 0.5rem !important;
+  background-color: #f9fafb !important;
+  font-size: 0.875rem !important;
+  line-height: 1.25rem !important;
+  transition: all 0.2s ease !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+}
+
+.date-time-grid .react-datepicker__input-container input:focus,
+.date-time-grid .time-select-trigger:focus {
+  outline: none !important;
+  border-color: #111827 !important;
+  box-shadow: 0 0 0 2px rgba(17, 24, 39, 0.1) !important;
+}
+
+/* Help text styling */
+.date-time-grid .text-xs {
+  font-size: 0.75rem;
+  line-height: 1rem;
+  color: #6b7280;
+  margin-top: 0.25rem;
+  font-style: normal;
+}
+
+/* Responsive grid behavior */
+@media (max-width: 768px) {
+  .date-time-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .date-time-grid > div:first-child {
+    margin-bottom: 0.5rem;
+  }
+}
+
+/* Clean spacing and alignment */
+.date-time-grid > div {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: stretch;
+}
+
+.date-time-grid .space-y-2 {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Ensure select dropdown doesn't interfere with layout */
+.date-time-grid [data-radix-select-content] {
+  z-index: 50;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* Icon positioning fix for both inputs */
+.date-time-grid .relative .absolute {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 20;
+  pointer-events: none;
+  color: #9ca3af;
+  width: 1rem;
+  height: 1rem;
+}
+/* Specific DatePicker input styling to match Select component */
+.date-picker-input {
+  height: 42px !important;
+  padding: 0.5rem 1rem 0.5rem 2.5rem !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 0.5rem !important;
+  background-color: #f9fafb !important;
+  font-size: 0.875rem !important;
+  line-height: 1.25rem !important;
+  transition: all 0.2s ease !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+}
+
+.date-picker-input:focus {
+  outline: none !important;
+  border-color: #111827 !important;
+  box-shadow: 0 0 0 2px rgba(17, 24, 39, 0.1) !important;
+}
+
+.date-picker-input::placeholder {
+  color: #9ca3af !important;
+  font-size: 0.875rem !important;
+}
+
+/* Override any conflicting DatePicker wrapper styles */
+.date-time-grid .react-datepicker-wrapper {
+  width: 100%;
+  display: block;
+}
+
+.date-time-grid .react-datepicker__input-container {
+  width: 100%;
+  display: block;
+}
+
+/* Ensure both inputs have exactly the same appearance */
+.date-time-grid input.date-picker-input {
+  height: 42px !important;
+  min-height: 42px !important;
+  max-height: 42px !important;
+  padding: 0.5rem 1rem 0.5rem 2.5rem !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 0.5rem !important;
+  background-color: #f9fafb !important;
+  font-size: 0.875rem !important;
+  line-height: 1.25rem !important;
+  font-family: inherit !important;
+  color: #111827 !important;
+  transition: all 0.2s ease !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.date-time-grid .time-select-trigger {
+  height: 42px !important;
+  min-height: 42px !important;
+  max-height: 42px !important;
+  padding: 0.5rem 2.5rem 0.5rem 0.75rem !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 0.5rem !important;
+  background-color: #f9fafb !important;
+  font-size: 0.875rem !important;
+  line-height: 1.25rem !important;
+  font-family: inherit !important;
+  color: #111827 !important;
+  transition: all 0.2s ease !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+}
+
+.date-time-grid input.date-picker-input:focus {
+  outline: none !important;
+  border-color: #111827 !important;
+  box-shadow: 0 0 0 2px rgba(17, 24, 39, 0.1) !important;
+  background-color: #ffffff !important;
+}
+
+.date-time-grid .time-select-trigger:focus {
+  outline: none !important;
+  border-color: #111827 !important;
+  box-shadow: 0 0 0 2px rgba(17, 24, 39, 0.1) !important;
+  background-color: #ffffff !important;
+}
+/* Ensure Select component is fully clickable */
+.time-select-trigger[data-radix-select-trigger] {
+  justify-content: flex-start !important;
+  cursor: pointer !important;
+}
+
+.time-select-trigger[data-radix-select-trigger] > span[data-radix-select-value] {
+  flex: 1 !important;
+  text-align: left !important;
+}
+/* Unified styling for both date and time pickers */
+.date-picker-container,
+.time-picker-container {
+  position: relative;
+  width: 100%;
+}
+
+/* Removed - now handled by unified rules below */
+
+.time-select-trigger {
+  height: 42px !important;
+  min-height: 42px !important;
+  max-height: 42px !important;
+  padding: 0.5rem 2.5rem 0.5rem 0.75rem !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 0.5rem !important;
+  background-color: #f9fafb !important;
+  font-size: 0.875rem !important;
+  line-height: 1.25rem !important;
+  font-family: inherit !important;
+  color: #111827 !important;
+  transition: all 0.2s ease !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.75rem !important;
+  cursor: pointer !important;
+  justify-content: flex-start !important;
+}
+
+.date-select-trigger:hover,
+.time-select-trigger:hover {
+  border-color: #d1d5db !important;
+}
+
+.date-select-trigger:focus,
+.date-select-trigger:focus-within,
+.time-select-trigger:focus {
+  outline: none !important;
+  border-color: #111827 !important;
+  box-shadow: 0 0 0 2px rgba(17, 24, 39, 0.1) !important;
+  background-color: #ffffff !important;
+}
+
+/* DatePicker input styling */
+.date-picker-input {
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  font-size: 0.875rem !important;
+  color: #111827 !important;
+  cursor: pointer !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  width: 100% !important;
+  flex: 1 !important;
+  text-align: left !important;
+}
+
+.date-picker-input:focus {
+  outline: none !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+.date-picker-input::placeholder {
+  color: #9ca3af !important;
+  font-size: 0.875rem !important;
+}
+
+/* Override DatePicker wrapper styles */
+.date-picker-container .react-datepicker-wrapper {
+  width: 100% !important;
+}
+
+.date-picker-container .react-datepicker__input-container {
+  width: 100% !important;
+}
+
+/* Ensure icons are positioned correctly and don't block clicks */
+.date-picker-container .absolute {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  pointer-events: none;
+  color: #9ca3af;
+  width: 1rem;
+  height: 1rem;
+}
+
+.date-picker-container .absolute:first-child {
+  left: 0.75rem;
+}
+
+.date-picker-container .absolute:last-child {
+  right: 0.75rem;
+}
+/* Ensure SelectValue text doesn't overlap with clock icon */
+.time-select-trigger[data-radix-select-trigger] > span[data-radix-select-value] {
+  flex: 1 !important;
+  text-align: left !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Ensure clock icon is properly styled inside SelectTrigger */
+.time-select-trigger .lucide-clock {
+  width: 1rem !important;
+  height: 1rem !important;
+  color: #9ca3af !important;
+  flex-shrink: 0 !important;
+}
+
+/* Override any conflicting Radix UI styles */
+.time-select-trigger[data-radix-select-trigger] {
+  justify-content: flex-start !important;
+}
+/* Ensure both date wrapper and time trigger look identical */
+.date-select-wrapper,
+.time-select-trigger {
+  height: 42px !important;
+  min-height: 42px !important;
+  max-height: 42px !important;
+  padding: 0.5rem 0.75rem !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 0.5rem !important;
+  background-color: #f9fafb !important;
+  font-size: 0.875rem !important;
+  line-height: 1.25rem !important;
+  font-family: inherit !important;
+  color: #111827 !important;
+  transition: all 0.2s ease !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.75rem !important;
+  cursor: pointer !important;
+  justify-content: flex-start !important;
+}
+
+.date-select-wrapper:hover,
+.time-select-trigger:hover {
+  border-color: #d1d5db !important;
+}
+
+.date-select-wrapper:focus-within,
+.time-select-trigger:focus {
+  outline: none !important;
+  border-color: #111827 !important;
+  box-shadow: 0 0 0 2px rgba(17, 24, 39, 0.1) !important;
+  background-color: #ffffff !important;
+}
+
+/* Ensure icons in both components are styled consistently */
+.date-select-wrapper .lucide-calendar-days,
+.time-select-trigger .lucide-clock {
+  width: 1rem !important;
+  height: 1rem !important;
+  color: #9ca3af !important;
+  flex-shrink: 0 !important;
+}
+
+/* Ensure dropdown arrows are styled consistently */
+.date-select-wrapper svg:last-child,
+.time-select-trigger svg:last-child {
+  width: 1rem !important;
+  height: 1rem !important;
+  color: #9ca3af !important;
+  flex-shrink: 0 !important;
+}
+/* Ensure disabled time picker has consistent styling */
+.time-select-trigger[data-disabled="true"],
+.time-select-trigger:disabled {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+  background-color: #f3f4f6 !important;
+}
+
+.time-select-trigger[data-disabled="true"]:hover,
+.time-select-trigger:disabled:hover {
+  border-color: #e5e7eb !important;
+  background-color: #f3f4f6 !important;
+}
+
+/* Ensure both inputs have exactly the same dimensions */
+.date-select-wrapper,
+.time-select-trigger[data-radix-select-trigger] {
+  height: 42px !important;
+  min-height: 42px !important;
+  max-height: 42px !important;
+  padding: 0.5rem 0.75rem !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 0.5rem !important;
+  background-color: #f9fafb !important;
+  font-size: 0.875rem !important;
+  line-height: 1.25rem !important;
+  font-family: inherit !important;
+  color: #111827 !important;
+  transition: all 0.2s ease !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.75rem !important;
+  cursor: pointer !important;
+  justify-content: flex-start !important;
+}
+
+/* Override any Radix UI default styles that might interfere */
+.time-select-trigger[data-radix-select-trigger] {
+  padding: 0.5rem 0.75rem !important;
+  gap: 0.75rem !important;
+}
+
+.time-select-trigger[data-radix-select-trigger] > span[data-radix-select-value] {
+  flex: 1 !important;
+  text-align: left !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+/* Google Maps Container - Ensure proper rendering */
+.google-map-container {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 400px !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+/* Ensure Google Maps renders properly in modal */
+.google-map-container > div {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Fix Google Maps controls positioning */
+.google-map-container .gm-style {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.google-map-container .gm-style > div:first-child {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Ensure map tiles load properly */
+.google-map-container .gm-style .gm-style-mtc {
+  display: none !important;
+}
+
+.google-map-container .gm-style .gm-bundled-control {
+  margin: 10px !important;
+}
+
+/* Loading state for map container */
+.google-map-container.loading {
+  background: #f3f4f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.google-map-container.loading::before {
+  content: 'Loading map...';
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+/* Ensure modal has proper dimensions for map */
+.map-modal-content {
+  min-height: 600px !important;
+  max-height: 90vh !important;
+}
+
+/* Fix for map not showing in modal */
+.map-modal-content .flex-1 {
+  min-height: 400px !important;
+  flex: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+/* Ensure proper z-index for map elements */
+.google-map-container .gm-style-iw-c {
+  z-index: 1000 !important;
+}
+
+.google-map-container .gm-style-iw-d {
+  overflow: auto !important;
+}
+
+/* Custom marker styles */
+.google-map-container .gm-style .gm-style-iw {
+  border-radius: 8px !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Responsive map container */
+@media (max-width: 768px) {
+  .google-map-container {
+    min-height: 300px !important;
+  }
+  
+  .map-modal-content {
+    min-height: 500px !important;
+    max-height: 95vh !important;
+  }
+}
