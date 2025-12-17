@@ -1,478 +1,266 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { collection, addDoc } from 'firebase/firestore';
+import PropTypes from "prop-types";
 import { db } from '../../firebase';
-import './LeadModal.css';
+import { collection, addDoc } from 'firebase/firestore';
+import { X, User, Mail, Phone, Home, MessageSquare, CheckCircle, Loader2 } from 'lucide-react';
 
-const LeadModal = ({ isOpen, onClose }) => {
+// Shadcn UI Components
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+
+const LeadModal = ({ isOpen, onClose, propertyTitle = '', source = 'General' }) => {
   const [formData, setFormData] = useState({
     name: '',
-    requirementType: '',
-    bhkType: '',
-    budget: '',
-    location: '',
-    phone: ''
+    email: '',
+    phone: '',
+    propertyType: '',
+    message: ''
   });
+  const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
 
-  // Refs for form fields to enable auto-scroll
-  const nameRef = useRef(null);
-  const requirementTypeRef = useRef(null);
-  const bhkTypeRef = useRef(null);
-  const budgetRef = useRef(null);
-  const locationRef = useRef(null);
-  const phoneRef = useRef(null);
-  const modalBodyRef = useRef(null);
-
-  // Simplified auto-scroll function
-  const scrollToNextField = (currentField) => {
-    if (!modalBodyRef.current) return;
-
-    // Determine next field based on form logic
-    let nextField = null;
-    
-    if (currentField === 'name') {
-      nextField = 'requirementType';
-    } else if (currentField === 'requirementType') {
-      const showBhkType = ['Flat', 'House', 'Villa'].includes(formData.requirementType);
-      nextField = showBhkType ? 'bhkType' : 'budget';
-    } else if (currentField === 'bhkType') {
-      nextField = 'budget';
-    } else if (currentField === 'budget') {
-      nextField = 'location';
-    } else if (currentField === 'location') {
-      nextField = 'phone';
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+      // Reset form when modal closes
+      setTimeout(() => {
+        setFormData({ name: '', email: '', phone: '', propertyType: '', message: '' });
+        setErrors({});
+        setSuccess(false);
+      }, 300);
     }
-
-    // Simple scroll without heavy animations
-    if (nextField) {
-      requestAnimationFrame(() => {
-        const nextElement = document.getElementById(nextField);
-        if (nextElement && modalBodyRef.current) {
-          nextElement.scrollIntoView({ 
-            behavior: 'smooth', 
-            block: 'center' 
-          });
-          // Focus after a short delay
-          setTimeout(() => nextElement.focus(), 200);
-        }
-      });
-    }
-  };
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    
-    // If property type changes, reset BHK type and budget
-    if (name === 'requirementType') {
-      setFormData(prev => ({ ...prev, [name]: value, bhkType: '', budget: '' }));
-      if (value) scrollToNextField(name);
-    } 
-    // If BHK type changes, reset budget
-    else if (name === 'bhkType') {
-      setFormData(prev => ({ ...prev, [name]: value, budget: '' }));
-      if (value) scrollToNextField(name);
-    } 
-    else {
-      setFormData(prev => ({ ...prev, [name]: value }));
-      // Only auto-scroll for select fields to reduce performance impact
-      if (value && ['budget'].includes(name)) {
-        scrollToNextField(name);
-      }
-    }
-    
-    setError('');
+    setFormData(prev => ({ ...prev, [name]: value }));
+    if (errors[name]) setErrors(prev => ({ ...prev, [name]: null }));
   };
 
-  // Check if BHK type should be shown
-  const showBhkType = ['Flat', 'House', 'Villa'].includes(formData.requirementType);
-  
-  // Check if Budget should be shown - after property type is selected, and for BHK types after BHK is selected
-  const showBudget = formData.requirementType && (
-    !showBhkType || (showBhkType && formData.bhkType)
-  );
+  const handleSelectChange = (value) => {
+    setFormData(prev => ({ ...prev, propertyType: value }));
+    if (errors.propertyType) setErrors(prev => ({ ...prev, propertyType: null }));
+  };
 
-  // Simplified auto-scroll when new fields appear
-  useEffect(() => {
-    if (showBhkType && formData.requirementType && !formData.bhkType) {
-      requestAnimationFrame(() => {
-        const bhkElement = document.getElementById('bhkType');
-        if (bhkElement) {
-          bhkElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-      });
-    }
-  }, [showBhkType, formData.requirementType]);
-
-  useEffect(() => {
-    if (showBudget && ((showBhkType && formData.bhkType) || (!showBhkType && formData.requirementType)) && !formData.budget) {
-      requestAnimationFrame(() => {
-        const budgetElement = document.getElementById('budget');
-        if (budgetElement) {
-          budgetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-      });
-    }
-  }, [showBudget, formData.bhkType, formData.requirementType]);
+  const validate = () => {
+    const newErrors = {};
+    if (!formData.name.trim()) newErrors.name = 'Name is required';
+    if (!formData.email.trim()) newErrors.email = 'Email is required';
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) newErrors.email = 'Invalid email';
+    if (!formData.phone.trim()) newErrors.phone = 'Phone is required';
+    else if (!/^[6-9]\d{9}$/.test(formData.phone)) newErrors.phone = 'Invalid phone number';
+    if (!formData.propertyType) newErrors.propertyType = 'Please select property type';
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Validation
-    if (!formData.name || !formData.requirementType || !formData.budget || !formData.location || !formData.phone) {
-      setError('All fields are required');
-      return;
-    }
-
-    // Validate BHK type only if it should be shown
-    if (showBhkType && !formData.bhkType) {
-      setError('Please select BHK type');
-      return;
-    }
-
-    if (!/^\d{10}$/.test(formData.phone)) {
-      setError('Phone number must be 10 digits');
-      return;
-    }
+    if (!validate()) return;
 
     setLoading(true);
-    setError('');
-
     try {
-      // Save to Firestore
-      const leadData = {
-        name: formData.name,
-        requirement_type: formData.requirementType,
-        budget: formData.budget,
-        location: formData.location,
-        phone: formData.phone,
-        created_at: new Date().toISOString()
-      };
-
-      // Only add BHK type if applicable
-      if (showBhkType && formData.bhkType) {
-        leadData.bhk_type = formData.bhkType;
-      }
-
-      await addDoc(collection(db, 'leads'), leadData);
-
-      console.log('✅ Lead saved successfully:', formData);
+      await addDoc(collection(db, 'leads'), {
+        ...formData,
+        propertyTitle,
+        source,
+        created_at: new Date().toISOString(),
+        status: 'new'
+      });
       setSuccess(true);
-      
-      // Close modal after 1.5 seconds
       setTimeout(() => {
-        setFormData({ name: '', requirementType: '', bhkType: '', budget: '', location: '', phone: '' });
-        setSuccess(false);
         onClose();
-      }, 1500);
-    } catch (err) {
-      console.error('❌ Error saving lead:', err);
-      setError(err.message || 'Failed to submit. Please try again.');
+      }, 2000);
+    } catch (error) {
+      console.error('Error submitting lead:', error);
+      setErrors({ submit: 'Failed to submit. Please try again.' });
     } finally {
       setLoading(false);
     }
   };
 
-  if (!isOpen) return null;
+  const propertyTypes = [
+    'Flat/Apartment',
+    'Independent House',
+    'Villa',
+    'Plot/Land',
+    'Commercial Space',
+    'Office',
+    'Other'
+  ];
 
   return (
     <AnimatePresence>
-      <motion.div 
-        className="lead-modal-overlay" 
-        onClick={onClose}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.3 }}
-      >
-        <motion.div 
-          className="lead-modal-content" 
-          onClick={(e) => e.stopPropagation()}
-          initial={{ scale: 0.8, opacity: 0, y: 50 }}
-          animate={{ scale: 1, opacity: 1, y: 0 }}
-          exit={{ scale: 0.8, opacity: 0, y: 50 }}
-          transition={{ type: "spring", duration: 0.5 }}
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+          onClick={(e) => e.target === e.currentTarget && onClose()}
         >
-          <button className="lead-modal-close" onClick={onClose}>&times;</button>
-          
-          {success ? (
-            <motion.div 
-              className="success-message"
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ type: "spring", duration: 0.5 }}
-            >
-              <div className="success-icon">✓</div>
-              <h2>Thank You!</h2>
-              <p>We'll contact you soon</p>
-            </motion.div>
-          ) : (
-            <>
-              <div className="lead-modal-header">
-                <h2 className="lead-modal-title">Find Your Dream Property</h2>
-                <p className="lead-modal-subtitle">Tell us what you're looking for</p>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            className="relative w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden"
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-100">
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">Get in Touch</h2>
+                <p className="text-sm text-gray-500">We'll get back to you within 24 hours</p>
               </div>
-
-              <form onSubmit={handleSubmit} className="lead-modal-form">
-                <div className="lead-modal-body" ref={modalBodyRef}>
-          <div className="form-group">
-            <label htmlFor="name">Name *</label>
-            <input
-              ref={nameRef}
-              type="text"
-              id="name"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              placeholder="Enter your name"
-              required
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="requirementType">Property Type *</label>
-            <select
-              ref={requirementTypeRef}
-              id="requirementType"
-              name="requirementType"
-              value={formData.requirementType}
-              onChange={handleChange}
-              required
-            >
-              <option value="">Select property type</option>
-              <option value="Flat">Flat</option>
-              <option value="House">House</option>
-              <option value="Villa">Villa</option>
-              <option value="Plot">Plot</option>
-              <option value="Commercial">Commercial</option>
-              <option value="Shop">Shop</option>
-              <option value="Office">Office</option>
-              <option value="Warehouse">Warehouse</option>
-              <option value="Showroom">Showroom</option>
-            </select>
-          </div>
-
-          {/* Show BHK Type only for Flat, House, Villa */}
-          {showBhkType && (
-            <motion.div 
-              className="form-group"
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              <label htmlFor="bhkType">BHK Type *</label>
-              <select
-                ref={bhkTypeRef}
-                id="bhkType"
-                name="bhkType"
-                value={formData.bhkType}
-                onChange={handleChange}
-                required
+              <button
+                onClick={onClose}
+                className="p-2 rounded-full hover:bg-gray-100 text-gray-500 transition-colors"
               >
-                <option value="">Select BHK type</option>
-                <option value="1RK">1 RK</option>
-                <option value="1BHK">1 BHK</option>
-                <option value="2BHK">2 BHK</option>
-                <option value="3BHK">3 BHK</option>
-                <option value="4BHK">4 BHK</option>
-                <option value="5BHK">5 BHK</option>
-                <option value="6+BHK">6+ BHK</option>
-              </select>
-            </motion.div>
-          )}
+                <X className="w-5 h-5" />
+              </button>
+            </div>
 
-          {/* Show Budget only after property type is selected, and for BHK types after BHK is selected */}
-          {showBudget && (
-            <motion.div 
-              className="form-group"
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              <label htmlFor="budget">Budget *</label>
-              <select
-                ref={budgetRef}
-                id="budget"
-                name="budget"
-                value={formData.budget}
-                onChange={handleChange}
-                required
-              >
-                <option value="">Select budget range</option>
-                <optgroup label="In Lakhs">
-                  <option value="Under 10 Lakhs">Under ₹10 Lakhs</option>
-                  <option value="10-20 Lakhs">₹10-20 Lakhs</option>
-                  <option value="20-30 Lakhs">₹20-30 Lakhs</option>
-                  <option value="30-40 Lakhs">₹30-40 Lakhs</option>
-                  <option value="40-50 Lakhs">₹40-50 Lakhs</option>
-                  <option value="50-60 Lakhs">₹50-60 Lakhs</option>
-                  <option value="60-70 Lakhs">₹60-70 Lakhs</option>
-                  <option value="70-80 Lakhs">₹70-80 Lakhs</option>
-                  <option value="80-90 Lakhs">₹80-90 Lakhs</option>
-                  <option value="90 Lakhs - 1 Crore">₹90 Lakhs - 1 Crore</option>
-                </optgroup>
-                <optgroup label="In Crores">
-                  <option value="1-2 Crores">₹1-2 Crores</option>
-                  <option value="2-3 Crores">₹2-3 Crores</option>
-                  <option value="3-4 Crores">₹3-4 Crores</option>
-                  <option value="4-5 Crores">₹4-5 Crores</option>
-                  <option value="5-10 Crores">₹5-10 Crores</option>
-                  <option value="10-15 Crores">₹10-15 Crores</option>
-                  <option value="15-20 Crores">₹15-20 Crores</option>
-                  <option value="20-50 Crores">₹20-50 Crores</option>
-                  <option value="Above 50 Crores">Above ₹50 Crores</option>
-                </optgroup>
-              </select>
-            </motion.div>
-          )}
+            {/* Content */}
+            <div className="p-6">
+              {success ? (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="text-center py-8"
+                >
+                  <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
+                    <CheckCircle className="w-8 h-8 text-green-600" />
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">Thank You!</h3>
+                  <p className="text-gray-500">We'll contact you shortly.</p>
+                </motion.div>
+              ) : (
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  {/* Name */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700">Name</label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                      <Input
+                        name="name"
+                        value={formData.name}
+                        onChange={handleChange}
+                        placeholder="Your name"
+                        className="pl-10 bg-gray-50 border-gray-200"
+                      />
+                    </div>
+                    {errors.name && <p className="text-red-500 text-sm">{errors.name}</p>}
+                  </div>
 
-          <div className="form-group">
-            <label htmlFor="location">Location *</label>
-            <input
-              ref={locationRef}
-              type="text"
-              id="location"
-              name="location"
-              value={formData.location}
-              onChange={handleChange}
-              placeholder="Enter city or location"
-              list="location-suggestions"
-              required
-            />
-            <datalist id="location-suggestions">
-              <option value="PAN India" />
-              <option value="Mumbai" />
-              <option value="Delhi" />
-              <option value="Bangalore" />
-              <option value="Hyderabad" />
-              <option value="Ahmedabad" />
-              <option value="Chennai" />
-              <option value="Kolkata" />
-              <option value="Pune" />
-              <option value="Jaipur" />
-              <option value="Surat" />
-              <option value="Lucknow" />
-              <option value="Kanpur" />
-              <option value="Nagpur" />
-              <option value="Indore" />
-              <option value="Thane" />
-              <option value="Bhopal" />
-              <option value="Visakhapatnam" />
-              <option value="Pimpri-Chinchwad" />
-              <option value="Patna" />
-              <option value="Vadodara" />
-              <option value="Ghaziabad" />
-              <option value="Ludhiana" />
-              <option value="Agra" />
-              <option value="Nashik" />
-              <option value="Faridabad" />
-              <option value="Meerut" />
-              <option value="Rajkot" />
-              <option value="Kalyan-Dombivali" />
-              <option value="Vasai-Virar" />
-              <option value="Varanasi" />
-              <option value="Srinagar" />
-              <option value="Aurangabad" />
-              <option value="Dhanbad" />
-              <option value="Amritsar" />
-              <option value="Navi Mumbai" />
-              <option value="Allahabad" />
-              <option value="Ranchi" />
-              <option value="Howrah" />
-              <option value="Coimbatore" />
-              <option value="Jabalpur" />
-              <option value="Gwalior" />
-              <option value="Vijayawada" />
-              <option value="Jodhpur" />
-              <option value="Madurai" />
-              <option value="Raipur" />
-              <option value="Kota" />
-              <option value="Chandigarh" />
-              <option value="Guwahati" />
-              <option value="Solapur" />
-              <option value="Hubli-Dharwad" />
-              <option value="Mysore" />
-              <option value="Tiruchirappalli" />
-              <option value="Bareilly" />
-              <option value="Aligarh" />
-              <option value="Tiruppur" />
-              <option value="Moradabad" />
-              <option value="Jalandhar" />
-              <option value="Bhubaneswar" />
-              <option value="Salem" />
-              <option value="Warangal" />
-              <option value="Mira-Bhayandar" />
-              <option value="Thiruvananthapuram" />
-              <option value="Bhiwandi" />
-              <option value="Saharanpur" />
-              <option value="Guntur" />
-              <option value="Amravati" />
-              <option value="Bikaner" />
-              <option value="Noida" />
-              <option value="Jamshedpur" />
-              <option value="Bhilai" />
-              <option value="Cuttack" />
-              <option value="Firozabad" />
-              <option value="Kochi" />
-              <option value="Nellore" />
-              <option value="Bhavnagar" />
-              <option value="Dehradun" />
-              <option value="Durgapur" />
-              <option value="Asansol" />
-            </datalist>
-          </div>
+                  {/* Email */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700">Email</label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                      <Input
+                        name="email"
+                        type="email"
+                        value={formData.email}
+                        onChange={handleChange}
+                        placeholder="your@email.com"
+                        className="pl-10 bg-gray-50 border-gray-200"
+                      />
+                    </div>
+                    {errors.email && <p className="text-red-500 text-sm">{errors.email}</p>}
+                  </div>
 
-          <div className="form-group">
-            <label htmlFor="phone">Phone Number *</label>
-            <input
-              ref={phoneRef}
-              type="tel"
-              id="phone"
-              name="phone"
-              value={formData.phone}
-              onChange={handleChange}
-              placeholder="10-digit number"
-              maxLength="10"
-              required
-            />
-          </div>
+                  {/* Phone */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700">Phone</label>
+                    <div className="relative">
+                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                      <Input
+                        name="phone"
+                        value={formData.phone}
+                        onChange={handleChange}
+                        placeholder="10-digit mobile number"
+                        maxLength={10}
+                        className="pl-10 bg-gray-50 border-gray-200"
+                      />
+                    </div>
+                    {errors.phone && <p className="text-red-500 text-sm">{errors.phone}</p>}
+                  </div>
 
-                </div>
+                  {/* Property Type */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700">Property Type</label>
+                    <Select value={formData.propertyType} onValueChange={handleSelectChange}>
+                      <SelectTrigger className="bg-gray-50 border-gray-200">
+                        <Home className="h-4 w-4 text-gray-400 mr-2" />
+                        <SelectValue placeholder="Select property type" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white border-gray-200">
+                        {propertyTypes.map(type => (
+                          <SelectItem key={type} value={type}>{type}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {errors.propertyType && <p className="text-red-500 text-sm">{errors.propertyType}</p>}
+                  </div>
 
-                <div className="lead-modal-footer">
-                  {error && (
-                    <motion.p 
-                      className="error-message"
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      style={{ marginBottom: '16px' }}
-                    >
-                      {error}
-                    </motion.p>
+                  {/* Message */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700">Message (Optional)</label>
+                    <div className="relative">
+                      <MessageSquare className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <textarea
+                        name="message"
+                        value={formData.message}
+                        onChange={handleChange}
+                        placeholder="Tell us more about your requirements..."
+                        rows={3}
+                        className="w-full pl-10 pr-4 py-3 text-sm bg-gray-50 border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-gray-300"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Error Message */}
+                  {errors.submit && (
+                    <Alert variant="destructive">
+                      <AlertDescription>{errors.submit}</AlertDescription>
+                    </Alert>
                   )}
 
-                  <button type="submit" className="submit-button" disabled={loading}>
+                  {/* Submit Button */}
+                  <Button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full h-12 bg-gray-900 text-white hover:bg-gray-800"
+                  >
                     {loading ? (
-                      <>
-                        <span className="spinner"></span>
-                        Submitting...
-                      </>
+                      <Loader2 className="w-5 h-5 animate-spin" />
                     ) : (
-                      'Submit'
+                      'Submit Inquiry'
                     )}
-                  </button>
-                </div>
-              </form>
-            </>
-          )}
+                  </Button>
+                </form>
+              )}
+            </div>
+          </motion.div>
         </motion.div>
-      </motion.div>
+      )}
     </AnimatePresence>
   );
+};
+
+LeadModal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  propertyTitle: PropTypes.string,
+  source: PropTypes.string
 };
 
 export default LeadModal;

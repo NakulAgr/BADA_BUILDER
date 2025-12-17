@@ -1,552 +1,245 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import logo from '../../assets/logo.png';
-import UserTypeModal from '../UserTypeModal/UserTypeModal';
-import SearchBar from '../SearchBar/SearchBar';
-import './Header.css';
-import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { auth } from '../../firebase';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
+import { Menu, X, User, LogOut, Plus, ChevronDown, Calculator, GraduationCap, Home, Building2, Phone, Users, Search } from 'lucide-react';
 
-const calcdropdownItems = [
-  { label: "Funds from Operations (FFO)", href: "/calculator/FFO" },
-  { label: "Adjusted Funds from Operations (AFFO)", href: "/calculator/AFFO" },
-  { label: "Net Operating Income (NOI)", href: "/calculator/NOI" },
-  { label: "Cap Rate (Capitalization Rate)", href: "/calculator/CapRate" },
-  { label: "Net Asset Value (NAV)", href: "/calculator/NAV" },
-  { label: "Loan-to-Value Ratio (LTV)", href: "/calculator/LTV" },
-  { label: "Dividend Yield", href: "/calculator/DividendYield" },
-  { label: "Payout Ratio (based on AFFO)", href: "/calculator/PayoutRatio" },
-  { label: "Debt Service Coverage Ratio (DSCR)", href: "/calculator/DSCR" },
-  { label: "Internal Rate of Return (IRR)", href: "/calculator/IRR" },
-  { label: "Total Return", href: "/calculator/TotalReturn" },
-  { label: "Occupancy Rate", href: "/calculator/OccupancyRate" },
-  { label: "EBITDAre", href: "/calculator/EBITDAre" },
-  { label: "Price-to-FFO Ratio (P/FFO)", href: "/calculator/PFFO" },
-  { label: "Discounted Cash Flow (DCF)", href: "/calculator/DCF" },
-  { label: "Net Property Value (NPV)", href: "/calculator/NPV" },
-];
+// Shadcn UI
+import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
+import { cn } from '@/lib/utils';
 
-const dropdownItems = [
-  { label: 'Lease and asset management', href: '/learn/lease-and-asset-management' },
-  { label: 'Market and investment analysis', href: '/learn/market-and-investment-analysis' },
-  { label: 'Real estate financial modelling', href: '/learn/real-estate-financial-modelling' },
-  { label: 'Real estate market research', href: '/learn/real-estate-market-research' },
-  { label: 'Reit valuation and compliance', href: '/learn/reit-valuation-and-compliance' },
-  { label: 'Risk assessment & due diligence', href: '/learn/risk-assessment-due-diligence' },
-  { label: 'Stakeholder communication in Reit', href: '/learn/stakeholder-communication' },
-  { label: 'Types of Reits in India', href: '/learn/types-of-reits-india' },
-  { label: 'Taxation in Reits', href: '/learn/taxation-in-reits' },
-  { label: 'Types Job profiles in Reits', href: '/learn/job-profiles-in-reits' },
-  { label: 'Work of Different job profiles', href: '/learn/work-of-job-profiles' }
-];
+import logo from '../../assets/logo.png';
 
 const Header = () => {
-  const [showDropdown, setShowDropdown] = useState(false);
-  const [CaclshowDropdown, setCaclShowDropdown] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [mobileLearnOpen, setMobileLearnOpen] = useState(false);
-  const [mobileCalcOpen, setMobileCalcOpen] = useState(false);
-  const [isUserTypeModalOpen, setIsUserTypeModalOpen] = useState(false);
-  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [loading, setLoading] = useState(true);
-
-  const timeoutRef = useRef(null);
-  const calctimeoutRef = useRef(null);
-  const profileTimeoutRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
-  const { currentUser, userProfile, loading: authLoading } = useAuth();
-
-  // Use AuthContext instead of direct Firebase listener
-  useEffect(() => {
-    setIsLoggedIn(!!currentUser);
-    setLoading(authLoading);
-  }, [currentUser, authLoading]);
+  const { userData, isAuthenticated, logout, isSubscribed } = useAuth();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
-    return () => {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-      if (calctimeoutRef.current) clearTimeout(calctimeoutRef.current);
-      if (profileTimeoutRef.current) clearTimeout(profileTimeoutRef.current);
-    };
+    const handleScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [location.pathname]);
 
   const handleLogout = async () => {
     try {
-      await signOut(auth);
+      await logout();
       navigate('/');
-      setIsMobileMenuOpen(false);
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error('Logout failed:', error);
     }
   };
 
-  // Handle login click - reset form if already on login page
-  const handleLoginClick = (e) => {
-    if (location.pathname === '/login') {
-      e.preventDefault();
-      // Trigger form reset by navigating with state
-      navigate('/login', { state: { resetForm: true } });
-    }
-    setIsMobileMenuOpen(false);
-  };
-
-  if (loading) {
-    return (
-      <header className="custom-header flex justify-between items-center px-4 md:px-8 py-4 bg-white shadow-sm sticky top-0 z-50">
-        <div className="flex-1 flex justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#58335e]"></div>
-        </div>
-      </header>
-    );
-  }
-
-  const toggleMobileMenu = () => {
-    setIsMobileMenuOpen(!isMobileMenuOpen);
-    if (isMobileMenuOpen) {
-      setMobileLearnOpen(false);
-      setMobileCalcOpen(false);
+  const handlePostProperty = () => {
+    if (!isAuthenticated) {
+      navigate('/login', { state: { from: '/post-property' } });
+    } else if (!isSubscribed) {
+      navigate('/subscription-plans');
+    } else {
+      navigate('/post-property');
     }
   };
 
-  const toggleMobileLearn = () => {
-    setMobileLearnOpen(!mobileLearnOpen);
-  };
-
-  const toggleMobileCalc = () => {
-    setMobileCalcOpen(!mobileCalcOpen);
-  };
-
-  const calchandleMouseEnter = () => {
-    if (calctimeoutRef.current) clearTimeout(calctimeoutRef.current);
-    setCaclShowDropdown(true);
-  };
-
-  const calchandleMouseLeave = () => {
-    calctimeoutRef.current = setTimeout(() => {
-      setCaclShowDropdown(false);
-    }, 150);
-  };
-
-  const handleMouseEnter = () => {
-    if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    setShowDropdown(true);
-  };
-
-  const handleMouseLeave = () => {
-    timeoutRef.current = setTimeout(() => {
-      setShowDropdown(false);
-    }, 150);
-  };
-
-  // Profile dropdown handlers
-  const handleProfileMouseEnter = () => {
-    if (profileTimeoutRef.current) clearTimeout(profileTimeoutRef.current);
-    setShowProfileDropdown(true);
-  };
-
-  const handleProfileMouseLeave = () => {
-    profileTimeoutRef.current = setTimeout(() => {
-      setShowProfileDropdown(false);
-    }, 150);
-  };
-
-  // Generate user initials for avatar
-  const getUserInitials = () => {
-    if (userProfile?.name) {
-      return userProfile.name
-        .split(' ')
-        .map(name => name.charAt(0))
-        .join('')
-        .toUpperCase()
-        .slice(0, 2);
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
     }
-    if (currentUser?.displayName) {
-      return currentUser.displayName
-        .split(' ')
-        .map(name => name.charAt(0))
-        .join('')
-        .toUpperCase()
-        .slice(0, 2);
-    }
-    if (currentUser?.email) {
-      return currentUser.email.charAt(0).toUpperCase();
-    }
-    return 'U';
   };
 
-  // Get user display name
-  const getUserDisplayName = () => {
-    return userProfile?.name || currentUser?.displayName || 'User';
-  };
+  const navLinks = [
+    { to: '/', label: 'Home' },
+    { to: '/exhibition', label: 'Properties' },
+    { to: '/services', label: 'Services' },
+    { to: '/contact', label: 'Contact' },
+  ];
 
-  // Get user email
-  const getUserEmail = () => {
-    return userProfile?.email || currentUser?.email || '';
-  };
+  const learnLinks = [
+    { to: '/investments', label: 'REITs Investment' },
+    { to: '/working', label: 'How It Works' },
+  ];
 
-  // Get user phone
-  const getUserPhone = () => {
-    return userProfile?.phone || 'Not provided';
-  };
+  const calculatorLinks = [
+    { to: '/npv-calculator', label: 'NPV Calculator' },
+    { to: '/dcf-calculator', label: 'DCF Calculator' },
+  ];
 
   return (
-    <>
-      <header className="custom-header flex justify-between items-center px-4 md:px-8 py-4 bg-white shadow-sm sticky top-0 z-50 backdrop-blur-sm bg-opacity-95">
-        {/* Logo */}
-        <div className="logo-container flex-shrink-0">
-          <Link to="/" className="logo-link inline-block transition-transform duration-200 hover:scale-105">
-            <img src={logo} alt="Logo" className="logo-image h-10 md:h-12 w-auto" />
-          </Link>
-        </div>
-
-        {/* Desktop Navigation */}
-        <nav className="flex items-center space-x-8 hidden lg:flex font-semibold text-gray-900">
-          <Link 
-            to="/exhibition" 
-            className="nav-link relative py-2 px-2 text-gray-900 hover:text-[#58335e] transition-all duration-200 after:content-[''] after:absolute after:w-0 after:h-0.5 after:bg-[#58335e] after:left-0 after:bottom-0 after:transition-all after:duration-300 hover:after:w-full"
-          >
-            Exhibition
-          </Link>
-          
-          <Link 
-            to="/services" 
-            className="nav-link relative py-2 px-2 text-gray-900 hover:text-[#58335e] transition-all duration-200 after:content-[''] after:absolute after:w-0 after:h-0.5 after:bg-[#58335e] after:left-0 after:bottom-0 after:transition-all after:duration-300 hover:after:w-full"
-          >
-            Services
+    <header className="sticky top-0 z-50 bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        {/* Main Nav Row */}
+        <div className={cn(
+          "flex items-center justify-between h-16 px-6 my-2 rounded-full transition-all duration-300",
+          scrolled ? "bg-white shadow-lg border border-gray-100" : "bg-gray-50"
+        )}>
+          {/* Logo */}
+          <Link to="/" className="flex items-center">
+            <img src={logo} alt="Bada Builder" className="h-8" />
           </Link>
 
-          {/* Learn Reit's Dropdown */}
-          <div
-            className="relative inline-block text-left"
-            onMouseEnter={handleMouseEnter}
-            onMouseLeave={handleMouseLeave}
-          >
-            <div className={`nav-link cursor-pointer py-2 px-2 text-gray-900 transition-all duration-200 flex items-center gap-1 relative after:content-[''] after:absolute after:w-0 after:h-0.5 after:bg-[#58335e] after:left-0 after:bottom-0 after:transition-all after:duration-300 ${showDropdown ? 'text-[#58335e] after:w-full' : 'hover:text-[#58335e] hover:after:w-full'}`}>
-              Learn Reit's 
-              <span className={`inline-block transition-transform duration-200 ${showDropdown ? 'rotate-180' : ''}`}>
-                ▾
-              </span>
-            </div>
-
-            {showDropdown && (
-              <div className="dropdown-menu absolute left-0 mt-1 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-20 py-2 animate-fadeIn">
-                <div className="max-h-96 overflow-y-auto">
-                  {dropdownItems.map((item, index) => (
-                    <Link
-                      key={index}
-                      to={item.href}
-                      className="block px-5 py-3 text-sm text-gray-800 hover:bg-purple-50 hover:text-[#58335e] transition-all duration-150 border-l-4 border-transparent hover:border-[#58335e] font-semibold"
-                    >
-                      {item.label}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Calculator Dropdown */}
-          <div
-            className="relative inline-block text-left"
-            onMouseEnter={calchandleMouseEnter}
-            onMouseLeave={calchandleMouseLeave}
-          >
-            <div className={`nav-link cursor-pointer py-2 px-2 text-gray-900 transition-all duration-200 flex items-center gap-1 relative after:content-[''] after:absolute after:w-0 after:h-0.5 after:bg-[#58335e] after:left-0 after:bottom-0 after:transition-all after:duration-300 ${CaclshowDropdown ? 'text-[#58335e] after:w-full' : 'hover:text-[#58335e] hover:after:w-full'}`}>
-              Calculator 
-              <span className={`inline-block transition-transform duration-200 ${CaclshowDropdown ? 'rotate-180' : ''}`}>
-                ▾
-              </span>
-            </div>
-
-            {CaclshowDropdown && (
-              <div className="dropdown-menu absolute left-0 mt-1 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-20 py-2 animate-fadeIn">
-                <div className="max-h-96 overflow-y-auto">
-                  {calcdropdownItems.map((item, index) => (
-                    <Link
-                      key={index}
-                      to={item.href}
-                      className="block px-5 py-3 text-sm text-gray-800 hover:bg-purple-50 hover:text-[#58335e] transition-all duration-150 border-l-4 border-transparent hover:border-[#58335e] font-semibold"
-                    >
-                      {item.label}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          <Link 
-            to="/contact" 
-            className="nav-link relative py-2 px-2 text-gray-900 hover:text-[#58335e] transition-all duration-200 after:content-[''] after:absolute after:w-0 after:h-0.5 after:bg-[#58335e] after:left-0 after:bottom-0 after:transition-all after:duration-300 hover:after:w-full"
-          >
-            Contact Us
-          </Link>
-          
-          <Link 
-            to="/about" 
-            className="nav-link relative py-2 px-2 text-gray-900 hover:text-[#58335e] transition-all duration-200 after:content-[''] after:absolute after:w-0 after:h-0.5 after:bg-[#58335e] after:left-0 after:bottom-0 after:transition-all after:duration-300 hover:after:w-full"
-          >
-            Who are we
-          </Link>
-        </nav>
-
-        {/* Desktop Buttons */}
-        <div className="hidden lg:flex items-center gap-3 flex-shrink-0">
-          <button 
-            onClick={() => setIsUserTypeModalOpen(true)}
-            className="bg-gradient-to-r from-green-600 to-green-700 text-white px-6 py-2.5 rounded-full shadow-md hover:shadow-lg hover:from-green-700 hover:to-green-800 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-green-600 focus:ring-opacity-50 font-medium text-sm tracking-wide transform hover:scale-105 active:scale-95 whitespace-nowrap"
-          >
-            Post Property
-          </button>
-          {isLoggedIn ? (
-            <div 
-              className="relative"
-              onMouseEnter={handleProfileMouseEnter}
-              onMouseLeave={handleProfileMouseLeave}
-            >
-              <button className="profile-avatar">
-                <span className="profile-initials">
-                  {getUserInitials()}
-                </span>
-              </button>
-              
-              {showProfileDropdown && (
-                <div className="profile-dropdown">
-                  <div className="profile-dropdown-header">
-                    <div className="profile-dropdown-avatar">
-                      {getUserInitials()}
-                    </div>
-                    <div className="profile-dropdown-info">
-                      <div className="profile-dropdown-name">
-                        {getUserDisplayName()}
-                      </div>
-                      <div className="profile-dropdown-email">
-                        {getUserEmail()}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="profile-dropdown-divider"></div>
-                  
-                  <div className="profile-dropdown-details">
-                    <div className="profile-detail-item">
-                      <span className="profile-detail-label">Name:</span>
-                      <span className="profile-detail-value">{getUserDisplayName()}</span>
-                    </div>
-                    <div className="profile-detail-item">
-                      <span className="profile-detail-label">Email:</span>
-                      <span className="profile-detail-value">{getUserEmail()}</span>
-                    </div>
-                    <div className="profile-detail-item">
-                      <span className="profile-detail-label">Phone:</span>
-                      <span className="profile-detail-value">{getUserPhone()}</span>
-                    </div>
-                  </div>
-                  
-                  <div className="profile-dropdown-divider"></div>
-                  
-                  <button 
-                    onClick={handleLogout}
-                    className="profile-dropdown-logout"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                    </svg>
-                    Logout
-                  </button>
-                </div>
-              )}
-            </div>
-          ) : (
-            <Link to="/login" onClick={handleLoginClick}>
-              <button className="bg-[#58335e] text-white px-6 py-2.5 rounded-full shadow-md hover:shadow-lg hover:bg-opacity-90 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#58335e] focus:ring-opacity-50 font-medium text-sm tracking-wide transform hover:scale-105 active:scale-95 whitespace-nowrap">
-                Login
-              </button>
-            </Link>
-          )}
-        </div>
-
-        {/* Mobile Menu Button */}
-        <div className="lg:hidden flex items-center">
-          <button
-            onClick={toggleMobileMenu}
-            className="p-2 rounded-md text-gray-700 hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-[#58335e] transition-all duration-200"
-            aria-label="Toggle mobile menu"
-          >
-            <div className="w-6 h-6 flex flex-col justify-center items-center">
-              <span className={`bg-current block transition-all duration-300 ease-out h-0.5 w-4 rounded-sm ${isMobileMenuOpen ? 'rotate-45 translate-y-1' : '-translate-y-0.5'}`}></span>
-              <span className={`bg-current block transition-all duration-300 ease-out h-0.5 w-4 rounded-sm my-0.5 ${isMobileMenuOpen ? 'opacity-0' : 'opacity-100'}`}></span>
-              <span className={`bg-current block transition-all duration-300 ease-out h-0.5 w-4 rounded-sm ${isMobileMenuOpen ? '-rotate-45 -translate-y-1' : 'translate-y-0.5'}`}></span>
-            </div>
-          </button>
-        </div>
-      </header>
-
-      {/* Mobile Menu Overlay */}
-      {isMobileMenuOpen && (
-        <div className="lg:hidden fixed inset-0 z-50 bg-black bg-opacity-50" onClick={toggleMobileMenu}>
-          <div 
-            className="absolute top-0 right-0 w-80 max-w-full h-full bg-white shadow-xl transform transition-transform duration-300 ease-out"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Mobile Menu Header */}
-            <div className="flex justify-between items-center px-6 py-5 border-b border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-900">Menu</h2>
-              <button
-                onClick={toggleMobileMenu}
-                className="p-2 rounded-md text-gray-700 hover:text-gray-900 hover:bg-gray-100 focus:outline-none"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-
-            {/* Mobile Menu Content */}
-            <div className="mobile-menu-content">
-              <nav className="mobile-nav">
-                {/* Mobile Login/Profile */}
-                {isLoggedIn ? (
-                  <div className="mobile-profile-section">
-                    <div className="mobile-profile-header">
-                      <div className="mobile-profile-avatar">
-                        {getUserInitials()}
-                      </div>
-                      <div className="mobile-profile-info">
-                        <div className="mobile-profile-name">
-                          {getUserDisplayName()}
-                        </div>
-                        <div className="mobile-profile-email">
-                          {getUserEmail()}
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="mobile-profile-details">
-                      <div className="mobile-profile-detail">
-                        <span className="mobile-detail-label">Name:</span>
-                        <span className="mobile-detail-value">{getUserDisplayName()}</span>
-                      </div>
-                      <div className="mobile-profile-detail">
-                        <span className="mobile-detail-label">Email:</span>
-                        <span className="mobile-detail-value">{getUserEmail()}</span>
-                      </div>
-                      <div className="mobile-profile-detail">
-                        <span className="mobile-detail-label">Phone:</span>
-                        <span className="mobile-detail-value">{getUserPhone()}</span>
-                      </div>
-                    </div>
-                    
-                    <button 
-                      onClick={handleLogout}
-                      className="mobile-logout-btn"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                      </svg>
-                      Logout
-                    </button>
-                  </div>
-                ) : (
-                  <Link to="/login" onClick={handleLoginClick} className="mobile-login-btn">
-                    🔐 Login / Sign Up
-                  </Link>
+          {/* Desktop Navigation */}
+          <nav className="hidden lg:flex items-center gap-1">
+            {navLinks.map((link) => (
+              <NavLink
+                key={link.to}
+                to={link.to}
+                className={({ isActive }) => cn(
+                  "px-4 py-2 text-sm font-medium rounded-full transition-colors",
+                  isActive 
+                    ? "border border-gray-900 text-gray-900" 
+                    : "text-gray-600 hover:text-gray-900"
                 )}
+              >
+                {link.label}
+              </NavLink>
+            ))}
 
-                {/* Post Property Button */}
-                <button 
-                  onClick={() => {
-                    toggleMobileMenu();
-                    setIsUserTypeModalOpen(true);
-                  }}
-                  className="mobile-post-btn"
-                >
-                  <span className="mobile-btn-icon">📝</span>
-                  <span>Post Property</span>
+            {/* Learn Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex items-center gap-1 px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
+                  Learn <ChevronDown className="w-4 h-4" />
                 </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="bg-white border border-gray-200 shadow-lg rounded-xl">
+                {learnLinks.map((link) => (
+                  <DropdownMenuItem key={link.to} asChild>
+                    <Link to={link.to} className="text-gray-700 hover:text-gray-900">{link.label}</Link>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
 
-                {/* Regular Menu Items */}
-                <Link to="/exhibition" onClick={toggleMobileMenu} className="mobile-menu-item">
-                  Exhibition
-                </Link>
-                
-                <Link to="/services" onClick={toggleMobileMenu} className="mobile-menu-item">
-                  Services
-                </Link>
+            {/* Calculator Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex items-center gap-1 px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
+                  <Calculator className="w-4 h-4" /> Calculator <ChevronDown className="w-4 h-4" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="bg-white border border-gray-200 shadow-lg rounded-xl">
+                {calculatorLinks.map((link) => (
+                  <DropdownMenuItem key={link.to} asChild>
+                    <Link to={link.to} className="text-gray-700 hover:text-gray-900">{link.label}</Link>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </nav>
 
-                {/* Mobile Learn Reit's Dropdown */}
-                <div className="mobile-dropdown">
-                  <button onClick={toggleMobileLearn} className="mobile-dropdown-btn">
-                    <span>Learn Reit's</span>
-                    <span className={`mobile-dropdown-icon ${mobileLearnOpen ? 'rotate' : ''}`}>
-                      ▾
-                    </span>
+          {/* Right Actions */}
+          <div className="flex items-center gap-3">
+            <Button 
+              onClick={handlePostProperty}
+              className="hidden sm:flex gap-2 bg-gray-900 text-white hover:bg-gray-800 rounded-full"
+            >
+              <Plus className="w-4 h-4" />
+              Post Property
+            </Button>
+
+            {isAuthenticated ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="flex items-center gap-2 p-1 rounded-full hover:bg-gray-100 transition-colors">
+                    <Avatar className="h-8 w-8 bg-gray-900 text-white">
+                      <AvatarFallback className="bg-gray-900 text-white text-sm">
+                        {userData?.name?.charAt(0) || 'U'}
+                      </AvatarFallback>
+                    </Avatar>
                   </button>
-                  
-                  {mobileLearnOpen && (
-                    <div className="mobile-dropdown-content">
-                      {dropdownItems.map((item, index) => (
-                        <Link
-                          key={index}
-                          to={item.href}
-                          onClick={toggleMobileMenu}
-                          className="mobile-dropdown-item"
-                        >
-                          {item.label}
-                        </Link>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="bg-white border border-gray-200 shadow-lg rounded-xl">
+                  <DropdownMenuItem className="text-gray-700">
+                    <User className="w-4 h-4 mr-2" />
+                    {userData?.name || 'User'}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleLogout} className="text-red-600 hover:text-red-700">
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Logout
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Button 
+                variant="ghost" 
+                onClick={() => navigate('/login')}
+                className="gap-2 text-gray-700 hover:bg-gray-100 rounded-full"
+              >
+                <User className="w-4 h-4" />
+                <span className="hidden sm:inline">Login</span>
+              </Button>
+            )}
 
-                {/* Mobile Calculator Dropdown */}
-                <div className="mobile-dropdown">
-                  <button onClick={toggleMobileCalc} className="mobile-dropdown-btn">
-                    <span>Calculator</span>
-                    <span className={`mobile-dropdown-icon ${mobileCalcOpen ? 'rotate' : ''}`}>
-                      ▾
-                    </span>
-                  </button>
-                  
-                  {mobileCalcOpen && (
-                    <div className="mobile-dropdown-content mobile-dropdown-scrollable">
-                      {calcdropdownItems.map((item, index) => (
-                        <Link
-                          key={index}
-                          to={item.href}
-                          onClick={toggleMobileMenu}
-                          className="mobile-dropdown-item"
-                        >
-                          {item.label}
-                        </Link>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                <Link to="/contact" onClick={toggleMobileMenu} className="mobile-menu-item">
-                  Contact Us
-                </Link>
-                
-                <Link to="/about" onClick={toggleMobileMenu} className="mobile-menu-item">
-                  Who are we
-                </Link>
-              </nav>
-            </div>
+            {/* Mobile Menu Button */}
+            <button 
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="lg:hidden p-2 rounded-full hover:bg-gray-100 text-gray-600"
+            >
+              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
           </div>
         </div>
-      )}
 
-      {/* User Type Modal */}
-      <UserTypeModal 
-        isOpen={isUserTypeModalOpen} 
-        onClose={() => setIsUserTypeModalOpen(false)} 
-      />
-    </>
+        {/* Search Bar Row */}
+        <div className="hidden md:flex items-center justify-center pb-4">
+          <form onSubmit={handleSearch} className="flex items-center gap-2 w-full max-w-xl">
+            <div className="relative flex-1">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search properties..."
+                className="pl-10 h-10 bg-gray-50 border-gray-200 rounded-full"
+              />
+            </div>
+            <Button type="submit" className="bg-gray-900 text-white hover:bg-gray-800 rounded-full h-10 px-6">
+              Search
+            </Button>
+          </form>
+        </div>
+      </div>
+
+      {/* Mobile Menu */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="lg:hidden bg-white border-t border-gray-100"
+          >
+            <div className="px-4 py-4 space-y-2">
+              {navLinks.map((link) => (
+                <NavLink
+                  key={link.to}
+                  to={link.to}
+                  className={({ isActive }) => cn(
+                    "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium",
+                    isActive ? "bg-gray-100 text-gray-900" : "text-gray-600 hover:bg-gray-50"
+                  )}
+                >
+                  {link.label}
+                </NavLink>
+              ))}
+              <Button onClick={handlePostProperty} className="w-full mt-4 bg-gray-900 text-white hover:bg-gray-800 rounded-full">
+                <Plus className="w-4 h-4 mr-2" />
+                Post Property
+              </Button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </header>
   );
 };
 

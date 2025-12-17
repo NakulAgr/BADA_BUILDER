@@ -3,9 +3,40 @@
 ## 📊 Project Overview
 
 **Status**: ✅ Production Ready  
-**Tech Stack**: React 19 + Vite + Tailwind CSS + Firebase + Framer Motion  
+**Tech Stack**: React 19 + Vite + Tailwind CSS 4 + Firebase + Framer Motion + shadcn/ui + Magic UI  
 **Company**: Bada Builder  
-**Type**: Real Estate Platform with Lead Generation, Property Listings, and Subscription Model
+**Type**: Real Estate Platform with Lead Generation, Property Listings, REIT Learning & Calculators, and Subscription Model
+
+---
+
+## 🎨 UI Design System
+
+### Design Philosophy (Denqid-Inspired)
+- **Light Theme**: Gray (#f3f4f6) backgrounds with white cards
+- **Typography**: Black text for maximum readability
+- **Buttons**: Black (gray-900) with white text
+- **Footer**: Dark theme (gray-900) with white text
+- **Clean & Minimal**: Focus on content, subtle shadows
+
+### Component Libraries
+- **shadcn/ui**: 15+ components (Button, Input, Select, Dialog, Badge, etc.)
+- **Magic UI**: Animated components (ShineBorder, AuroraText, ShimmerButton, ScrollProgress)
+- **Lucide React**: Unified icon system
+
+### Migrated Components (11 Total)
+| Component | Shadcn Components Used |
+|-----------|----------------------|
+| Header | NavigationMenu, DropdownMenu, Avatar, Button, ScrollProgress |
+| LeadModal | Dialog, Input, Select, Button, Alert |
+| HeroSection | Select, Button (light gray bg) |
+| Footer | Button (dark bg, white text) |
+| Login | Input, Button, Alert |
+| RecommendedProjects | Badge, Button |
+| Chatbot | Button, Input, Badge |
+| Services | Badge, Button |
+| SubscriptionPlans | Badge, Button, Alert |
+| BookSiteVisit | Input, Select, Button, Alert, Badge |
+| Exhibition (ByIndividual) | Button, Badge |
 
 ---
 
@@ -52,14 +83,20 @@
 - **Files**: `src/pages/PostProperty.jsx`, `src/components/UserTypeModal/`
 
 ### ✅ 5. Exhibition Pages
-Three specialized property listing pages:
+Four specialized property listing pages:
 - **By Individual**: Direct owner listings
 - **By Developer**: Developer projects with construction status
 - **By Bada Builder**: Premium curated properties with ROI display
-- Live Grouping page for group buying opportunities
+- **Live Grouping**: Group buying opportunities with detailed project pages
 - **Files**: `src/pages/Exhibition/`
 
-### ✅ 6. Services Section
+### ✅ 6. Live Grouping System
+- Dynamic group buying listings
+- Detailed project pages with full property information
+- Admin management panel for live grouping content
+- **Files**: `src/pages/Exhibition/LiveGrouping.jsx`, `src/pages/Exhibition/LiveGroupingDetails.jsx`, `src/pages/Admin/AdminLiveGrouping.jsx`
+
+### ✅ 7. Services Section
 6 service offerings with modern card design:
 - Legal Verification
 - Home Loans
@@ -70,14 +107,63 @@ Three specialized property listing pages:
 - Investment Advisory (links to investments page)
 - **Files**: `src/pages/Services.jsx`
 
-### ✅ 7. Site Visit Booking
+### ✅ 8. Site Visit Booking
 - Integrated with property listings
 - Saves bookings to Firestore `bookings` collection
 - Email notifications (console logged for MVP)
 - Protected route (requires login)
 - **Files**: `src/pages/BookSiteVisit.jsx`
 
-### ✅ 8. Responsive Design
+### ✅ 9. REIT Learning Center
+11 comprehensive educational pages covering:
+- Lease and Asset Management (LAM)
+- Market and Investment Analysis
+- Real Estate Financial Modelling
+- Risk Assessment Due Diligence (RADD)
+- Real Estate Market Research
+- REIT Valuation and Compliance
+- Stakeholder Communication
+- REIT Taxation
+- Job Profiles in REITs
+- Work of Job Profiles
+- Types of REITs in India
+- **Files**: `src/pages/Report Data/`
+
+### ✅ 10. REIT Calculators (16 Total)
+Complete suite of financial calculators:
+- FFO (Funds From Operations)
+- AFFO (Adjusted FFO)
+- NOI (Net Operating Income)
+- Cap Rate (Capitalization Rate)
+- NAV (Net Asset Value)
+- LTV (Loan to Value)
+- Dividend Yield
+- Payout Ratio
+- DSCR (Debt Service Coverage Ratio)
+- IRR (Internal Rate of Return)
+- Total Return
+- Occupancy Rate
+- EBITDAre
+- PFFO (Price/FFO)
+- DCF (Discounted Cash Flow)
+- NPV (Net Present Value)
+- **Files**: `src/pages/calculator/`
+
+### ✅ 11. Global Search
+- **GlobalSearchBar**: Site-wide search component
+- **SearchBar**: Component for local search
+- **SearchResults**: Dedicated search results page
+- **Files**: `src/components/GlobalSearchBar/`, `src/components/SearchBar/`, `src/pages/SearchResults.jsx`
+
+### ✅ 12. AI Chatbot
+- Interactive chatbot component for user assistance
+- **Files**: `src/components/Chatbot/`
+
+### ✅ 13. Contact/Connect Page
+- User contact form functionality
+- **Files**: `src/pages/Connect.jsx`
+
+### ✅ 14. Responsive Design
 - Mobile-first approach
 - Optimized mobile sidebar with boxes around menu items
 - Hamburger menu with smooth animations
@@ -203,53 +289,132 @@ Border:           #e5e7eb
 bada-builder/
 ├── src/
 │   ├── components/
-│   │   ├── Header/
-│   │   │   ├── Header.jsx
-│   │   │   └── Header.css
+│   │   ├── Chatbot/
+│   │   │   ├── Chatbot.jsx
+│   │   │   └── Chatbot.css
 │   │   ├── Footer/
 │   │   │   ├── Footer.jsx
 │   │   │   └── Footer.css
+│   │   ├── GlobalSearchBar/
+│   │   │   ├── GlobalSearchBar.jsx
+│   │   │   └── GlobalSearchBar.css
+│   │   ├── Header/
+│   │   │   ├── Header.jsx
+│   │   │   ├── Header.css
+│   │   │   ├── HeaderMobileMenu.css  # Modular mobile menu styles
+│   │   │   └── HeaderProfile.css     # Modular profile dropdown styles
 │   │   ├── HeroSection/
 │   │   │   ├── HeroSection.jsx
 │   │   │   └── HeroSection.css
-│   │   ├── RecommendedProjects/
-│   │   │   ├── RecommendedProjects.jsx
-│   │   │   └── RecommendedProjects.css
 │   │   ├── LeadModal/
 │   │   │   ├── LeadModal.jsx
 │   │   │   └── LeadModal.css
+│   │   ├── RecommendedProjects/
+│   │   │   ├── RecommendedProjects.jsx
+│   │   │   └── RecommendedProjects.css
+│   │   ├── SearchBar/
+│   │   │   ├── SearchBar.jsx
+│   │   │   └── SearchBar.css
 │   │   └── UserTypeModal/
 │   │       ├── UserTypeModal.jsx
 │   │       └── UserTypeModal.css
 │   ├── pages/
-│   │   ├── Login.jsx
-│   │   ├── Services.jsx
-│   │   ├── SubscriptionPlans.jsx
-│   │   ├── PostProperty.jsx
-│   │   ├── BookSiteVisit.jsx
+│   │   ├── Admin/
+│   │   │   ├── AdminLiveGrouping.jsx
+│   │   │   └── AdminLiveGrouping.css
 │   │   ├── Exhibition/
 │   │   │   ├── ByIndividual.jsx
 │   │   │   ├── ByDeveloper.jsx
 │   │   │   ├── ByBadaBuilder.jsx
 │   │   │   ├── LiveGrouping.jsx
-│   │   │   └── Exhibition.css
+│   │   │   ├── LiveGroupingDetails.jsx
+│   │   │   ├── Exhibition.css
+│   │   │   ├── LiveGrouping.css
+│   │   │   └── LiveGroupingDetails.css
+│   │   ├── Report Data/ (11 REIT learning pages)
+│   │   │   ├── LAM.jsx
+│   │   │   ├── MarketInvestmentAnalysis.jsx
+│   │   │   ├── RealEstateFinancialModelling.jsx
+│   │   │   ├── RADD.jsx
+│   │   │   ├── RealEstateReport.jsx
+│   │   │   ├── REITValuationCompliance.jsx
+│   │   │   ├── REITStakeholderCommunication.jsx
+│   │   │   ├── REITTaxation.jsx
+│   │   │   ├── TypesOfREITs.jsx
+│   │   │   ├── REITJobProfiles.jsx
+│   │   │   └── JobProfilesWork.jsx
 │   │   ├── calculator/ (16 REIT calculators)
-│   │   └── Report Data/ (11 REIT learning pages)
+│   │   │   ├── FFOCalculator.jsx
+│   │   │   ├── AFFOCalculator.jsx
+│   │   │   ├── NOICalculator.jsx
+│   │   │   ├── CapRateCalculator.jsx
+│   │   │   ├── NAVCalculator.jsx
+│   │   │   ├── LTVCalculator.jsx
+│   │   │   ├── DividendYieldCalculator.jsx
+│   │   │   ├── PayoutRatioCalculator.jsx
+│   │   │   ├── DSCRCalculator.jsx
+│   │   │   ├── IRRCalculator.jsx
+│   │   │   ├── TotalReturnCalculator.jsx
+│   │   │   ├── OccupancyRateCalculator.jsx
+│   │   │   ├── EBITDAreCalculator.jsx
+│   │   │   ├── PFFOCalculator.jsx
+│   │   │   ├── DCFCalculator.jsx
+│   │   │   └── NPVCalculator.jsx
+│   │   ├── BookSiteVisit.jsx
+│   │   ├── BookSiteVisit.css
+│   │   ├── MapModal.css              # Modular map modal styles
+│   │   ├── Connect.jsx
+│   │   ├── Exhibition.jsx
+│   │   ├── Investments.jsx
+│   │   ├── Login.jsx
+│   │   ├── PostProperty.jsx
+│   │   ├── ProjectDetails.jsx
+│   │   ├── Projects.jsx
+│   │   ├── SearchResults.jsx
+│   │   ├── Services.jsx
+│   │   ├── SubscriptionPlans.jsx
+│   │   └── Working.jsx
 │   ├── context/
 │   │   └── AuthContext.jsx
 │   ├── data/
 │   │   └── listings.jsx
+│   ├── utils/
+│   │   ├── authTest.js
+│   │   ├── loadingOverlayTest.js
+│   │   └── performance.js
+│   ├── assets/
 │   ├── firebase.jsx
 │   ├── App.jsx
+│   ├── App.css
 │   ├── main.jsx
 │   └── index.css
 ├── public/
-├── dist/
+│   └── _redirects
+├── notification-server.js
+├── package.json
+├── package-lock.json
+├── vite.config.js
+├── vercel.json
+├── netlify.toml
+├── eslint.config.js
+├── index.html
 ├── setup-git.sh
 ├── setup-git.bat
-├── package.json
-├── vite.config.js
-└── PROJECT.md (this file)
+├── .gitignore
+├── .env.notification.example
+│
+├── Documentation Files:
+│   ├── PROJECT.md (this file)
+│   ├── 404_FIX_GUIDE.md
+│   ├── ADMIN_PANEL_GUIDE.md
+│   ├── ANALYSIS_SUMMARY.md
+│   ├── CHATBOT_DOCUMENTATION.md
+│   ├── CONDITIONAL_BHK_IMPLEMENTATION.md
+│   ├── NOTIFICATION_SETUP_GUIDE.md
+│   ├── QUICK_REFERENCE.md
+│   ├── SEARCH_BAR_IMPLEMENTATION.md
+│   └── SERVICES_SEARCH_FEATURE.md
+└── node_modules/
 ```
 
 ---
@@ -331,9 +496,25 @@ git config --global user.email "nakul@example.com"
 3. Switch to "By Developer" tab
 4. Switch to "By Bada Builder" tab
 5. Click "🔴 Live Grouping" tab
-6. Verify all pages load correctly
+6. Click on a project to view detailed information
+7. Verify all pages load correctly
 
-### Test Flow 6: Mobile Responsiveness
+### Test Flow 6: REIT Learning & Calculators
+1. Navigate to any learning page via `/learn/*`
+2. Test REIT calculators at `/calculator/*`
+3. Verify calculations are correct
+
+### Test Flow 7: Global Search
+1. Use the global search bar
+2. Enter a search term
+3. Verify search results page displays correctly
+
+### Test Flow 8: Admin Panel
+1. Navigate to `/admin/live-grouping`
+2. Manage live grouping content
+3. Verify changes reflect on public pages
+
+### Test Flow 9: Mobile Responsiveness
 1. Open DevTools (F12)
 2. Toggle device toolbar (Ctrl+Shift+M)
 3. Test on iPhone, iPad, Desktop sizes
@@ -372,6 +553,11 @@ VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
 VITE_FIREBASE_APP_ID=your_app_id
 ```
 
+### Notification Server
+**File**: `notification-server.js`
+- Email notification server for site visits and bookings
+- See `NOTIFICATION_SETUP_GUIDE.md` for configuration
+
 ---
 
 ## 🐛 Known Issues & Solutions
@@ -395,6 +581,10 @@ VITE_FIREBASE_APP_ID=your_app_id
 ### Issue 5: Register Button Stuck
 **Error**: Stuck on "Please wait..."  
 **Solution**: ✅ Fixed - Fixed async/await flow and error handling
+
+### Issue 6: 404 Errors on Deployment
+**Error**: Routes return 404 on refresh  
+**Solution**: ✅ Fixed - Added `_redirects` file and hosting configs (see `404_FIX_GUIDE.md`)
 
 ---
 
@@ -422,8 +612,8 @@ VITE_FIREBASE_APP_ID=your_app_id
 
 ## 📧 Email Notifications
 
-### Current Status: Console Logged (MVP)
-Email notifications are formatted and logged to console:
+### Current Status: Console Logged / Server Available
+Email notifications can be enabled via the notification server:
 
 ```javascript
 📧 EMAIL NOTIFICATION TO ADMIN:
@@ -436,12 +626,10 @@ Time: 10:00
 ========================================
 ```
 
-### For Production
-Integrate with:
-- **SendGrid** (Recommended)
-- **AWS SES**
-- **Firebase Cloud Functions** with Nodemailer
-- **Mailgun**
+### Setup
+See `NOTIFICATION_SETUP_GUIDE.md` for full configuration:
+- Configure `notification-server.js`
+- Set up environment variables in `.env.notification.example`
 
 ---
 
@@ -455,13 +643,17 @@ Integrate with:
 | `/exhibition/developer` | Developer projects | Public |
 | `/exhibition/badabuilder` | Premium properties | Public |
 | `/exhibition/live-grouping` | Group buying | Public |
+| `/exhibition/live-grouping/:id` | Project details | Public |
 | `/services` | Services grid | Public |
 | `/investments` | Investment page | Public |
 | `/subscription-plans` | Pricing tiers | Login Required |
 | `/post-property` | Property form | Login + Subscription |
 | `/login` | Auth page | Public |
 | `/booksitevisit` | Booking form | Login Required |
+| `/contact` | Contact page | Public |
+| `/search` | Search results | Public |
 | `/projects/:id` | Property details | Public |
+| `/admin/live-grouping` | Admin panel | Admin Access |
 | `/calculator/*` | 16 REIT calculators | Public |
 | `/learn/*` | 11 REIT learning pages | Public |
 
@@ -492,6 +684,15 @@ npm install -g vercel
 vercel login
 vercel
 ```
+Configuration in `vercel.json`
+
+### Netlify
+```bash
+npm install -g netlify-cli
+netlify login
+netlify deploy --prod
+```
+Configuration in `netlify.toml`
 
 ### Firebase Hosting
 ```bash
@@ -502,13 +703,6 @@ npm run build
 firebase deploy
 ```
 
-### Netlify
-```bash
-npm install -g netlify-cli
-netlify login
-netlify deploy --prod
-```
-
 ---
 
 ## 📈 Future Enhancements
@@ -516,7 +710,7 @@ netlify deploy --prod
 ### Phase 1 (High Priority)
 - [ ] Payment gateway integration (Razorpay/Stripe)
 - [ ] Email service integration (SendGrid)
-- [ ] Admin dashboard
+- [ ] Enhanced admin dashboard
 - [ ] Property approval workflow
 - [ ] User profile page
 - [ ] Advanced search filters
@@ -539,14 +733,27 @@ netlify deploy --prod
 
 ---
 
-## 📚 Additional Resources
+## 📚 Additional Documentation
 
-### Firebase Console
-- **URL**: https://console.firebase.google.com/
+### Project Documentation Files
+| File | Description |
+|------|-------------|
+| `404_FIX_GUIDE.md` | Fixing 404 errors on deployment |
+| `ADMIN_PANEL_GUIDE.md` | Admin panel usage guide |
+| `ANALYSIS_SUMMARY.md` | Project analysis summary |
+| `CHATBOT_DOCUMENTATION.md` | Chatbot implementation details |
+| `CONDITIONAL_BHK_IMPLEMENTATION.md` | BHK field implementation |
+| `NOTIFICATION_SETUP_GUIDE.md` | Email notification setup |
+| `QUICK_REFERENCE.md` | Quick reference guide |
+| `SEARCH_BAR_IMPLEMENTATION.md` | Search bar implementation |
+| `SERVICES_SEARCH_FEATURE.md` | Services search feature |
+
+### External Resources
+- **Firebase Console**: https://console.firebase.google.com/
 - **Project**: badabuilder-64565
 - **Collections**: users, leads, properties, bookings
 
-### Documentation
+### Documentation Links
 - React: https://react.dev/
 - Vite: https://vitejs.dev/
 - Tailwind CSS: https://tailwindcss.com/
@@ -564,9 +771,16 @@ netlify deploy --prod
 ✅ Subscription Plans  
 ✅ Post Property (with user type selection)  
 ✅ Services Section  
-✅ Exhibition Pages (3 types + Live Grouping)  
+✅ Exhibition Pages (4 types including Live Grouping)  
+✅ Live Grouping Details Page  
+✅ Admin Panel (Live Grouping Management)  
 ✅ Site Visit Booking  
-✅ Email Notifications (Console)  
+✅ Email Notifications (Console + Server)  
+✅ REIT Learning Center (11 pages)  
+✅ REIT Calculators (16 calculators)  
+✅ Global Search  
+✅ AI Chatbot  
+✅ Contact/Connect Page  
 ✅ Responsive Design  
 ✅ Mobile Sidebar Optimization  
 ✅ Protected Routes  
@@ -575,18 +789,20 @@ netlify deploy --prod
 ✅ Loading States  
 ✅ Error Handling  
 ✅ Animations (Framer Motion)  
-✅ Git Configuration
+✅ Git Configuration  
+✅ Deployment Configs (Vercel, Netlify)
 
-### Production Readiness: 85%
+### Production Readiness: 90%
 ✅ Core features complete  
 ✅ Database integrated  
 ✅ Authentication working  
 ✅ Responsive design  
 ✅ Build successful  
+✅ Admin panel available  
+✅ Notification server ready  
 ⚠️ Payment gateway (TODO)  
-⚠️ Email service (TODO)  
-⚠️ Environment variables (TODO)  
-⚠️ Admin dashboard (TODO)
+⚠️ Production email service (TODO)  
+⚠️ Environment variables (TODO)
 
 ---
 
@@ -623,6 +839,7 @@ netlify deploy --prod
 3. Check network tab for API calls
 4. Review this documentation
 5. Check Git commit history
+6. Review specialized documentation files
 
 ### Regular Maintenance
 - Update dependencies monthly
@@ -635,16 +852,20 @@ netlify deploy --prod
 
 ## ✨ What Makes This Project Special
 
-1. **Complete Feature Set**: All requirements implemented
-2. **Modern Tech Stack**: Latest React, Vite, Tailwind, Firebase
+1. **Complete Feature Set**: All requirements implemented plus extras
+2. **Modern Tech Stack**: Latest React 19, Vite, Tailwind CSS 4, Firebase
 3. **Production Quality**: Clean, maintainable code
 4. **Responsive Design**: Works on all devices
 5. **User Experience**: Smooth animations, loading states
 6. **Security**: Protected routes, auth checks
 7. **Scalable**: Easy to extend and maintain
-8. **Well Documented**: Comprehensive documentation
+8. **Well Documented**: Comprehensive documentation (10+ guides)
 9. **Performance**: Optimized build, fast loading
 10. **Professional**: Ready for real-world use
+11. **Educational Content**: Complete REIT learning center
+12. **Financial Tools**: 16 professional calculators
+13. **Admin Panel**: Content management capabilities
+14. **AI Features**: Integrated chatbot
 
 ---
 
@@ -655,18 +876,27 @@ Your Bada Builder real estate website is fully functional with:
 - ✅ User authentication
 - ✅ Subscription model
 - ✅ Property posting (Individual & Developer)
-- ✅ Exhibition pages
+- ✅ Exhibition pages (4 types)
+- ✅ Live grouping with details
+- ✅ Admin panel
 - ✅ Site visit booking
 - ✅ Services section
+- ✅ REIT Learning Center (11 pages)
+- ✅ REIT Calculators (16 tools)
+- ✅ Global search
+- ✅ AI Chatbot
 - ✅ Database integration
 - ✅ Responsive design
 - ✅ Modern UI/UX
+- ✅ Email notifications
+- ✅ Deployment ready
 
 **Ready for testing and deployment!** 🚀
 
 ---
 
 **Last Updated**: December 2024  
-**Version**: 1.0.0  
+**Version**: 2.0.0  
+**Developed By**: Digency Studio
 **Author**: Nakul Agrawal  
 **Company**: Bada Builder

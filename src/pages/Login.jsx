@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo, useEffect } from "react";
-import { motion } from "framer-motion";
-import "./Login.css";
+import { motion, AnimatePresence } from "framer-motion";
+import { Eye, EyeOff, Loader2, CheckCircle, User, Mail, Lock, ArrowRight } from "lucide-react";
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
@@ -11,121 +11,82 @@ import { auth, db } from "../firebase";
 import { useNavigate, useLocation } from "react-router-dom";
 import { performanceMonitor } from "../utils/performance";
 
+// Shadcn UI Components
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { cn } from "@/lib/utils";
+
 const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const from = location.state?.from || "/";
-  
-  // For registration, always redirect to home page, not back to login
+
   const getRedirectPath = (isRegistration = false) => {
-    if (isRegistration) {
-      return "/"; // Always go to home after registration
-    }
-    return from === "/login" ? "/" : from; // Don't redirect back to login page
+    if (isRegistration) return "/";
+    return from === "/login" ? "/" : from;
   };
 
   const [mode, setMode] = useState("login");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: "",
     confirmPassword: "",
   });
-
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
-  const [registrationStep, setRegistrationStep] = useState('form'); // 'form', 'creating', 'success', 'transitioning'
+  const [registrationStep, setRegistrationStep] = useState('form');
 
-  // ------------------ RESET FORM FUNCTION ------------------
   const resetForm = useCallback(() => {
     setMode("login");
     setShowPassword(false);
     setShowConfirmPassword(false);
-    setFormData({
-      name: "",
-      email: "",
-      password: "",
-      confirmPassword: "",
-    });
+    setFormData({ name: "", email: "", password: "", confirmPassword: "" });
     setErrors({});
     setLoading(false);
     setRegistrationStep('form');
   }, []);
 
-  // ------------------ HANDLE HEADER LOGIN CLICK ------------------
   useEffect(() => {
-    // Check if user clicked login from header while already on login page
     if (location.state?.resetForm) {
       resetForm();
-      // Show brief reset confirmation
       setErrors({ submit: "Form has been reset. Please enter your credentials." });
-      setTimeout(() => {
-        setErrors({});
-      }, 2000); // Reduced from 3000ms to 2000ms
-      // Clear the state to prevent repeated resets
+      setTimeout(() => setErrors({}), 2000);
       navigate(location.pathname, { replace: true, state: {} });
     }
   }, [location.state, resetForm, navigate, location.pathname]);
 
-  // ------------------ HANDLE INPUT ------------------
   const handleChange = useCallback((e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-    // Clear field-specific errors immediately
-    if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: "" }));
-    }
+    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
   }, [errors]);
 
-  // ------------------ VALIDATION ------------------
   const validate = useMemo(() => {
     return () => {
       const newErrors = {};
-
-      if (mode === "register" && !formData.name.trim()) {
-        newErrors.name = "Name is required.";
-      }
-
-      if (!formData.email) {
-        newErrors.email = "Email is required.";
-      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-        newErrors.email = "Enter a valid email.";
-      }
-
-      if (!formData.password) {
-        newErrors.password = "Password is required.";
-      } else if (formData.password.length < 6) {
-        newErrors.password = "Password should be at least 6 characters.";
-      }
-
+      if (mode === "register" && !formData.name.trim()) newErrors.name = "Name is required.";
+      if (!formData.email) newErrors.email = "Email is required.";
+      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) newErrors.email = "Enter a valid email.";
+      if (!formData.password) newErrors.password = "Password is required.";
+      else if (formData.password.length < 6) newErrors.password = "Password should be at least 6 characters.";
       if (mode === "register") {
-        if (!formData.confirmPassword) {
-          newErrors.confirmPassword = "Please confirm your password.";
-        } else if (formData.password !== formData.confirmPassword) {
-          newErrors.confirmPassword = "Passwords do not match.";
-        }
+        if (!formData.confirmPassword) newErrors.confirmPassword = "Please confirm your password.";
+        else if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = "Passwords do not match.";
       }
-
       setErrors(newErrors);
       return Object.keys(newErrors).length === 0;
     };
   }, [mode, formData]);
 
-  // ------------------ LOGIN ------------------
   const loginUser = useCallback(async (email, password) => {
     setLoading(true);
     setErrors({});
-
     try {
-      await performanceMonitor.trackNetworkRequest(
-        'Login',
-        signInWithEmailAndPassword(auth, email, password)
-      );
-      
-      // Navigate immediately after auth success - don't wait for context updates
+      await performanceMonitor.trackNetworkRequest('Login', signInWithEmailAndPassword(auth, email, password));
       navigate(getRedirectPath(false), { replace: true });
     } catch (error) {
       let msg = "Login failed";
@@ -139,107 +100,58 @@ const Login = () => {
     }
   }, [navigate, getRedirectPath]);
 
-  // ------------------ REGISTER ------------------
   const createUser = useCallback(async (email, password, name) => {
     setLoading(true);
     setErrors({});
     setRegistrationStep('creating');
-
     try {
-      // Step 1: Create user account (fast)
       const userCredential = await performanceMonitor.trackNetworkRequest(
         'Registration',
         createUserWithEmailAndPassword(auth, email, password)
       );
-      
-      // Step 2: Create user profile in background (non-blocking)
       const userProfilePromise = performanceMonitor.trackNetworkRequest(
         'Profile Creation',
         setDoc(doc(db, "users", userCredential.user.uid), {
-          email,
-          name,
-          is_subscribed: false,
-          subscription_expiry: null,
-          created_at: new Date().toISOString(),
+          email, name, is_subscribed: false, subscription_expiry: null, created_at: new Date().toISOString(),
         })
       );
-
-      // Step 3: Show success message briefly, then transition
       setRegistrationStep('success');
-      
-      // Sign out the user immediately after registration (no auto-login)
       await signOut(auth);
-      
-      // Show success message briefly, then start transition
       setTimeout(() => {
         setRegistrationStep('transitioning');
-        setLoading(true); // Keep loading overlay during transition
-      }, 800); // Reduced from 1500ms to 800ms
-      
-      // Complete transition to login mode
+        setLoading(true);
+      }, 800);
       setTimeout(() => {
         setMode('login');
         setRegistrationStep('form');
-        setLoading(false); // Remove loading overlay after UI transition is complete
+        setLoading(false);
         setFormData({ name: "", email: "", password: "", confirmPassword: "" });
         setErrors({ submit: "Registration successful! Please login with your credentials." });
-      }, 1200); // Reduced from 2000ms to 1200ms
-
-      // Handle profile creation in background
-      userProfilePromise.catch((profileError) => {
-        console.warn('Profile creation delayed:', profileError);
-        // Profile creation failed, but user registration was successful
-        // Profile will be created on first login via AuthContext
-      });
-
+      }, 1200);
+      userProfilePromise.catch((profileError) => console.warn('Profile creation delayed:', profileError));
     } catch (error) {
       setRegistrationStep('form');
       setLoading(false);
       let msg = "Registration failed";
-      if (error.code === "auth/email-already-in-use") {
-        msg = "Email already registered";
-      } else if (error.code === "auth/weak-password") {
-        msg = "Password is too weak";
-      } else if (error.code === "auth/network-request-failed") {
-        msg = "Network error. Please check your connection";
-      }
+      if (error.code === "auth/email-already-in-use") msg = "Email already registered";
+      else if (error.code === "auth/weak-password") msg = "Password is too weak";
+      else if (error.code === "auth/network-request-failed") msg = "Network error. Please check your connection";
       setErrors({ submit: msg });
     }
   }, []);
 
-  // ------------------ SUBMIT ------------------
   const handleSubmit = useCallback((e) => {
     e.preventDefault();
-    
-    // Prevent submission if already loading
     if (loading) return;
-    
     if (!validate()) return;
-
-    if (mode === "login") {
-      loginUser(formData.email, formData.password);
-    } else {
-      createUser(formData.email, formData.password, formData.name);
-    }
+    if (mode === "login") loginUser(formData.email, formData.password);
+    else createUser(formData.email, formData.password, formData.name);
   }, [mode, formData, validate, loginUser, createUser, loading]);
 
-  // ------------------ TOGGLE ------------------
   const toggleMode = useCallback(() => {
-    // Don't allow toggle during transition
     if (registrationStep === 'transitioning') return;
-    
-    // Switch mode
     setMode((prev) => (prev === "login" ? "register" : "login"));
-    
-    // Reset all form data
-    setFormData({
-      name: "",
-      email: "",
-      password: "",
-      confirmPassword: "",
-    });
-    
-    // Reset all states
+    setFormData({ name: "", email: "", password: "", confirmPassword: "" });
     setErrors({});
     setShowPassword(false);
     setShowConfirmPassword(false);
@@ -247,166 +159,204 @@ const Login = () => {
     setLoading(false);
   }, [registrationStep]);
 
-  // ------------------ UI ------------------
-  return (
-    <div className="login-page">
-      {/* Full-screen loading overlay */}
-      {(loading && registrationStep !== 'success') || registrationStep === 'transitioning' ? (
-        <motion.div
-          className="fullscreen-loading-overlay"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.15 }}
-        >
-          <div className="loading-content">
-            <div className="loading-spinner-large"></div>
-            <p className="loading-text">
-              {registrationStep === 'transitioning' ? "Switching to login..." :
-               mode === "login" ? "Signing you in..." : 
-               registrationStep === 'creating' ? "Creating your account..." : 
-               "Processing..."}
-            </p>
-          </div>
-        </motion.div>
-      ) : null}
+  const isDisabled = loading || registrationStep === 'transitioning';
 
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
+      {/* Loading Overlay */}
+      <AnimatePresence>
+        {(loading && registrationStep !== 'success') || registrationStep === 'transitioning' ? (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-white/80 backdrop-blur-sm flex items-center justify-center"
+          >
+            <div className="text-center">
+              <Loader2 className="w-12 h-12 animate-spin text-gray-900 mx-auto mb-4" />
+              <p className="text-gray-700 text-lg">
+                {registrationStep === 'transitioning' ? "Switching to login..." :
+                 mode === "login" ? "Signing you in..." :
+                 registrationStep === 'creating' ? "Creating your account..." : "Processing..."}
+              </p>
+            </div>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
+
+      {/* Login Card */}
       <motion.div
-        className="login-box"
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
+        className="w-full max-w-md"
       >
-        <motion.h2
-          key={mode}
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-        >
-          {mode === "login" ? "login" : "Create Account"}
-        </motion.h2>
+        <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-200">
+          {/* Header */}
+          <motion.div key={mode} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="mb-8">
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">
+              {mode === "login" ? "Welcome Back" : "Create Account"}
+            </h2>
+            <p className="text-gray-500">
+              {mode === "login" ? "Sign in to continue" : "Join us today"}
+            </p>
+          </motion.div>
 
-        <form onSubmit={handleSubmit} className={`login-form ${loading || registrationStep === 'transitioning' ? 'form-disabled' : ''}`}>
-          {mode === "register" && (
-            <>
-              <label>Name</label>
-              <input name="name" value={formData.name} onChange={handleChange} disabled={loading || registrationStep === 'transitioning'} />
-              {errors.name && <p className="error">{errors.name}</p>}
-            </>
-          )}
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Name Field (Register only) */}
+            <AnimatePresence>
+              {mode === "register" && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="space-y-2"
+                >
+                  <label className="text-sm font-medium text-gray-700">Name</label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Input
+                      name="name"
+                      value={formData.name}
+                      onChange={handleChange}
+                      disabled={isDisabled}
+                      placeholder="Enter your name"
+                      className="pl-10 bg-gray-50 border-gray-200"
+                    />
+                  </div>
+                  {errors.name && <p className="text-red-500 text-sm">{errors.name}</p>}
+                </motion.div>
+              )}
+            </AnimatePresence>
 
-          <label>Email</label>
-          <input
-            name="email"
-            type="email"
-            value={formData.email}
-            onChange={handleChange}
-            disabled={loading || registrationStep === 'transitioning'}
-          />
-          {errors.email && <p className="error">{errors.email}</p>}
-
-          <label>Password</label>
-          <div className="password-wrapper">
-            <input
-              name="password"
-              type={showPassword ? "text" : "password"}
-              value={formData.password}
-              onChange={handleChange}
-              className="password-input"
-              disabled={loading || registrationStep === 'transitioning'}
-            />
-            <button
-              type="button"
-              className="eye-btn"
-              onClick={() => setShowPassword((prev) => !prev)}
-              disabled={loading || registrationStep === 'transitioning'}
-            >
-              <i className={`far ${showPassword ? "fa-eye" : "fa-eye-slash"}`} />
-            </button>
-          </div>
-          {errors.password && <p className="error">{errors.password}</p>}
-
-          {mode === "register" && (
-            <>
-              <label>Confirm Password</label>
-              <div className="password-wrapper">
-                <input
-                  name="confirmPassword"
-                  type={showConfirmPassword ? "text" : "password"}
-                  value={formData.confirmPassword}
+            {/* Email Field */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">Email</label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  name="email"
+                  type="email"
+                  value={formData.email}
                   onChange={handleChange}
-                  className="password-input"
-                  disabled={loading || registrationStep === 'transitioning'}
+                  disabled={isDisabled}
+                  placeholder="Enter your email"
+                  className="pl-10 bg-gray-50 border-gray-200"
+                />
+              </div>
+              {errors.email && <p className="text-red-500 text-sm">{errors.email}</p>}
+            </div>
+
+            {/* Password Field */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">Password</label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  value={formData.password}
+                  onChange={handleChange}
+                  disabled={isDisabled}
+                  placeholder="Enter your password"
+                  className="pl-10 pr-10 bg-gray-50 border-gray-200"
                 />
                 <button
                   type="button"
-                  className="eye-btn"
-                  onClick={() =>
-                    setShowConfirmPassword((prev) => !prev)
-                  }
-                  disabled={loading || registrationStep === 'transitioning'}
+                  onClick={() => setShowPassword(!showPassword)}
+                  disabled={isDisabled}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                 >
-                  <i
-                    className={`far ${
-                      showConfirmPassword ? "fa-eye" : "fa-eye-slash"
-                    }`}
-                  />
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
-              {errors.confirmPassword && (
-                <p className="error">{errors.confirmPassword}</p>
+              {errors.password && <p className="text-red-500 text-sm">{errors.password}</p>}
+            </div>
+
+            {/* Confirm Password (Register only) */}
+            <AnimatePresence>
+              {mode === "register" && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="space-y-2"
+                >
+                  <label className="text-sm font-medium text-gray-700">Confirm Password</label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Input
+                      name="confirmPassword"
+                      type={showConfirmPassword ? "text" : "password"}
+                      value={formData.confirmPassword}
+                      onChange={handleChange}
+                      disabled={isDisabled}
+                      placeholder="Confirm your password"
+                      className="pl-10 pr-10 bg-gray-50 border-gray-200"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      disabled={isDisabled}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                      {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                  {errors.confirmPassword && <p className="text-red-500 text-sm">{errors.confirmPassword}</p>}
+                </motion.div>
               )}
-            </>
-          )}
+            </AnimatePresence>
 
-          {errors.submit && (
-            <p className={`error submit-error ${
-              errors.submit.includes('successful') ? 'success-login' : 
-              errors.submit.includes('reset') ? 'info-message' : ''
-            }`}>
-              {errors.submit}
-            </p>
-          )}
-
-          {/* Registration Success Message */}
-          {mode === "register" && registrationStep === 'success' && (
-            <motion.div 
-              className="success-message"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-            >
-              <p className="success">✓ Registration successful! Please login with your credentials.</p>
-            </motion.div>
-          )}
-
-          <button 
-            className="submit-btn" 
-            disabled={loading || (mode === "register" && (registrationStep === 'success' || registrationStep === 'transitioning'))}
-          >
-            {loading ? (
-              <span className="spinner"></span>
-            ) : mode === "register" && registrationStep === 'success' ? (
-              "Registration successful!"
-            ) : mode === "register" && registrationStep === 'transitioning' ? (
-              "Switching to login..."
-            ) : mode === "register" && registrationStep === 'creating' ? (
-              "Creating account..."
-            ) : mode === "login" ? (
-              "Login"
-            ) : (
-              "Register"
+            {/* Error/Success Messages */}
+            {errors.submit && (
+              <Alert variant={errors.submit.includes('successful') ? 'default' : 'destructive'} className={cn(
+                errors.submit.includes('successful') && "bg-green-50 border-green-200 text-green-700"
+              )}>
+                <AlertDescription>{errors.submit}</AlertDescription>
+              </Alert>
             )}
-          </button>
-        </form>
 
-        <p className="toggle-text">
-          {mode === "login" ? "Don't have an account?" : "Already have one?"}{" "}
-          <span 
-            onClick={loading || registrationStep === 'transitioning' ? undefined : toggleMode} 
-            className={`toggle-link ${loading || registrationStep === 'transitioning' ? 'disabled' : ''}`}
-          >
-            {mode === "login" ? "Register" : "Login"}
-          </span>
-        </p>
+            {/* Success Step */}
+            {mode === "register" && registrationStep === 'success' && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex items-center gap-2 p-3 bg-green-50 rounded-lg border border-green-200"
+              >
+                <CheckCircle className="w-5 h-5 text-green-600" />
+                <p className="text-green-700 text-sm">Registration successful! Redirecting to login...</p>
+              </motion.div>
+            )}
+
+            {/* Submit Button */}
+            <Button
+              type="submit"
+              disabled={isDisabled || (mode === "register" && (registrationStep === 'success' || registrationStep === 'transitioning'))}
+              className="w-full h-12 bg-gray-900 text-white hover:bg-gray-800 rounded-full"
+            >
+              {loading ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <>
+                  {mode === "login" ? "Sign In" : "Create Account"}
+                  <ArrowRight className="ml-2 w-4 h-4" />
+                </>
+              )}
+            </Button>
+          </form>
+
+          {/* Toggle Mode */}
+          <p className="mt-6 text-center text-gray-500 text-sm">
+            {mode === "login" ? "Don't have an account?" : "Already have an account?"}{" "}
+            <button
+              onClick={isDisabled ? undefined : toggleMode}
+              disabled={isDisabled}
+              className="text-gray-900 hover:underline font-medium"
+            >
+              {mode === "login" ? "Register" : "Login"}
+            </button>
+          </p>
+        </div>
       </motion.div>
     </div>
   );

@@ -1,198 +1,231 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
-import './HeroSection.css';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import { Search, MapPin, Home, ChevronDown } from 'lucide-react';
+
+// Shadcn UI Components
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 const HeroSection = () => {
   const navigate = useNavigate();
-
   const [location, setLocation] = useState('');
   const [propertyType, setPropertyType] = useState('');
   const [bhkType, setBhkType] = useState('');
   const [possession, setPossession] = useState('');
+  
+  const [locationOpen, setLocationOpen] = useState(false);
+  const [propertyOpen, setPropertyOpen] = useState(false);
+  const [possessionOpen, setPossessionOpen] = useState(false);
 
-  // Check if BHK type should be shown
   const showBhkType = ['Flat', 'House', 'Villa'].includes(propertyType);
 
-  // Handle property type change
-  const handlePropertyTypeChange = (e) => {
-    const newType = e.target.value;
-    setPropertyType(newType);
-    // Reset BHK if property type doesn't support it
-    if (!['Flat', 'House', 'Villa'].includes(newType)) {
+  const handlePropertyTypeChange = (value) => {
+    setPropertyType(value);
+    setPropertyOpen(false);
+    if (!['Flat', 'House', 'Villa'].includes(value)) {
       setBhkType('');
     }
   };
 
   const handleSearch = () => {
-    // Build search query parameters
     const params = new URLSearchParams();
     if (location) params.append('location', location);
     if (propertyType) params.append('type', propertyType);
-    // Only add BHK if it's applicable for the property type
     if (bhkType && showBhkType) params.append('bhk', bhkType);
     if (possession) params.append('possession', possession);
-    
-    // Navigate to search results page
     navigate(`/search?${params.toString()}`);
   };
 
+  const locationSuggestions = [
+    'PAN India', 'Mumbai', 'Delhi', 'Bangalore', 'Hyderabad', 'Ahmedabad',
+    'Chennai', 'Kolkata', 'Pune', 'Jaipur', 'Surat'
+  ];
+
+  const propertyTypes = [
+    { value: 'Flat', label: 'Flat/Apartment' },
+    { value: 'House', label: 'Independent House' },
+    { value: 'Villa', label: 'Villa' },
+    { value: 'Plot', label: 'Plot/Land' },
+    { value: 'Commercial', label: 'Commercial Space' },
+    { value: 'Shop', label: 'Shop' },
+    { value: 'Office', label: 'Office Space' }
+  ];
+
+  const possessionOptions = [
+    'Just Launched', 'Under Construction', 'Ready to Move'
+  ];
+
+  // Custom Select Component
+  const CustomSelect = ({ value, placeholder, options, open, setOpen, onChange, icon: Icon }) => (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className={cn(
+          "w-full h-12 px-4 flex items-center justify-between gap-2 rounded-full border border-gray-200 bg-white text-left transition-colors",
+          "hover:border-gray-300 focus:outline-none focus:border-gray-400",
+          value ? "text-gray-900" : "text-gray-500"
+        )}
+      >
+        <div className="flex items-center gap-2">
+          {Icon && <Icon className="w-4 h-4 text-gray-400" />}
+          <span className="text-sm">{value || placeholder}</span>
+        </div>
+        <ChevronDown className={cn("w-4 h-4 text-gray-400 transition-transform", open && "rotate-180")} />
+      </button>
+      
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl border border-gray-200 shadow-lg z-50 max-h-60 overflow-y-auto"
+          >
+            {options.map((option) => {
+              const optValue = typeof option === 'string' ? option : option.value;
+              const optLabel = typeof option === 'string' ? option : option.label;
+              return (
+                <button
+                  key={optValue}
+                  type="button"
+                  onClick={() => onChange(optValue)}
+                  className={cn(
+                    "w-full px-4 py-2.5 text-left text-sm hover:bg-gray-50 transition-colors",
+                    value === optValue && "bg-gray-100 font-medium"
+                  )}
+                >
+                  {optLabel}
+                </button>
+              );
+            })}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+
   return (
-    <section className="hero-section">
-      <div className="hero-content">
-        <motion.h1
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-        >
-          Find Your Dream Property
-        </motion.h1>
+    <section className="relative min-h-[70vh] flex items-center justify-center bg-gray-100">
+      <div className="relative z-10 container mx-auto px-4 text-center">
+        {/* Tagline */}
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
+          transition={{ duration: 0.6 }}
+          className="text-gray-500 italic mb-4"
         >
-          Search from a wide range of properties across India
+          — Your Dream Property Awaits —
         </motion.p>
-        <motion.div 
-          className="search-bar"
+
+        {/* Main Heading */}
+        <motion.h1
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-4"
+        >
+          Find Your Dream Property
+        </motion.h1>
+
+        {/* Underline */}
+        <motion.div
+          initial={{ scaleX: 0 }}
+          animate={{ scaleX: 1 }}
+          transition={{ duration: 0.8, delay: 0.3 }}
+          className="w-32 h-1 bg-blue-500 mx-auto mb-6"
+        />
+
+        {/* Subtitle */}
+        <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.4 }}
+          transition={{ duration: 0.8, delay: 0.2 }}
+          className="text-gray-600 mb-10 max-w-2xl mx-auto"
         >
-          {/* Location Input with Datalist - User can type or select */}
-          <input 
-            type="text" 
-            value={location} 
-            onChange={(e) => setLocation(e.target.value)} 
-            className="search-input"
-            placeholder="Enter or Select Location"
-            list="location-suggestions"
-          />
-          <datalist id="location-suggestions">
-            <option value="PAN India" />
-            <option value="Mumbai" />
-            <option value="Delhi" />
-            <option value="Bangalore" />
-            <option value="Hyderabad" />
-            <option value="Ahmedabad" />
-            <option value="Chennai" />
-            <option value="Kolkata" />
-            <option value="Pune" />
-            <option value="Vadodara" />
-            <option value="Surat" />
-            <option value="Rajkot" />
-            <option value="Gandhinagar" />
-            <option value="Bhavnagar" />
-            <option value="Jamnagar" />
-            <option value="Anand" />
-            <option value="Navi Mumbai" />
-            <option value="Thane" />
-            <option value="Nagpur" />
-            <option value="Nashik" />
-            <option value="Aurangabad" />
-            <option value="Mysore" />
-            <option value="Mangalore" />
-            <option value="Hubli" />
-            <option value="Coimbatore" />
-            <option value="Madurai" />
-            <option value="Tiruchirappalli" />
-            <option value="Warangal" />
-            <option value="Nizamabad" />
-            <option value="Visakhapatnam" />
-            <option value="Vijayawada" />
-            <option value="Guntur" />
-            <option value="Kochi" />
-            <option value="Thiruvananthapuram" />
-            <option value="Kozhikode" />
-            <option value="Howrah" />
-            <option value="Durgapur" />
-            <option value="Siliguri" />
-            <option value="Jaipur" />
-            <option value="Jodhpur" />
-            <option value="Udaipur" />
-            <option value="Kota" />
-            <option value="Indore" />
-            <option value="Bhopal" />
-            <option value="Jabalpur" />
-            <option value="Gwalior" />
-            <option value="Noida" />
-            <option value="Ghaziabad" />
-            <option value="Lucknow" />
-            <option value="Kanpur" />
-            <option value="Agra" />
-            <option value="Varanasi" />
-            <option value="Chandigarh" />
-            <option value="Ludhiana" />
-            <option value="Amritsar" />
-            <option value="Jalandhar" />
-            <option value="Gurgaon" />
-            <option value="Faridabad" />
-            <option value="Panipat" />
-            <option value="Patna" />
-            <option value="Gaya" />
-            <option value="Bhubaneswar" />
-            <option value="Cuttack" />
-            <option value="Ranchi" />
-            <option value="Jamshedpur" />
-            <option value="Raipur" />
-            <option value="Bhilai" />
-            <option value="Dehradun" />
-            <option value="Haridwar" />
-            <option value="Panaji" />
-            <option value="Margao" />
-          </datalist>
+          Search from a wide range of properties across India. 
+          Your perfect home is just a search away.
+        </motion.p>
 
-          {/* Property Type */}
-          <select value={propertyType} onChange={handlePropertyTypeChange} className="search-select">
-            <option value="">Property Type</option>
-            <option value="Flat">Flat/Apartment</option>
-            <option value="House">Independent House</option>
-            <option value="Villa">Villa</option>
-            <option value="Plot">Plot/Land</option>
-            <option value="Commercial">Commercial Space</option>
-            <option value="Shop">Shop</option>
-            <option value="Office">Office Space</option>
-            <option value="Warehouse">Warehouse</option>
-            <option value="Showroom">Showroom</option>
-          </select>
+        {/* Search Bar */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.4 }}
+          className="max-w-3xl mx-auto"
+        >
+          <div className="bg-white rounded-full p-2 shadow-lg border border-gray-200">
+            <div className="flex items-center gap-2">
+              {/* Location Select */}
+              <div className="flex-1" onClick={(e) => e.stopPropagation()}>
+                <CustomSelect
+                  value={location}
+                  placeholder="Select Location"
+                  options={locationSuggestions}
+                  open={locationOpen}
+                  setOpen={(v) => { setLocationOpen(v); setPropertyOpen(false); setPossessionOpen(false); }}
+                  onChange={(v) => { setLocation(v); setLocationOpen(false); }}
+                  icon={MapPin}
+                />
+              </div>
 
-          {/* BHK Type - Only show for Flat, House, Villa */}
-          {showBhkType && (
-            <motion.select 
-              value={bhkType} 
-              onChange={(e) => setBhkType(e.target.value)} 
-              className="search-select"
-              initial={{ opacity: 0, width: 0 }}
-              animate={{ opacity: 1, width: 'auto' }}
-              exit={{ opacity: 0, width: 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              <option value="">BHK Type</option>
-              <option value="1RK">1 RK</option>
-              <option value="1BHK">1 BHK</option>
-              <option value="2BHK">2 BHK</option>
-              <option value="3BHK">3 BHK</option>
-              <option value="4BHK">4 BHK</option>
-              <option value="5BHK">5 BHK</option>
-              <option value="6BHK">6+ BHK</option>
-            </motion.select>
-          )}
+              {/* Property Type Select */}
+              <div className="flex-1" onClick={(e) => e.stopPropagation()}>
+                <CustomSelect
+                  value={propertyType}
+                  placeholder="Property Type"
+                  options={propertyTypes}
+                  open={propertyOpen}
+                  setOpen={(v) => { setPropertyOpen(v); setLocationOpen(false); setPossessionOpen(false); }}
+                  onChange={handlePropertyTypeChange}
+                  icon={Home}
+                />
+              </div>
 
-          {/* Possession Status */}
-          <select value={possession} onChange={(e) => setPossession(e.target.value)} className="search-select">
-            <option value="">Possession Status</option>
-            <option value="Just Launched">Just Launched</option>
-            <option value="Under Construction">Under Construction</option>
-            <option value="Ready to Move">Ready to Move</option>
-          </select>
+              {/* Possession Status Select */}
+              <div className="flex-1" onClick={(e) => e.stopPropagation()}>
+                <CustomSelect
+                  value={possession}
+                  placeholder="Possession Status"
+                  options={possessionOptions}
+                  open={possessionOpen}
+                  setOpen={(v) => { setPossessionOpen(v); setLocationOpen(false); setPropertyOpen(false); }}
+                  onChange={(v) => { setPossession(v); setPossessionOpen(false); }}
+                />
+              </div>
 
-          <button onClick={handleSearch} className="search-button">
-            <svg className="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-            Search
-          </button>
+              {/* Search Button */}
+              <Button 
+                onClick={handleSearch}
+                className="h-12 px-8 bg-gray-900 text-white hover:bg-gray-800 rounded-full gap-2"
+              >
+                <Search className="w-4 h-4" />
+                <span className="hidden sm:inline">Search</span>
+              </Button>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Trust Badges */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.8, delay: 0.8 }}
+          className="mt-16 flex flex-wrap justify-center gap-8 text-gray-500"
+        >
+          <div className="flex items-center gap-2">
+            <span className="text-2xl font-bold text-gray-900">10K+</span>
+            <span className="text-sm">Properties</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-2xl font-bold text-gray-900">50+</span>
+            <span className="text-sm">Cities</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-2xl font-bold text-gray-900">5K+</span>
+            <span className="text-sm">Happy Customers</span>
+          </div>
         </motion.div>
       </div>
     </section>
