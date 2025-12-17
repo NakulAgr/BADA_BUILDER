@@ -1,9 +1,10 @@
 // src/pages/BookSiteVisit.jsx
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { collection, addDoc } from 'firebase/firestore';
 import { db } from '../firebase';
+import emailjs from '@emailjs/browser';
 import './BookSiteVisit.css';
 
 const BookSiteVisit = () => {
@@ -27,6 +28,8 @@ const BookSiteVisit = () => {
   });
 
   const [loading, setLoading] = useState(false);
+  const [screenLocked, setScreenLocked] = useState(false);
+  const [bookingStep, setBookingStep] = useState('');
   const [minDate, setMinDate] = useState('');
   const [maxDate, setMaxDate] = useState('');
 
@@ -67,6 +70,49 @@ const BookSiteVisit = () => {
     setFormData({ ...formData, paymentMethod: e.target.value });
   };
 
+  // Open Google Maps for address selection
+  const openGoogleMapsForAddress = () => {
+    const mapsUrl = 'https://www.google.com/maps';
+    window.open(mapsUrl, '_blank');
+  };
+
+  // EmailJS function to send admin notification
+  const sendAdminEmail = async (bookingData) => {
+    try {
+      // Create visitor list with all names
+      const visitors = [];
+      if (bookingData.person1_name) visitors.push(`1. ${bookingData.person1_name}`);
+      if (bookingData.person2_name) visitors.push(`2. ${bookingData.person2_name}`);
+      if (bookingData.person3_name) visitors.push(`3. ${bookingData.person3_name}`);
+      const allVisitors = visitors.join('\n');
+
+      const templateParams = {
+        person1: bookingData.person1_name,
+        all_visitors: allVisitors,
+        number_of_people: bookingData.number_of_people,
+        user_email: bookingData.user_email,
+        visit_date: bookingData.visit_date,
+        visit_time: bookingData.visit_time,
+        pickup_address: bookingData.pickup_address,
+        property_title: bookingData.property_title,
+        payment_method: bookingData.payment_method
+      };
+
+      const result = await emailjs.send(
+        'service_d188p7h',    // Your service ID
+        'template_h5bldc9',   // Your template ID
+        templateParams,
+        'X1M-x2azpHtpYjDJb'   // Your public key
+      );
+
+      console.log('✅ Admin email sent successfully:', result.text);
+      return { success: true };
+    } catch (error) {
+      console.error('❌ Failed to send admin email:', error);
+      return { success: false, error: error.text };
+    }
+  };
+
 
 
   const handleSubmit = async (e) => {
@@ -78,7 +124,10 @@ const BookSiteVisit = () => {
       return;
     }
 
+    // Lock screen immediately
+    setScreenLocked(true);
     setLoading(true);
+    setBookingStep('Saving booking details...');
 
     try {
       // Save booking to Firestore
@@ -105,34 +154,59 @@ const BookSiteVisit = () => {
       bookingData.booking_id = docRef.id;
       bookingData.property_location = property?.location || 'N/A';
 
-      // Send email and WhatsApp notifications to admin
+      setBookingStep('Booking confirmed! Redirecting...');
 
-      try {
-  const response = await fetch('http://localhost:3002/api/notify-booking', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(bookingData)
-  });
+      // Send EmailJS notification to admin (non-blocking - runs in background)
+      sendAdminEmail(bookingData).then(emailResult => {
+        if (emailResult.success) {
+          console.log('✅ Admin email sent successfully');
+        } else {
+          console.warn('⚠️ Admin email failed:', emailResult.error);
+        }
+      });
 
-  const result = await response.json();
+      // Send email and WhatsApp notifications to admin (existing notification server - non-blocking)
+      fetch('http://localhost:3002/api/notify-booking', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(bookingData)
+      }).then(response => response.json())
+        .then(result => {
+          if (result.success) {
+            console.log('✅ Notifications sent successfully');
+          } else {
+            console.warn('⚠️ Notification failed:', result.error);
+          }
+        })
+        .catch(err => {
+          console.warn('⚠️ Notification service unreachable');
+        });
 
-  if (result.success) {
-    console.log('✅ Notifications sent successfully');
-  } else {
-    console.warn('⚠️ Notification failed:', result.error);
-  }
-} catch (err) {
-  console.warn('⚠️ Notification service unreachable');
-}
+      // Auto-redirect immediately with success message (non-blocking)
+      setTimeout(() => {
+        // Show success popup (non-blocking)
+        setTimeout(() => {
+          alert('Your site visit has been booked successfully!\n\nYou will receive a confirmation shortly.');
+        }, 100);
+        
+        // Navigate immediately without waiting for popup
+        navigate('/');
+      }, 500);
 
-      alert('Your site visit has been booked successfully!\n\nYou will receive a confirmation shortly.');
-      navigate('/');
     } catch (error) {
       console.error('Error booking site visit:', error);
-      alert('Failed to book site visit. Please try again.');
-    } finally {
+      setScreenLocked(false);
       setLoading(false);
+      alert('Failed to book site visit. Please try again.');
     }
+
+    // Safety mechanism: Always unlock screen after 3 seconds max
+    setTimeout(() => {
+      if (screenLocked) {
+        setScreenLocked(false);
+        setLoading(false);
+      }
+    }, 3000);
   };
 
   return (
@@ -231,19 +305,31 @@ const BookSiteVisit = () => {
           <div className="pickup-section">
             <h4>📍 Pickup Location</h4>
 
-            {/* Enhanced Address Input with Google Maps Integration */}
+            {/* Enhanced Address Input with Maps Button */}
             <div className="address-input-container">
               <label>
                 Pickup Address:
-                <input
-                  type="text"
-                  name="address"
-                  value={locationData.address}
-                  onChange={(e) => setLocationData({ ...locationData, address: e.target.value })}
-                  placeholder="Enter your complete pickup address..."
-                  required
-                  className="simple-address-input"
-                />
+                <div className="address-input-wrapper">
+                  <input
+                    type="text"
+                    name="address"
+                    value={locationData.address}
+                    onChange={(e) => setLocationData({ ...locationData, address: e.target.value })}
+                    placeholder="Enter your complete pickup address..."
+                    required
+                    className="address-input-with-maps"
+                    disabled={screenLocked}
+                  />
+                  <button
+                    type="button"
+                    className="maps-button"
+                    onClick={openGoogleMapsForAddress}
+                    disabled={screenLocked}
+                    title="Open Google Maps"
+                  >
+                    🗺️
+                  </button>
+                </div>
                 <small className="address-help">
                   Please provide your complete address including area, city, and pincode
                 </small>
@@ -289,11 +375,11 @@ const BookSiteVisit = () => {
             </div>
           )}
           <div className="form-actions">
-            <button type="submit" disabled={loading}>
-              {loading ? 'Booking...' : 'Book'}
+            <button type="submit" disabled={loading || screenLocked}>
+              {screenLocked ? 'Processing...' : loading ? 'Booking...' : 'Book'}
             </button>
-            <button type="button" onClick={() => alert('Reschedule functionality coming soon!')}>Reschedule</button>
-            <button type="button" className="cancel-btn" onClick={() => navigate(-1)}>Cancel</button>
+            <button type="button" disabled={screenLocked} onClick={() => alert('Reschedule functionality coming soon!')}>Reschedule</button>
+            <button type="button" className="cancel-btn" disabled={screenLocked} onClick={() => navigate(-1)}>Cancel</button>
           </div>
         </form>
       </div>
@@ -306,6 +392,35 @@ const BookSiteVisit = () => {
           If you decide to purchase the property, the visit charges will be refunded.
         </p>
       </div>
+
+      {/* Screen Lock Overlay */}
+      {screenLocked && (
+        <div className="screen-lock-overlay">
+          <div className="lock-content">
+            <div className="lock-spinner"></div>
+            <h3 className="lock-title">Processing Your Booking</h3>
+            <p className="lock-message">{bookingStep}</p>
+            <ul className="lock-steps">
+              <li>
+                <span className="step-icon">✓</span>
+                Validating booking details
+              </li>
+              <li>
+                <span className={`step-icon ${bookingStep.includes('Saving') ? 'processing' : bookingStep.includes('confirmed') ? '' : 'pending'}`}>
+                  {bookingStep.includes('confirmed') ? '✓' : bookingStep.includes('Saving') ? '⟳' : '2'}
+                </span>
+                Saving to database
+              </li>
+              <li>
+                <span className={`step-icon ${bookingStep.includes('Redirecting') ? 'processing' : 'pending'}`}>
+                  {bookingStep.includes('Redirecting') ? '⟳' : '3'}
+                </span>
+                Completing & redirecting
+              </li>
+            </ul>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
