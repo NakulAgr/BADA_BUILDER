@@ -330,6 +330,7 @@ const LeadModal = ({ isOpen, onClose }) => {
             </motion.div>
           )}
 
+
           <div className="form-group">
             <label htmlFor="location">Location *</label>
             <input

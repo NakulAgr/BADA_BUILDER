@@ -1,7 +1,6 @@
-/* eslint-disable jsx-a11y/anchor-is-valid */
-import React from 'react'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
+import { sendForm, init } from '@emailjs/browser'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
 import { Switch } from '@headlessui/react'
 
@@ -14,6 +13,91 @@ function classNames(...classes) {
 
 const Connect = () => {
     const [agreed, setAgreed] = useState(false);
+    const [sending, setSending] = useState(false);
+    const [message, setMessage] = useState('');
+    const [messageType, setMessageType] = useState(''); // 'success' or 'error'
+    const formRef = useRef(null);
+
+    useEffect(() => {
+        const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY || '';
+        if (publicKey) init(publicKey);
+    }, []);
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        if (sending) return;
+
+        // Clear previous messages
+        setMessage('');
+        setMessageType('');
+
+        // Basic form validation
+        const formData = new FormData(formRef.current);
+        const firstName = formData.get('first_name');
+        const lastName = formData.get('last_name');
+        const email = formData.get('user_email');
+        const phone = formData.get('phone');
+        const messageText = formData.get('message');
+
+        if (!firstName || !lastName || !email || !phone || !messageText) {
+            setMessage('Please fill in all required fields.');
+            setMessageType('error');
+            return;
+        }
+
+        if (!agreed) {
+            setMessage('Please agree to allow us to contact you via phone.');
+            setMessageType('error');
+            return;
+        }
+
+        setSending(true);
+
+        const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID || '';
+        const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID || '';
+        const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY || '';
+
+        if (!serviceId || !templateId || !publicKey) {
+            setMessage('EmailJS not configured. Please contact support.');
+            setMessageType('error');
+            setSending(false);
+            return;
+        }
+
+        console.log('📧 Sending contact form with EmailJS...');
+        console.log('Service ID:', serviceId);
+        console.log('Template ID:', templateId);
+        
+        // Log form data being sent
+        const formDataForLog = new FormData(formRef.current);
+        console.log('📋 Form data being sent:');
+        for (let [key, value] of formDataForLog.entries()) {
+            console.log(`  ${key}: ${value}`);
+        }
+
+        sendForm(serviceId, templateId, formRef.current, publicKey)
+            .then((response) => {
+                console.log('✅ Contact form sent successfully:', response.text);
+                setMessage('Thank you! Your message has been sent successfully. We will contact you soon.');
+                setMessageType('success');
+                formRef.current.reset();
+                setAgreed(false);
+                
+                // Auto-hide success message after 5 seconds
+                setTimeout(() => {
+                    setMessage('');
+                    setMessageType('');
+                }, 5000);
+            })
+            .catch((error) => {
+                console.error('❌ Failed to send contact form:', error);
+                setMessage('Failed to send message. Please try again later or contact us directly.');
+                setMessageType('error');
+            })
+            .finally(() => {
+                setSending(false);
+            });
+    };
 
     return (
         // <div className="isolate bg-white px-6 py-24 sm:py-32 lg:px-8"> --original
@@ -39,36 +123,72 @@ const Connect = () => {
             {/* <div className="mx-auto max-w-2xl text-center mt-28 "> --original */}
             <div className="mx-auto text-center">
                 <h2 className="title">Contact Us</h2>
-                <p className="mt-2 subdesc">
+                {/* <p className="mt-2 subdesc">
                     We are here to assist you on your study abroad journey.
-                </p>
+                </p> */}
             </div>
-            <form action="#" method="POST" className="mx-auto mt-16 max-w-xl sm:mt-20">
+            
+            {/* Success/Error Message */}
+            {message && (
+                <div className={`mx-auto mt-8 max-w-xl p-4 rounded-lg border ${
+                    messageType === 'success' 
+                        ? 'bg-green-50 border-green-200 text-green-800' 
+                        : 'bg-red-50 border-red-200 text-red-800'
+                }`}>
+                    <div className="flex items-center">
+                        {messageType === 'success' ? (
+                            <svg className="w-5 h-5 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                        ) : (
+                            <svg className="w-5 h-5 mr-2 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        )}
+                        <p className="text-sm font-medium">{message}</p>
+                        <button
+                            onClick={() => {
+                                setMessage('');
+                                setMessageType('');
+                            }}
+                            className="ml-auto text-gray-400 hover:text-gray-600"
+                        >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            <form ref={formRef} onSubmit={handleSubmit} className="mx-auto mt-16 max-w-xl sm:mt-20">
                 <div className="grid grid-cols-1 gap-x-8 gap-y-6 sm:grid-cols-2">
                     <div>
-                        <label htmlFor="first-name" className="block text-sm font-semibold leading-6 text-gray-600">
+                        <label htmlFor="first_name" className="block text-sm font-semibold leading-6 text-gray-600">
                             First name
                         </label>
                         <div className="mt-2.5">
                             <input
                                 type="text"
-                                name="first-name"
-                                id="first-name"
+                                name="first_name"
+                                id="first_name"
                                 autoComplete="given-name"
+                                required
                                 className="block w-full rounded-md border-0 px-3.5 py-2 text-gray-800 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                             />
                         </div>
                     </div>
                     <div>
-                        <label htmlFor="last-name" className="block text-sm font-semibold leading-6 text-gray-600">
+                        <label htmlFor="last_name" className="block text-sm font-semibold leading-6 text-gray-600">
                             Last name
                         </label>
                         <div className="mt-2.5">
                             <input
                                 type="text"
-                                name="last-name"
-                                id="last-name"
+                                name="last_name"
+                                id="last_name"
                                 autoComplete="family-name"
+                                required
                                 className="block w-full rounded-md border-0 px-3.5 py-2 text-gray-800 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                             />
                         </div>
@@ -88,15 +208,16 @@ const Connect = () => {
                         </div>
                     </div>
                     <div className="sm:col-span-2">
-                        <label htmlFor="email" className="block text-sm font-semibold leading-6 text-gray-600">
+                        <label htmlFor="user_email" className="block text-sm font-semibold leading-6 text-gray-600">
                             Email
                         </label>
                         <div className="mt-2.5">
                             <input
                                 type="email"
-                                name="email"
-                                id="email"
+                                name="user_email"
+                                id="user_email"
                                 autoComplete="email"
+                                required
                                 className="block w-full rounded-md border-0 px-3.5 py-2 text-gray-800 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                             />
                         </div>
@@ -126,9 +247,10 @@ const Connect = () => {
                             </div>
                             <input
                                 type="tel"
-                                name="phone-number"
-                                id="phone-number"
+                                name="phone"
+                                id="phone"
                                 autoComplete="tel"
+                                required
                                 className="block w-full rounded-md border-0 px-3.5 py-2 pl-20 text-gray-800 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                             />
                         </div>
@@ -142,6 +264,8 @@ const Connect = () => {
                                 name="message"
                                 id="message"
                                 rows={4}
+                                required
+                                placeholder="Tell us about your inquiry..."
                                 className="block w-full rounded-md border-0 px-3.5 py-2 text-gray-800 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                                 defaultValue={''}
                             />
@@ -175,9 +299,17 @@ const Connect = () => {
                 <div className="mt-10">
                     <button
                         type="submit"
-                        className="block w-full rounded-xl bg-primary px-3.5 py-2.5 text-center text-sm font-semibold text-white shadow-xl hover:bg-primary-hover focus:bg-primary-hover duration-300 transition-colors"
+                        disabled={sending || !agreed}
+                        className="block w-full rounded-xl bg-primary px-3.5 py-2.5 text-center text-sm font-semibold text-white shadow-xl hover:bg-primary-hover focus:bg-primary-hover duration-300 transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
-                        Let's talk
+                        {sending ? (
+                            <>
+                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                Sending Message...
+                            </>
+                        ) : (
+                            "Let's talk"
+                        )}
                     </button>
                 </div>
             </form>
