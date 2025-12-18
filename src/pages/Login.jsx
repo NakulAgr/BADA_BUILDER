@@ -10,7 +10,6 @@ import { doc, setDoc } from "firebase/firestore";
 import { auth, db } from "../firebase";
 import { useNavigate, useLocation } from "react-router-dom";
 import { performanceMonitor } from "../utils/performance";
-import { authOptimizations } from "../utils/authOptimizations";
 
 // Shadcn UI Components
 import { Button } from "@/components/ui/button";
@@ -86,13 +85,8 @@ const Login = () => {
   const loginUser = useCallback(async (email, password) => {
     setLoading(true);
     setErrors({});
-    
     try {
-      // Use retry mechanism for better reliability
-      const loginOperation = () => signInWithEmailAndPassword(auth, email, password);
-      await performanceMonitor.retryOperation(loginOperation, 1, 500);
-      
-      // Navigate immediately without waiting for profile fetch
+      await performanceMonitor.trackNetworkRequest('Login', signInWithEmailAndPassword(auth, email, password));
       navigate(getRedirectPath(false), { replace: true });
     } catch (error) {
       let msg = "Login failed";
@@ -100,7 +94,6 @@ const Login = () => {
       if (error.code === "auth/wrong-password") msg = "Wrong password";
       if (error.code === "auth/invalid-credential") msg = "Invalid email or password";
       if (error.code === "auth/too-many-requests") msg = "Too many attempts. Try again later";
-      if (error.code === "auth/network-request-failed") msg = "Network error. Please check your connection";
       setErrors({ submit: msg });
     } finally {
       setLoading(false);
@@ -111,51 +104,31 @@ const Login = () => {
     setLoading(true);
     setErrors({});
     setRegistrationStep('creating');
-    
     try {
-      // Use retry mechanism for registration
-      const registrationOperation = () => createUserWithEmailAndPassword(auth, email, password);
-      const userCredential = await performanceMonitor.retryOperation(registrationOperation, 1, 500);
-      
-      // Create profile asynchronously - don't block the UI
-      const profileCreation = setDoc(doc(db, "users", userCredential.user.uid), {
-        email, 
-        name, 
-        is_subscribed: false, 
-        subscription_expiry: null, 
-        created_at: new Date().toISOString(),
-      });
-      
+      const userCredential = await performanceMonitor.trackNetworkRequest(
+        'Registration',
+        createUserWithEmailAndPassword(auth, email, password)
+      );
+      const userProfilePromise = performanceMonitor.trackNetworkRequest(
+        'Profile Creation',
+        setDoc(doc(db, "users", userCredential.user.uid), {
+          email, name, is_subscribed: false, subscription_expiry: null, created_at: new Date().toISOString(),
+        })
+      );
       setRegistrationStep('success');
-      
-      // Sign out and transition to login
       await signOut(auth);
-      
-      // Optimized transition timing
       setTimeout(() => {
         setRegistrationStep('transitioning');
         setLoading(true);
-      }, 600);
-      
+      }, 800);
       setTimeout(() => {
         setMode('login');
         setRegistrationStep('form');
         setLoading(false);
         setFormData({ name: "", email: "", password: "", confirmPassword: "" });
         setErrors({ submit: "Registration successful! Please login with your credentials." });
-      }, 900);
-      
-      // Handle profile creation in background
-      profileCreation.catch((profileError) => {
-        console.warn('Profile creation delayed:', profileError);
-        // Retry profile creation once
-        setTimeout(() => {
-          setDoc(doc(db, "users", userCredential.user.uid), {
-            email, name, is_subscribed: false, subscription_expiry: null, created_at: new Date().toISOString(),
-          }).catch(err => console.error('Profile creation failed:', err));
-        }, 2000);
-      });
-      
+      }, 1200);
+      userProfilePromise.catch((profileError) => console.warn('Profile creation delayed:', profileError));
     } catch (error) {
       setRegistrationStep('form');
       setLoading(false);
@@ -167,16 +140,13 @@ const Login = () => {
     }
   }, []);
 
-  const handleSubmit = useCallback(
-    authOptimizations.preventDoubleSubmission((e) => {
-      e.preventDefault();
-      if (loading) return;
-      if (!validate()) return;
-      if (mode === "login") loginUser(formData.email, formData.password);
-      else createUser(formData.email, formData.password, formData.name);
-    }, 1500),
-    [mode, formData, validate, loginUser, createUser, loading]
-  );
+  const handleSubmit = useCallback((e) => {
+    e.preventDefault();
+    if (loading) return;
+    if (!validate()) return;
+    if (mode === "login") loginUser(formData.email, formData.password);
+    else createUser(formData.email, formData.password, formData.name);
+  }, [mode, formData, validate, loginUser, createUser, loading]);
 
   const toggleMode = useCallback(() => {
     if (registrationStep === 'transitioning') return;
@@ -193,7 +163,7 @@ const Login = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
-      {/* Simple Loading Overlay */}
+      {/* Loading Overlay */}
       <AnimatePresence>
         {(loading && registrationStep !== 'success') || registrationStep === 'transitioning' ? (
           <motion.div
@@ -203,8 +173,8 @@ const Login = () => {
             className="fixed inset-0 z-50 bg-white/80 backdrop-blur-sm flex items-center justify-center"
           >
             <div className="text-center">
-              <Loader2 className="w-8 h-8 animate-spin text-gray-900 mx-auto mb-4" />
-              <p className="text-gray-700 text-sm">
+              <Loader2 className="w-12 h-12 animate-spin text-gray-900 mx-auto mb-4" />
+              <p className="text-gray-700 text-lg">
                 {registrationStep === 'transitioning' ? "Switching to login..." :
                  mode === "login" ? "Signing you in..." :
                  registrationStep === 'creating' ? "Creating your account..." : "Processing..."}
