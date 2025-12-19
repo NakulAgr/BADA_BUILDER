@@ -68,16 +68,31 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const isSubscribed = useCallback(() => {
-    if (!userProfile) return false;
-    if (!userProfile.is_subscribed) return false;
+    console.log('🔍 Checking subscription status...');
+    console.log('User Profile:', userProfile);
+    
+    if (!userProfile) {
+      console.log('❌ No user profile found');
+      return false;
+    }
+    
+    if (!userProfile.is_subscribed) {
+      console.log('❌ User is not subscribed');
+      return false;
+    }
     
     // Check if subscription is still valid
     if (userProfile.subscription_expiry) {
       const expiryDate = new Date(userProfile.subscription_expiry);
-      return expiryDate > new Date();
+      const isValid = expiryDate > new Date();
+      console.log('📅 Subscription expiry:', userProfile.subscription_expiry);
+      console.log('📅 Is valid:', isValid);
+      return isValid;
     }
     
-    return false;
+    // If no expiry date, assume it's valid (lifetime subscription)
+    console.log('✅ No expiry date, assuming valid subscription');
+    return true;
   }, [userProfile]);
 
   const value = {

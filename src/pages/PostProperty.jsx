@@ -1,11 +1,46 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { collection, addDoc } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { db, storage } from '../firebase';
+import { db } from '../firebase';
 import './PostProperty.css';
+
+// --- Cloudinary Configuration ---
+const CLOUDINARY_CLOUD_NAME = "dooamkdih";
+const CLOUDINARY_UPLOAD_PRESET = "property_images";
+
+/**
+ * Uploads an image file to Cloudinary using an unsigned preset.
+ * @param {File} file The image file to upload.
+ * @returns {Promise<string>} A promise that resolves to the secure URL of the uploaded image.
+ */
+const uploadToCloudinary = async (file) => {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+
+  const url = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`;
+
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(`Cloudinary upload failed: ${errorData.error.message}`);
+    }
+
+    const data = await response.json();
+    return data.secure_url;
+  } catch (error) {
+    console.error("Error uploading to Cloudinary:", error);
+    throw error;
+  }
+};
+
 
 const PostProperty = () => {
   const navigate = useNavigate();
@@ -35,17 +70,29 @@ const PostProperty = () => {
   });
 
   useEffect(() => {
+    console.log('🔍 Checking authentication and subscription...');
+    console.log('Is Authenticated:', isAuthenticated);
+    console.log('Current User:', currentUser);
+    
     if (!isAuthenticated) {
+      console.warn('⚠️ User not authenticated, redirecting to login');
       alert('Please login to post a property');
       navigate('/login');
       return;
     }
 
-    if (!isSubscribed()) {
-      alert('Please subscribe to a plan to post properties');
-      navigate('/subscription-plans');
+    // Only check subscription after user profile is loaded
+    if (currentUser && !loading) {
+      const subscribed = isSubscribed();
+      console.log('Is Subscribed:', subscribed);
+      
+      if (!subscribed) {
+        console.warn('⚠️ User not subscribed, redirecting to subscription plans');
+        alert('Please subscribe to a plan to post properties');
+        navigate('/subscription-plans');
+      }
     }
-  }, [isAuthenticated, isSubscribed, navigate]);
+  }, [isAuthenticated, isSubscribed, navigate, currentUser, loading]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -77,7 +124,34 @@ const PostProperty = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    console.log('🚀 Starting property submission...');
+    console.log('Current User:', currentUser);
+    console.log('User Type:', userType);
+    console.log('Form Data:', formData);
+    
+    // Validate required fields
+    const requiredFields = ['title', 'type', 'location', 'price', 'description'];
+    const missingFields = requiredFields.filter(field => !formData[field]?.trim());
+    
+    if (missingFields.length > 0) {
+      alert(`Please fill in all required fields: ${missingFields.join(', ')}`);
+      return;
+    }
+    
+    // Validate developer fields if user is developer
+    if (userType === 'developer') {
+      const developerRequiredFields = ['companyName', 'projectName'];
+      const missingDeveloperFields = developerRequiredFields.filter(field => !formData[field]?.trim());
+      
+      if (missingDeveloperFields.length > 0) {
+        alert(`Please fill in required developer fields: ${missingDeveloperFields.join(', ')}`);
+        return;
+      }
+    }
+    
+    // Validate subscription
     if (!isSubscribed()) {
+      console.warn('⚠️ User not subscribed');
       alert('Your subscription has expired. Please renew to post properties.');
       navigate('/subscription-plans');
       return;
@@ -88,22 +162,22 @@ const PostProperty = () => {
     try {
       let imageUrl = '';
 
-      // Upload image if provided
+      // Upload image to Cloudinary if a file is selected
       if (imageFile) {
-        const imageRef = ref(storage, `properties/${Date.now()}_${imageFile.name}`);
-        await uploadBytes(imageRef, imageFile);
-        imageUrl = await getDownloadURL(imageRef);
+        console.log('📸 Uploading image to Cloudinary...');
+        imageUrl = await uploadToCloudinary(imageFile);
+        console.log('✅ Image uploaded successfully:', imageUrl);
       }
 
-      // Save property to Firestore
+      // Prepare property data for Firestore
       const propertyData = {
         title: formData.title,
         type: formData.type,
         location: formData.location,
         price: formData.price,
         description: formData.description,
-        facilities: formData.facilities.split(',').map(f => f.trim()),
-        image_url: imageUrl,
+        facilities: formData.facilities ? formData.facilities.split(',').map(f => f.trim()).filter(f => f) : [],
+        image_url: imageUrl, // Save the Cloudinary URL
         user_id: currentUser.uid,
         user_type: userType,
         created_at: new Date().toISOString(),
@@ -117,22 +191,41 @@ const PostProperty = () => {
 
       // Add developer-specific fields if user is a developer
       if (userType === 'developer') {
-        propertyData.company_name = formData.companyName;
-        propertyData.project_name = formData.projectName;
-        propertyData.total_units = formData.totalUnits;
-        propertyData.completion_date = formData.completionDate;
-        propertyData.rera_number = formData.reraNumber;
+        propertyData.company_name = formData.companyName || '';
+        propertyData.project_name = formData.projectName || '';
+        propertyData.total_units = formData.totalUnits || '';
+        propertyData.completion_date = formData.completionDate || '';
+        propertyData.rera_number = formData.reraNumber || '';
       }
 
+      console.log('💾 Saving to Firestore...', propertyData);
+
+      // Save document to Firestore
       await addDoc(collection(db, 'properties'), propertyData);
 
-      alert('Property posted successfully!');
-      navigate('/');
-    } catch (error) {
-      console.error('Error posting property:', error);
-      alert('Failed to post property. Please try again.');
-    } finally {
+      console.log('✅ Property posted successfully!');
+      
       setLoading(false);
+      alert('Property posted successfully!');
+      
+      // Navigate after a short delay
+      setTimeout(() => {
+        navigate('/');
+      }, 500);
+      
+    } catch (error) {
+      console.error('❌ Error posting property:', error);
+      
+      setLoading(false);
+      
+      let errorMessage = 'Failed to post property. ';
+      if (error.message.includes('Cloudinary')) {
+          errorMessage += 'The image upload failed. Please try again or use a different image.';
+      } else {
+          errorMessage += 'Please check your connection and try again.';
+      }
+      
+      alert(errorMessage);
     }
   };
 
@@ -404,13 +497,24 @@ const PostProperty = () => {
             {loading ? (
               <span className="flex items-center justify-center gap-2">
                 <span className="spinner"></span>
-                Posting...
+                Posting Property...
               </span>
             ) : (
               'Post Property'
             )}
           </button>
         </form>
+        
+        {/* Loading Overlay */}
+        {loading && (
+          <div className="loading-overlay">
+            <div className="loading-content">
+              <div className="spinner-large"></div>
+              <h3>Posting Your Property...</h3>
+              <p>Please wait while we save your property details</p>
+            </div>
+          </div>
+        )}
           </>
         )}
       </motion.div>

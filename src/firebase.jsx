@@ -2,17 +2,16 @@
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore, enableNetwork } from "firebase/firestore";
-import { getStorage } from "firebase/storage";
 
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCJo7eUuF3nm8GoTzOrpFBJb_k00I6v1wg",
-  authDomain: "original-badabuilder.firebaseapp.com",
-  projectId: "original-badabuilder",
-  storageBucket: "original-badabuilder.firebasestorage.app",
-  messagingSenderId: "988327451876",
-  appId: "1:988327451876:web:ee9b8875918495756720f1",
-  measurementId: "G-C5014YM6M6"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
 // Initialize Firebase
@@ -21,7 +20,6 @@ const app = initializeApp(firebaseConfig);
 // Initialize services with optimizations
 const auth = getAuth(app);
 const db = getFirestore(app);
-const storage = getStorage(app);
 
 // Optimize Firebase performance
 if (typeof window !== 'undefined') {
@@ -36,6 +34,5 @@ if (typeof window !== 'undefined') {
 export {
   app,
   auth,
-  db,
-  storage
+  db
 };

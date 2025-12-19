@@ -3,9 +3,44 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { db, storage } from '../../firebase';
+import { db } from '../../firebase';
 import './AdminLiveGrouping.css';
+
+// --- Cloudinary Configuration ---
+const CLOUDINARY_CLOUD_NAME = "dooamkdih";
+const CLOUDINARY_UPLOAD_PRESET = "property_images";
+
+/**
+ * Uploads an image file to Cloudinary using an unsigned preset.
+ * @param {File} file The image file to upload.
+ * @returns {Promise<string>} A promise that resolves to the secure URL of the uploaded image.
+ */
+const uploadToCloudinary = async (file) => {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+
+  const url = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`;
+
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(`Cloudinary upload failed: ${errorData.error.message}`);
+    }
+
+    const data = await response.json();
+    return data.secure_url;
+  } catch (error) {
+    console.error("Error uploading to Cloudinary:", error);
+    throw error;
+  }
+};
+
 
 const AdminLiveGrouping = () => {
   const navigate = useNavigate();
@@ -87,15 +122,8 @@ const AdminLiveGrouping = () => {
   };
 
   const uploadImages = async () => {
-    const imageUrls = [];
-    
-    for (const file of imageFiles) {
-      const imageRef = ref(storage, `live_grouping/${Date.now()}_${file.name}`);
-      await uploadBytes(imageRef, file);
-      const url = await getDownloadURL(imageRef);
-      imageUrls.push(url);
-    }
-    
+    const uploadPromises = imageFiles.map(file => uploadToCloudinary(file));
+    const imageUrls = await Promise.all(uploadPromises);
     return imageUrls;
   };
 
@@ -104,10 +132,12 @@ const AdminLiveGrouping = () => {
     setLoading(true);
 
     try {
-      // Upload images
+      // Upload images to Cloudinary
       let imageUrls = [];
       if (imageFiles.length > 0) {
+        console.log(`📸 Uploading ${imageFiles.length} images to Cloudinary...`);
         imageUrls = await uploadImages();
+        console.log('✅ Images uploaded successfully:', imageUrls);
       }
 
       // Calculate savings
@@ -146,18 +176,31 @@ const AdminLiveGrouping = () => {
           closingDate: formData.closingDate,
           expectedCompletion: formData.expectedCompletion
         },
-        images: imageUrls.length > 0 ? imageUrls : ['/placeholder-property.jpg'],
-        image: imageUrls.length > 0 ? imageUrls[0] : '/placeholder-property.jpg',
+        // Use Cloudinary URLs. If editing and no new images, this field won't be updated.
+        ...(imageUrls.length > 0 && { 
+            images: imageUrls,
+            image: imageUrls[0] 
+        }),
         created_at: new Date().toISOString(),
         created_by: currentUser.uid
       };
 
       if (editingId) {
-        // Update existing property
-        await updateDoc(doc(db, 'live_grouping_properties', editingId), propertyData);
+        // If editing, don't overwrite images unless new ones are uploaded
+        const docRef = doc(db, 'live_grouping_properties', editingId);
+        if (imageUrls.length === 0) {
+            // Keep existing images if none are uploaded
+            delete propertyData.images;
+            delete propertyData.image;
+        }
+        await updateDoc(docRef, propertyData);
         alert('Property updated successfully!');
       } else {
-        // Add new property
+        // Add new property, ensuring placeholder if no images
+        if (imageUrls.length === 0) {
+            propertyData.images = ['/placeholder-property.jpg'];
+            propertyData.image = '/placeholder-property.jpg';
+        }
         await addDoc(collection(db, 'live_grouping_properties'), propertyData);
         alert('Property added successfully!');
       }
@@ -201,6 +244,9 @@ const AdminLiveGrouping = () => {
       closingDate: property.groupDetails.closingDate,
       expectedCompletion: property.groupDetails.expectedCompletion
     });
+    // Set image previews from existing images if available
+    setImagePreviews(property.images || []);
+    setImageFiles([]); // Clear any selected files
     setShowForm(true);
   };
 

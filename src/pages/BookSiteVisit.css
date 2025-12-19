@@ -1,10 +1,10 @@
 /* src/pages/BookSiteVisit.css */
 
 .book-visit-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 2rem;
-  padding: 2rem;
+  /* Mobile-first: stack sections vertically */
+  display: block;
+  gap: 1rem;
+  padding: 1rem;
 }
 
 .ui-bg {
@@ -13,10 +13,11 @@
 }
 
 .form-section {
-  flex: 1 1 60%;
-  padding: 2rem;
+  width: 100%;
+  padding: 1rem;
   border-radius: 8px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+  box-sizing: border-box;
 }
 
 .form-section h2 {
@@ -151,13 +152,15 @@ button:not([type='submit']):not(.cancel-btn):hover {
 }
 
 .info-section {
-  flex: 1 1 35%;
-  padding: 2rem;
+  width: 100%;
+  padding: 1rem;
   border-radius: 8px;
   line-height: 1.6;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
   font-size: 1rem;
   color: #ffffff;
+  box-sizing: border-box;
+  margin-top: 0.75rem;
 }
 
 .info-section h3 {
@@ -228,6 +231,46 @@ button:not([type='submit']):not(.cancel-btn):hover {
   outline: none;
   border-color: #9e4efb;
   box-shadow: 0 0 0 3px rgba(158, 78, 251, 0.1);
+}
+
+/* Mobile-friendly base adjustments */
+.form-section form input,
+.form-section form select,
+.form-section form textarea {
+  font-size: 1rem;
+  min-height: 44px; /* touch-friendly */
+  padding: 0.75rem;
+  box-sizing: border-box;
+}
+
+.form-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+
+.form-actions button {
+  width: 100%;
+  padding: 0.9rem 1rem;
+  font-size: 1rem;
+}
+
+/* Ensure address input leaves space for maps button on small screens */
+.address-input-with-maps {
+  padding-right: 3.5rem !important;
+  width: 100%;
+}
+
+/* Date & Time stacked layout for small screens */
+.date-time-section label {
+  display: block;
+  width: 100%;
+}
+
+.time-select,
+.enhanced-date-input {
+  width: 100%;
 }
 
 /* Enhanced Date & Time Section */
@@ -1426,3 +1469,117 @@ button:not([type='submit']):not(.cancel-btn):hover {
     width: 100%;
   }
 }
+
+/* Desktop/layout for larger screens (restore original desktop look) */
+@media (min-width: 769px) {
+  .book-visit-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
+    padding: 2rem;
+  }
+
+  .form-section {
+    flex: 1 1 60%;
+    padding: 2rem;
+  }
+
+  .info-section {
+    flex: 1 1 35%;
+    padding: 2rem;
+    margin-top: 0;
+  }
+
+  .form-actions {
+    flex-direction: row;
+    gap: 1rem;
+  }
+
+  .form-actions button {
+    width: auto;
+    min-width: 160px;
+  }
+
+  .map-container, .google-map {
+    min-height: 400px;
+    max-height: 450px;
+  }
+}
+/* =============================================== */
+/* |      True Full-Screen Mobile Override       | */
+/* =============================================== */
+@media (max-width: 768px) {
+  body {
+    overflow-x: hidden;
+  }
+
+  .book-visit-container {
+    width: 100vw;
+    min-height: 100vh;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: #080918;
+    gap: 0;
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .book-visit-container > .form-section,
+  .book-visit-container > .info-section,
+  .book-visit-container > .property-info-section {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 1.5rem 1rem;
+    border-radius: 0;
+    box-shadow: none;
+    border: none;
+    border-bottom: 1px solid #232323;
+  }
+
+  .book-visit-container > .info-section {
+    border-bottom: none;
+  }
+
+  .form-section,
+  .people-details,
+  .date-time-section,
+  .pickup-section,
+  .razorpay-section,
+  .property-info-section {
+    border-radius: 0 !important;
+    border-left: none !important;
+    border-right: none !important;
+    margin-left: 0;
+    margin-right: 0;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .form-section form input,
+  .form-section form textarea,
+  .form-section form select,
+  .address-input-with-maps,
+  .google-places-input,
+  .map-search-input {
+    width: 100%;
+    border-radius: 4px !important;
+  }
+
+  .form-actions {
+    padding: 0;
+    margin-top: 1.5rem;
+  }
+  
+  .form-actions button,
+  .pay-button {
+    border-radius: 4px;
+    width: 100%;
+  }
+}
+
+  
