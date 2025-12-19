@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { collection, addDoc } from 'firebase/firestore';
+import { collection, addDoc, query, where, getDocs, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import './PostProperty.css';
 
@@ -52,7 +52,12 @@ const PostProperty = () => {
   // Get userType from navigation state if available
   const locationState = window.history.state?.usr;
   const [userType, setUserType] = useState(locationState?.userType || null); // 'individual' or 'developer'
-
+  const [selectedPropertyFlow, setSelectedPropertyFlow] = useState(null); // 'new' or 'existing'
+  const [paymentSuccessful, setPaymentSuccessful] = useState(false);
+  const [existingProperties, setExistingProperties] = useState([]);
+  const [fetchingProperties, setFetchingProperties] = useState(false);
+  const [editingProperty, setEditingProperty] = useState(null); // State to hold property being edited
+  
   const [formData, setFormData] = useState({
     title: '',
     type: '',
@@ -86,13 +91,44 @@ const PostProperty = () => {
       const subscribed = isSubscribed();
       console.log('Is Subscribed:', subscribed);
       
-      if (!subscribed) {
+      if (!subscribed && selectedPropertyFlow === 'new') { // Only enforce subscription for new properties
         console.warn('⚠️ User not subscribed, redirecting to subscription plans');
         alert('Please subscribe to a plan to post properties');
         navigate('/subscription-plans');
       }
     }
-  }, [isAuthenticated, isSubscribed, navigate, currentUser, loading]);
+  }, [isAuthenticated, isSubscribed, navigate, currentUser, loading, selectedPropertyFlow]);
+
+  // Effect to fetch existing properties
+  useEffect(() => {
+    const fetchExistingProperties = async () => {
+      if (selectedPropertyFlow === 'existing' && currentUser?.uid) {
+        setFetchingProperties(true);
+        try {
+          const propertiesRef = collection(db, 'properties');
+          const q = query(propertiesRef, where('user_id', '==', currentUser.uid));
+          const querySnapshot = await getDocs(q);
+          const propertiesData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          setExistingProperties(propertiesData);
+        } catch (error) {
+          console.error("Error fetching existing properties:", error);
+          alert("Failed to fetch your properties. Please try again.");
+        } finally {
+          setFetchingProperties(false);
+        }
+      }
+    };
+
+    fetchExistingProperties();
+  }, [selectedPropertyFlow, currentUser]);
+
+  const isEditable = (createdAt) => {
+    const creationDate = new Date(createdAt);
+    const threeDaysLater = new Date(creationDate);
+    threeDaysLater.setDate(creationDate.getDate() + 3);
+    const now = new Date();
+    return now < threeDaysLater;
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -121,9 +157,113 @@ const PostProperty = () => {
     }
   };
 
+  const handleEditProperty = (property) => {
+    setEditingProperty(property);
+    // Populate form with property data for editing
+    setFormData({
+      title: property.title || '',
+      type: property.type || '',
+      location: property.location || '',
+      price: property.price || '',
+      bhk: property.bhk || '',
+      description: property.description || '',
+      facilities: property.facilities ? property.facilities.join(', ') : '',
+      companyName: property.company_name || '',
+      projectName: property.project_name || '',
+      totalUnits: property.total_units || '',
+      completionDate: property.completion_date || '',
+      reraNumber: property.rera_number || ''
+    });
+    setImagePreview(property.image_url || '');
+    // Scroll to the form or open a modal for editing
+  };
+
+  const handleUpdateProperty = async (e) => {
+    e.preventDefault();
+    if (!editingProperty) return;
+
+    setLoading(true);
+
+    try {
+      let imageUrl = formData.image_url || ''; // Use existing image URL
+
+      // Check if a new image file is selected
+      if (imageFile) {
+        console.log('📸 Uploading new image to Cloudinary...');
+        imageUrl = await uploadToCloudinary(imageFile);
+        console.log('✅ New image uploaded successfully:', imageUrl);
+      }
+
+      const propertyData = {
+        title: formData.title,
+        type: formData.type,
+        location: formData.location,
+        price: formData.price,
+        description: formData.description,
+        facilities: formData.facilities ? formData.facilities.split(',').map(f => f.trim()).filter(f => f) : [],
+        image_url: imageUrl,
+        user_type: userType, // Keep user type
+        // created_at should not change
+        status: 'active'
+      };
+
+      if (showBhkType && formData.bhk) {
+        propertyData.bhk = formData.bhk;
+      } else {
+        propertyData.bhk = ''; // Clear BHK if property type no longer supports it
+      }
+
+      if (userType === 'developer') {
+        propertyData.company_name = formData.companyName || '';
+        propertyData.project_name = formData.projectName || '';
+        propertyData.total_units = formData.totalUnits || '';
+        propertyData.completion_date = formData.completionDate || '';
+        propertyData.rera_number = formData.reraNumber || '';
+      } else {
+        // Clear developer specific fields if user type changed from developer
+        propertyData.company_name = '';
+        propertyData.project_name = '';
+        propertyData.total_units = '';
+        propertyData.completion_date = '';
+        propertyData.rera_number = '';
+      }
+
+      const propertyRef = doc(db, 'properties', editingProperty.id);
+      await updateDoc(propertyRef, propertyData);
+
+      alert('Property updated successfully!');
+      setLoading(false);
+      setEditingProperty(null); // Exit editing mode
+      setFormData({ // Reset form data
+        title: '', type: '', location: '', price: '', bhk: '', description: '', facilities: '',
+        companyName: '', projectName: '', totalUnits: '', completionDate: '', reraNumber: ''
+      });
+      setImageFile(null);
+      setImagePreview('');
+
+      // Re-fetch properties to show updated list
+      const propertiesRef = collection(db, 'properties');
+      const q = query(propertiesRef, where('user_id', '==', currentUser.uid));
+      const querySnapshot = await getDocs(q);
+      const updatedPropertiesData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setExistingProperties(updatedPropertiesData);
+
+    } catch (error) {
+      console.error("Error updating property:", error);
+      alert("Failed to update property. " + (error.message.includes('Cloudinary') ? 'Image upload failed.' : ''));
+      setLoading(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    // If we are editing, call update function
+    if (editingProperty) {
+      handleUpdateProperty(e);
+      return;
+    }
+
     console.log('🚀 Starting property submission...');
     console.log('Current User:', currentUser);
     console.log('User Type:', userType);
@@ -149,8 +289,8 @@ const PostProperty = () => {
       }
     }
     
-    // Validate subscription
-    if (!isSubscribed()) {
+    // Validate subscription for new properties
+    if (selectedPropertyFlow === 'new' && !isSubscribed()) {
       console.warn('⚠️ User not subscribed');
       alert('Your subscription has expired. Please renew to post properties.');
       navigate('/subscription-plans');
@@ -237,11 +377,11 @@ const PostProperty = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
       >
-        <h1>Post Your Property</h1>
-        <p className="subtitle">Fill in the details to list your property</p>
+        <h1>{editingProperty ? 'Edit Property' : 'Post Your Property'}</h1>
+        <p className="subtitle">{editingProperty ? 'Modify the details of your property' : 'Fill in the details to list your property'}</p>
 
-        {/* User Type Selection */}
-        {!userType ? (
+        {/* Step 1: User Type Selection */}
+        {!userType && (
           <div className="user-type-selection">
             <h2>I am a...</h2>
             <div className="user-type-cards">
@@ -282,8 +422,11 @@ const PostProperty = () => {
               </motion.div>
             </div>
           </div>
-        ) : (
-          <>
+        )}
+
+        {/* Step 2: Property Flow Selection (New or Existing) */}
+        {userType && !selectedPropertyFlow && (
+          <div className="property-flow-selection">
             <div className="selected-type-badge">
               <span>
                 {userType === 'individual' ? '👤 Individual Owner' : '🏢 Developer'}
@@ -293,228 +436,201 @@ const PostProperty = () => {
                 className="change-type-btn"
                 onClick={() => setUserType(null)}
               >
-                Change
+                Change User Type
               </button>
             </div>
-
-            <form onSubmit={handleSubmit} className="property-form">
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="title">Property Title *</label>
-              <input
-                type="text"
-                id="title"
-                name="title"
-                value={formData.title}
-                onChange={handleChange}
-                placeholder="e.g., Luxury 3BHK Apartment"
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="type">Property Type *</label>
-              <select
-                id="type"
-                name="type"
-                value={formData.type}
-                onChange={handleChange}
-                required
+            <h2>What would you like to do?</h2>
+            <div className="property-flow-cards">
+              <motion.div 
+                className="property-flow-card"
+                whileHover={{ y: -8, scale: 1.02 }}
+                onClick={() => setSelectedPropertyFlow('new')}
               >
-                <option value="">Select type</option>
-                <option value="Flat/Apartment">Flat/Apartment</option>
-                <option value="Independent House/Villa">Independent House/Villa</option>
-                <option value="Commercial Property">Commercial Property</option>
-                <option value="Land">Land</option>
-              </select>
+                <div className="card-icon">✨</div>
+                <h3>Post New Property</h3>
+                <p>List a brand new property or project</p>
+                <button type="button" className="select-type-btn">
+                  Select
+                </button>
+              </motion.div>
+
+              <motion.div 
+                className="property-flow-card"
+                whileHover={{ y: -8, scale: 1.02 }}
+                onClick={() => setSelectedPropertyFlow('existing')}
+              >
+                <div className="card-icon">📝</div>
+                <h3>Manage Existing Properties</h3>
+                <p>View, edit, or update your listed properties</p>
+                <button type="button" className="select-type-btn">
+                  Select
+                </button>
+              </motion.div>
             </div>
           </div>
+        )}
 
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="location">Location *</label>
-              <input
-                type="text"
-                id="location"
-                name="location"
-                value={formData.location}
-                onChange={handleChange}
-                placeholder="e.g., Vadodara, Gujarat"
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="price">Price *</label>
-              <input
-                type="text"
-                id="price"
-                name="price"
-                value={formData.price}
-                onChange={handleChange}
-                placeholder="e.g., 50 L - 75 L"
-                required
-              />
-            </div>
-          </div>
-
-          {/* Developer Specific Fields */}
-          {userType === 'developer' && (
-            <>
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="companyName">Company Name *</label>
-                  <input
-                    type="text"
-                    id="companyName"
-                    name="companyName"
-                    value={formData.companyName}
-                    onChange={handleChange}
-                    placeholder="e.g., ABC Developers"
-                    required
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="projectName">Project Name *</label>
-                  <input
-                    type="text"
-                    id="projectName"
-                    name="projectName"
-                    value={formData.projectName}
-                    onChange={handleChange}
-                    placeholder="e.g., Green Valley Phase 2"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="totalUnits">Total Units</label>
-                  <input
-                    type="number"
-                    id="totalUnits"
-                    name="totalUnits"
-                    value={formData.totalUnits}
-                    onChange={handleChange}
-                    placeholder="e.g., 120"
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="completionDate">Expected Completion</label>
-                  <input
-                    type="month"
-                    id="completionDate"
-                    name="completionDate"
-                    value={formData.completionDate}
-                    onChange={handleChange}
-                  />
-                </div>
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="reraNumber">RERA Registration Number</label>
-                <input
-                  type="text"
-                  id="reraNumber"
-                  name="reraNumber"
-                  value={formData.reraNumber}
-                  onChange={handleChange}
-                  placeholder="e.g., PR/GJ/VADODARA/..."
-                />
-              </div>
-            </>
-          )}
-
-          <div className="form-row">
-            {/* BHK Type - Only show for Flat/Apartment and Independent House/Villa */}
-            {showBhkType && (
-              <div className="form-group">
-                <label htmlFor="bhk">BHK Type</label>
-                <select
-                  id="bhk"
-                  name="bhk"
-                  value={formData.bhk}
-                  onChange={handleChange}
-                >
-                  <option value="">Select BHK type</option>
-                  <option value="1 RK">1 RK</option>
-                  <option value="1 BHK">1 BHK</option>
-                  <option value="2 BHK">2 BHK</option>
-                  <option value="3 BHK">3 BHK</option>
-                  <option value="4 BHK">4 BHK</option>
-                  <option value="5 BHK">5 BHK</option>
-                  <option value="6+ BHK">6+ BHK</option>
-                </select>
-              </div>
-            )}
-
-            <div className="form-group">
-              <label htmlFor="image">Property Image</label>
-              <input
-                type="file"
-                id="image"
-                accept="image/*"
-                onChange={handleImageChange}
-              />
-            </div>
-          </div>
-
-          {imagePreview && (
-            <div className="image-preview">
-              <img src={imagePreview} alt="Preview" />
-            </div>
-          )}
-
-          <div className="form-group">
-            <label htmlFor="facilities">Facilities (comma-separated)</label>
-            <input
-              type="text"
-              id="facilities"
-              name="facilities"
-              value={formData.facilities}
-              onChange={handleChange}
-              placeholder="e.g., Swimming Pool, Gym, Parking"
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="description">Description *</label>
-            <textarea
-              id="description"
-              name="description"
-              value={formData.description}
-              onChange={handleChange}
-              placeholder="Describe your property..."
-              rows="5"
-              required
-            />
-          </div>
-
-          <button type="submit" className="submit-btn" disabled={loading}>
-            {loading ? (
-              <span className="flex items-center justify-center gap-2">
-                <span className="spinner"></span>
-                Posting Property...
+        {/* Step 3 (New Property Flow): Payment Section */}
+        {userType && selectedPropertyFlow === 'new' && !paymentSuccessful && !editingProperty && (
+          <div className="payment-section">
+            <div className="selected-type-badge">
+              <span>
+                {userType === 'individual' ? '👤 Individual Owner' : '🏢 Developer'}
               </span>
-            ) : (
-              'Post Property'
-            )}
-          </button>
-        </form>
+              <button 
+                type="button" 
+                className="change-type-btn"
+                onClick={() => {setUserType(null); setSelectedPropertyFlow(null);}} // Reset both
+              >
+                Change User Type
+              </button>
+            </div>
+            <div className="selected-flow-badge">
+              <span>
+                ✨ Post New Property
+              </span>
+              <button 
+                type="button" 
+                className="change-type-btn"
+                onClick={() => setSelectedPropertyFlow(null)}
+              >
+                Change Flow
+              </button>
+            </div>
+            <h2>Payment Required to Post New Property</h2>
+            <p>Please complete the payment to proceed with posting your property. This is a placeholder for the actual payment gateway integration.</p>
+            <button 
+              className="submit-btn" 
+              onClick={() => setPaymentSuccessful(true)}
+            >
+              Proceed to Property Form (Simulate Payment)
+            </button>
+          </div>
+        )}
+
+import PropertyForm from '../components/PropertyForm/PropertyForm'; // Import the new component
+
+// ... existing code ...
+
+        {/* Step 4 (New Property Flow): Property Creation Form */}
+        {(userType && selectedPropertyFlow === 'new' && paymentSuccessful) || (editingProperty && selectedPropertyFlow === 'existing') ? (
+          <>
+            <div className="selected-type-badge">
+              <span>
+                {userType === 'individual' ? '👤 Individual Owner' : '🏢 Developer'}
+              </span>
+              <button 
+                type="button" 
+                className="change-type-btn"
+                onClick={() => {setUserType(null); setSelectedPropertyFlow(null); setPaymentSuccessful(false); setEditingProperty(null);}} // Reset all
+              >
+                Change User Type
+              </button>
+            </div>
+            <div className="selected-flow-badge">
+              <span>
+                {selectedPropertyFlow === 'new' ? '✨ Post New Property' : '📝 Editing Existing Property'}
+              </span>
+              <button 
+                type="button" 
+                className="change-type-btn"
+                onClick={() => {setSelectedPropertyFlow(null); setPaymentSuccessful(false); setEditingProperty(null);}} // Reset flow and editing
+              >
+                Change Flow
+              </button>
+            </div>
+            <p className="subtitle">Fill in the details to list your property</p>
+            <PropertyForm
+              formData={formData}
+              handleChange={handleChange}
+              handleImageChange={handleImageChange}
+              imagePreview={imagePreview}
+              handleSubmit={handleSubmit}
+              loading={loading}
+              userType={userType}
+              showBhkType={showBhkType}
+              editingProperty={editingProperty}
+            />
         
         {/* Loading Overlay */}
         {loading && (
           <div className="loading-overlay">
             <div className="loading-content">
               <div className="spinner-large"></div>
-              <h3>Posting Your Property...</h3>
+              <h3>{editingProperty ? 'Updating Your Property...' : 'Posting Your Property...'}</h3>
               <p>Please wait while we save your property details</p>
             </div>
           </div>
         )}
+          </>
+        ) : null}
+
+        {/* Step 3 (Existing Property Flow): Display Existing Properties */}
+        {userType && selectedPropertyFlow === 'existing' && !editingProperty && (
+          <>
+            <div className="selected-type-badge">
+              <span>
+                {userType === 'individual' ? '👤 Individual Owner' : '🏢 Developer'}
+              </span>
+              <button 
+                type="button" 
+                className="change-type-btn"
+                onClick={() => {setUserType(null); setSelectedPropertyFlow(null);}} // Reset both
+              >
+                Change User Type
+              </button>
+            </div>
+            <div className="selected-flow-badge">
+              <span>
+                📝 Manage Existing Properties
+              </span>
+              <button 
+                type="button" 
+                className="change-type-btn"
+                onClick={() => setSelectedPropertyFlow(null)}
+              >
+                Change Flow
+              </button>
+            </div>
+            <h2>Your Existing Properties</h2>
+            {fetchingProperties ? (
+              <p>Loading your properties...</p>
+            ) : existingProperties.length > 0 ? (
+              <div className="existing-properties-list">
+                {existingProperties.map((property) => (
+                  <motion.div 
+                    key={property.id} 
+                    className="property-card"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    {property.image_url && <img src={property.image_url} alt={property.title} className="property-card-image" />}
+                    <div className="property-card-details">
+                      <h3>{property.title}</h3>
+                      <p><strong>Type:</strong> {property.type}</p>
+                      <p><strong>Location:</strong> {property.location}</p>
+                      <p><strong>Price:</strong> {property.price}</p>
+                      <p><strong>Posted On:</strong> {new Date(property.created_at).toLocaleDateString()}</p>
+                      {isEditable(property.created_at) ? (
+                        <button 
+                          className="edit-property-btn" 
+                          onClick={() => handleEditProperty(property)}
+                        >
+                          Edit Property
+                        </button>
+                      ) : (
+                        <p className="edit-restriction-message">
+                          Editing is allowed only within 3 days of posting this property.
+                        </p>
+                      )}
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            ) : (
+              <p>You have not posted any properties yet.</p>
+            )}
           </>
         )}
       </motion.div>
