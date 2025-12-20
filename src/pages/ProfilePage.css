@@ -74,6 +74,11 @@
   text-align: center;
 }
 
+.profile-photo-container {
+  position: relative;
+  display: inline-block;
+}
+
 .profile-photo-wrapper {
   width: 200px;
   height: 200px;
@@ -84,17 +89,63 @@
   box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
   margin-bottom: 20px;
   position: relative;
-  cursor: pointer;
   transition: all 0.3s ease;
 }
 
-.profile-photo-wrapper:hover {
-  transform: scale(1.05);
-  box-shadow: 0 12px 32px rgba(102, 126, 234, 0.4);
+/* Photo Action Buttons */
+.photo-action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 20px;
+  width: 100%;
+  max-width: 200px;
 }
 
-.profile-photo-wrapper:hover .photo-overlay {
-  opacity: 1;
+.photo-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: 2px solid #e2e8f0;
+  background: white;
+  color: #374151;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+  justify-content: center;
+}
+
+.photo-action-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.photo-action-btn:not(:disabled):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.photo-action-btn.change-photo:not(:disabled):hover {
+  background: #eff6ff;
+  border-color: #2563eb;
+  color: #2563eb;
+}
+
+.photo-action-btn.remove-photo:not(:disabled):hover {
+  background: #fef2f2;
+  border-color: #dc2626;
+  color: #dc2626;
+}
+
+.action-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
 }
 
 .photo-overlay {
@@ -110,16 +161,9 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  opacity: 0;
-  transition: opacity 0.3s ease;
   color: white;
   font-size: 14px;
   font-weight: 600;
-}
-
-.camera-icon {
-  width: 32px;
-  height: 32px;
 }
 
 .photo-uploading {
@@ -518,9 +562,27 @@
     align-items: center;
   }
 
+  .profile-photo-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
   .profile-photo-wrapper {
     width: 160px;
     height: 160px;
+  }
+
+  .photo-action-buttons {
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+    max-width: 200px;
+  }
+
+  .photo-action-btn {
+    min-width: auto;
+    width: 100%;
   }
 
   .profile-photo-icon {

@@ -1,18 +1,73 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { FiUser, FiMail, FiPhone, FiHash, FiBriefcase, FiHome, FiUsers, FiCalendar, FiCamera, FiUpload } from 'react-icons/fi';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { FiUser, FiMail, FiPhone, FiHash, FiBriefcase, FiHome, FiUsers, FiCalendar, FiUpload, FiTrash2, FiEdit3 } from 'react-icons/fi';
 import { doc, updateDoc } from 'firebase/firestore';
-import { storage, db } from '../firebase';
+import { db } from '../firebase';
 import './ProfilePage.css';
+
+// Cloudinary Configuration
+const CLOUDINARY_CLOUD_NAME = "dooamkdih";
+const CLOUDINARY_UPLOAD_PRESET = "property_images";
+
+/**
+ * Uploads an image file to Cloudinary using an unsigned preset.
+ * @param {File} file The image file to upload.
+ * @returns {Promise<string>} A promise that resolves to the secure URL of the uploaded image.
+ */
+const uploadToCloudinary = async (file) => {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+
+  const url = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`;
+
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(`Cloudinary upload failed: ${errorData.error.message}`);
+    }
+
+    const data = await response.json();
+    return data.secure_url;
+  } catch (error) {
+    console.error("Error uploading to Cloudinary:", error);
+    throw error;
+  }
+};
 
 const ProfilePage = () => {
   const navigate = useNavigate();
   const { currentUser, userProfile, refreshProfile } = useAuth();
   const [uploading, setUploading] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [profilePhoto, setProfilePhoto] = useState(null);
+  const [loading, setLoading] = useState(true);
   const fileInputRef = useRef(null);
+
+  // Load profile photo from Firestore on component mount
+  useEffect(() => {
+    const loadProfilePhoto = async () => {
+      try {
+        setLoading(true);
+        // Wait for userProfile to be available
+        if (userProfile) {
+          setProfilePhoto(userProfile.profilePhoto || null);
+        }
+      } catch (error) {
+        console.error('Error loading profile photo:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadProfilePhoto();
+  }, [userProfile]);
 
   // Placeholder data - will be replaced with actual Firebase data
   const userData = {
@@ -21,7 +76,7 @@ const ProfilePage = () => {
     phone: userProfile?.phone || '+91 9876543210',
     userId: currentUser?.uid?.substring(0, 8).toUpperCase() || 'USER1234',
     userType: userProfile?.userType || 'Individual',
-    profilePhoto: userProfile?.profilePhoto || null
+    profilePhoto: profilePhoto
   };
 
   const activityItems = [
@@ -56,7 +111,43 @@ const ProfilePage = () => {
   };
 
   const handlePhotoClick = () => {
+    // Remove click functionality - photo is now just for display
+  };
+
+  const handleChangePhoto = () => {
     fileInputRef.current?.click();
+  };
+
+  const handleRemovePhoto = async () => {
+    if (!currentUser) return;
+
+    try {
+      setUploading(true);
+
+      console.log('🗑️ Removing profile photo...');
+
+      // Update Firestore user document to remove photo
+      const userDocRef = doc(db, 'users', currentUser.uid);
+      await updateDoc(userDocRef, {
+        profilePhoto: null
+      });
+
+      console.log('✅ Profile photo removed from Firestore');
+
+      // Update local state immediately for instant UI update
+      setProfilePhoto(null);
+
+      // Refresh profile to get updated data from context
+      await refreshProfile();
+
+      setUploadSuccess(true);
+      setTimeout(() => setUploadSuccess(false), 3000);
+    } catch (error) {
+      console.error('❌ Error removing profile photo:', error);
+      alert('Failed to remove photo. Please try again.');
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handlePhotoChange = async (e) => {
@@ -79,14 +170,12 @@ const ProfilePage = () => {
       setUploading(true);
       setUploadSuccess(false);
 
-      // Create a reference to the storage location
-      const storageRef = ref(storage, `profile_photos/${currentUser.uid}/${Date.now()}_${file.name}`);
+      console.log('📸 Uploading profile photo to Cloudinary...');
 
-      // Upload the file
-      await uploadBytes(storageRef, file);
-
-      // Get the download URL
-      const photoURL = await getDownloadURL(storageRef);
+      // Upload to Cloudinary
+      const photoURL = await uploadToCloudinary(file);
+      
+      console.log('✅ Profile photo uploaded successfully:', photoURL);
 
       // Update Firestore user document
       const userDocRef = doc(db, 'users', currentUser.uid);
@@ -94,14 +183,27 @@ const ProfilePage = () => {
         profilePhoto: photoURL
       });
 
-      // Refresh profile to get updated data
+      console.log('✅ Profile photo URL saved to Firestore');
+
+      // Update local state immediately for instant UI update
+      setProfilePhoto(photoURL);
+
+      // Refresh profile to get updated data from context
       await refreshProfile();
 
       setUploadSuccess(true);
       setTimeout(() => setUploadSuccess(false), 3000);
     } catch (error) {
-      console.error('Error uploading photo:', error);
-      alert('Failed to upload photo. Please try again.');
+      console.error('❌ Error uploading profile photo:', error);
+      
+      let errorMessage = 'Failed to upload photo. ';
+      if (error.message.includes('Cloudinary')) {
+        errorMessage += 'Image upload service is temporarily unavailable. Please try again later.';
+      } else {
+        errorMessage += 'Please check your internet connection and try again.';
+      }
+      
+      alert(errorMessage);
     } finally {
       setUploading(false);
       // Reset file input
@@ -125,32 +227,52 @@ const ProfilePage = () => {
           <div className="profile-content">
             {/* Profile Photo */}
             <div className="profile-photo-section">
-              <div className="profile-photo-wrapper" onClick={handlePhotoClick}>
-                {userData.profilePhoto ? (
-                  <img 
-                    src={userData.profilePhoto} 
-                    alt="Profile" 
-                    className="profile-photo"
-                  />
-                ) : (
-                  <div className="profile-photo-placeholder">
-                    <FiUser className="profile-photo-icon" />
-                  </div>
-                )}
-                <div className="photo-overlay">
-                  {uploading ? (
-                    <div className="photo-uploading">
-                      <div className="spinner"></div>
-                      <span>Uploading...</span>
-                    </div>
+              <div className="profile-photo-container">
+                <div className="profile-photo-wrapper">
+                  {userData.profilePhoto ? (
+                    <img 
+                      src={userData.profilePhoto} 
+                      alt="Profile" 
+                      className="profile-photo"
+                    />
                   ) : (
-                    <>
-                      <FiCamera className="camera-icon" />
-                      <span>Change Photo</span>
-                    </>
+                    <div className="profile-photo-placeholder">
+                      <FiUser className="profile-photo-icon" />
+                    </div>
+                  )}
+                  {uploading && (
+                    <div className="photo-overlay">
+                      <div className="photo-uploading">
+                        <div className="spinner"></div>
+                        <span>Processing...</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Photo Action Buttons */}
+                <div className="photo-action-buttons">
+                  <button 
+                    className="photo-action-btn change-photo"
+                    onClick={handleChangePhoto}
+                    disabled={uploading}
+                  >
+                    <FiEdit3 className="action-icon" />
+                    <span>Change Photo</span>
+                  </button>
+                  {userData.profilePhoto && (
+                    <button 
+                      className="photo-action-btn remove-photo"
+                      onClick={handleRemovePhoto}
+                      disabled={uploading}
+                    >
+                      <FiTrash2 className="action-icon" />
+                      <span>Remove Photo</span>
+                    </button>
                   )}
                 </div>
               </div>
+
               <input
                 ref={fileInputRef}
                 type="file"
