@@ -86,10 +86,10 @@ const DeveloperPlan = () => {
       order_id: '',
       handler: async function (response) {
         console.log('✅ Payment successful:', response);
-        
+
         // Calculate expiry date
         const expiryDate = calculateExpiryDate(months);
-        
+
         // Prepare payment data
         const paymentData = {
           payment_id: response.razorpay_payment_id,
@@ -115,7 +115,9 @@ const DeveloperPlan = () => {
           subscription_plan: plan.id,
           subscription_price: plan.price,
           subscribed_at: new Date().toISOString(),
-          user_type: userRole
+          user_type: userRole,
+          property_credits: 20, // Set 20 credits for developer plan
+          total_credits_purchased: 20 // Reset/Set total credits (simplified logic)
         };
 
         try {
@@ -130,7 +132,7 @@ const DeveloperPlan = () => {
           // Show success and redirect
           setPaymentLoading(false);
           alert(`Successfully subscribed to Developer ${plan.duration} plan! Payment ID: ${response.razorpay_payment_id}`);
-          
+
           // Redirect to post property page
           setTimeout(() => {
             navigate('/post-property', { state: { userType: 'developer' } });
@@ -159,7 +161,7 @@ const DeveloperPlan = () => {
         color: '#58335e'
       },
       modal: {
-        ondismiss: function() {
+        ondismiss: function () {
           console.log('Payment cancelled by user');
           setPaymentLoading(false);
           setSelectedPlan(null);
@@ -189,7 +191,7 @@ const DeveloperPlan = () => {
 
     console.log('🚀 Starting Developer subscription payment for plan:', plan.duration);
     console.log('👤 User role:', userRole);
-    
+
     // Initiate Razorpay payment
     const paymentSuccess = await handleRazorpayPayment(plan);
     if (!paymentSuccess) {
@@ -201,7 +203,7 @@ const DeveloperPlan = () => {
   return (
     <div className="subscription-page">
       <div className="subscription-container">
-        <motion.div 
+        <motion.div
           className="subscription-header"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
@@ -216,8 +218,8 @@ const DeveloperPlan = () => {
 
         <div className="plans-grid">
           {developerPlan.map((plan, index) => (
-            <motion.div 
-              key={plan.id} 
+            <motion.div
+              key={plan.id}
               className={`plan-card ${plan.bestValue ? 'best-value' : ''}`}
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
@@ -225,7 +227,7 @@ const DeveloperPlan = () => {
               whileHover={{ y: -8, transition: { duration: 0.2 } }}
             >
               {plan.bestValue && <div className="badge best">Developer Plan</div>}
-              
+
               <div className="plan-header">
                 <h3>{plan.duration}</h3>
                 <div className="price">
@@ -265,7 +267,7 @@ const DeveloperPlan = () => {
           ))}
         </div>
 
-        <motion.div 
+        <motion.div
           className="subscription-note"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

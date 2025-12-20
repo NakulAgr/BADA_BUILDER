@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { FiUser, FiMail, FiPhone, FiHash, FiBriefcase, FiHome, FiUsers, FiCalendar, FiUpload, FiTrash2, FiEdit3 } from 'react-icons/fi';
-import { doc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { doc, updateDoc, collection, query, where, getDocs, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
 import './ProfilePage.css';
 
@@ -75,65 +75,65 @@ const ProfilePage = () => {
     loadProfilePhoto();
   }, [userProfile]);
 
-  // Fetch activity data
+  // Subscribe to activity data
   useEffect(() => {
-    const fetchActivityData = async () => {
-      if (!currentUser?.uid) return;
+    if (!currentUser?.uid) return;
 
-      try {
-        setLoadingActivity(true);
-        
-        // Fetch properties uploaded by user
-        const propertiesRef = collection(db, 'properties');
-        const propertiesQuery = query(propertiesRef, where('user_id', '==', currentUser.uid));
-        const propertiesSnapshot = await getDocs(propertiesQuery);
-        const propertiesCount = propertiesSnapshot.size;
+    setLoadingActivity(true);
 
-        // Fetch site visit bookings from 'bookings' collection
-        let siteVisitsCount = 0;
-        try {
-          const bookingsRef = collection(db, 'bookings');
-          const bookingsQuery = query(bookingsRef, where('userId', '==', currentUser.uid));
-          const bookingsSnapshot = await getDocs(bookingsQuery);
-          siteVisitsCount = bookingsSnapshot.size;
-        } catch (error) {
-          console.log('Bookings collection not found or empty');
-        }
+    const propertiesRef = collection(db, 'properties');
+    const propertiesQuery = query(propertiesRef, where('user_id', '==', currentUser.uid));
 
-        // For live groups, we'll check if user has any interactions
-        // Since the current structure doesn't track individual participation,
-        // we'll set this to 0 for now and can be updated when the feature is implemented
-        let liveGroupsCount = 0;
-        try {
-          // Check if user has any live group interactions (future implementation)
-          const liveGroupInteractionsRef = collection(db, 'liveGroupInteractions');
-          const liveGroupQuery = query(liveGroupInteractionsRef, where('userId', '==', currentUser.uid));
-          const liveGroupSnapshot = await getDocs(liveGroupQuery);
-          liveGroupsCount = liveGroupSnapshot.size;
-        } catch (error) {
-          console.log('Live group interactions collection not found - feature not implemented yet');
-        }
+    // Note: 'bookings' collection uses 'user_id' not 'userId'
+    const bookingsRef = collection(db, 'bookings');
+    const bookingsQuery = query(bookingsRef, where('user_id', '==', currentUser.uid));
 
-        setActivityCounts({
-          propertiesUploaded: propertiesCount,
-          joinedLiveGroups: liveGroupsCount,
-          bookedSiteVisits: siteVisitsCount
-        });
+    const liveGroupInteractionsRef = collection(db, 'liveGroupInteractions');
+    const liveGroupQuery = query(liveGroupInteractionsRef, where('userId', '==', currentUser.uid));
 
-        console.log('📊 Activity counts:', {
-          propertiesUploaded: propertiesCount,
-          joinedLiveGroups: liveGroupsCount,
-          bookedSiteVisits: siteVisitsCount
-        });
+    // Real-time listeners
+    const unsubscribeProperties = onSnapshot(propertiesQuery, (snapshot) => {
+      setActivityCounts(prev => ({
+        ...prev,
+        propertiesUploaded: snapshot.size
+      }));
+      setLoadingActivity(false); // Enable UI as soon as we get first data
+    }, (error) => {
+      console.error('Error fetching properties:', error);
+    });
 
-      } catch (error) {
-        console.error('Error fetching activity data:', error);
-      } finally {
-        setLoadingActivity(false);
+    const unsubscribeBookings = onSnapshot(bookingsQuery, (snapshot) => {
+      setActivityCounts(prev => ({
+        ...prev,
+        bookedSiteVisits: snapshot.size
+      }));
+      console.log('✅ Real-time bookings updated:', snapshot.size);
+    }, (error) => {
+      console.error('Error fetching bookings:', error);
+      // Fallback for missing index or collection
+      if (error.code === 'failed-precondition') {
+        console.warn('Firestore index might be missing for bookings query');
       }
-    };
+    });
 
-    fetchActivityData();
+    // Live groups might not exist yet, so we handle it gracefully usually, 
+    // but onSnapshot will just not fire or return empty if collection doesn't exist 
+    // (actually strict empty collection reads are fine).
+    const unsubscribeLiveGroups = onSnapshot(liveGroupQuery, (snapshot) => {
+      setActivityCounts(prev => ({
+        ...prev,
+        joinedLiveGroups: snapshot.size
+      }));
+    }, (error) => {
+      // Feature might not be implemented yet
+      console.log('Live group interactions not available yet');
+    });
+
+    return () => {
+      unsubscribeProperties();
+      unsubscribeBookings();
+      unsubscribeLiveGroups();
+    };
   }, [currentUser]);
 
   // Placeholder data - will be replaced with actual Firebase data
@@ -176,63 +176,6 @@ const ProfilePage = () => {
   const handleActivityClick = (path) => {
     navigate(path);
   };
-
-  // Function to refresh activity data
-  const refreshActivityData = async () => {
-    if (!currentUser?.uid) return;
-
-    try {
-      setLoadingActivity(true);
-      
-      const propertiesRef = collection(db, 'properties');
-      const propertiesQuery = query(propertiesRef, where('user_id', '==', currentUser.uid));
-      const propertiesSnapshot = await getDocs(propertiesQuery);
-      const propertiesCount = propertiesSnapshot.size;
-
-      let siteVisitsCount = 0;
-      try {
-        const bookingsRef = collection(db, 'bookings');
-        const bookingsQuery = query(bookingsRef, where('userId', '==', currentUser.uid));
-        const bookingsSnapshot = await getDocs(bookingsQuery);
-        siteVisitsCount = bookingsSnapshot.size;
-      } catch (error) {
-        console.log('Bookings collection not found');
-      }
-
-      let liveGroupsCount = 0;
-      try {
-        const liveGroupInteractionsRef = collection(db, 'liveGroupInteractions');
-        const liveGroupQuery = query(liveGroupInteractionsRef, where('userId', '==', currentUser.uid));
-        const liveGroupSnapshot = await getDocs(liveGroupQuery);
-        liveGroupsCount = liveGroupSnapshot.size;
-      } catch (error) {
-        console.log('Live group interactions not implemented yet');
-      }
-
-      setActivityCounts({
-        propertiesUploaded: propertiesCount,
-        joinedLiveGroups: liveGroupsCount,
-        bookedSiteVisits: siteVisitsCount
-      });
-
-    } catch (error) {
-      console.error('Error refreshing activity data:', error);
-    } finally {
-      setLoadingActivity(false);
-    }
-  };
-
-  // Refresh activity data when component becomes visible
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (!document.hidden && currentUser?.uid) {
-        refreshActivityData();
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [currentUser]);
 
   const handlePhotoClick = () => {
     // Remove click functionality - photo is now just for display
@@ -298,7 +241,7 @@ const ProfilePage = () => {
 
       // Upload to Cloudinary
       const photoURL = await uploadToCloudinary(file);
-      
+
       console.log('✅ Profile photo uploaded successfully:', photoURL);
 
       // Update Firestore user document
@@ -319,14 +262,14 @@ const ProfilePage = () => {
       setTimeout(() => setUploadSuccess(false), 3000);
     } catch (error) {
       console.error('❌ Error uploading profile photo:', error);
-      
+
       let errorMessage = 'Failed to upload photo. ';
       if (error.message.includes('Cloudinary')) {
         errorMessage += 'Image upload service is temporarily unavailable. Please try again later.';
       } else {
         errorMessage += 'Please check your internet connection and try again.';
       }
-      
+
       alert(errorMessage);
     } finally {
       setUploading(false);
@@ -354,9 +297,9 @@ const ProfilePage = () => {
               <div className="profile-photo-container">
                 <div className="profile-photo-wrapper">
                   {userData.profilePhoto ? (
-                    <img 
-                      src={userData.profilePhoto} 
-                      alt="Profile" 
+                    <img
+                      src={userData.profilePhoto}
+                      alt="Profile"
                       className="profile-photo"
                     />
                   ) : (
@@ -376,7 +319,7 @@ const ProfilePage = () => {
 
                 {/* Photo Action Buttons */}
                 <div className="photo-action-buttons">
-                  <button 
+                  <button
                     className="photo-action-btn change-photo"
                     onClick={handleChangePhoto}
                     disabled={uploading}
@@ -385,7 +328,7 @@ const ProfilePage = () => {
                     <span>Change Photo</span>
                   </button>
                   {userData.profilePhoto && (
-                    <button 
+                    <button
                       className="photo-action-btn remove-photo"
                       onClick={handleRemovePhoto}
                       disabled={uploading}
@@ -488,7 +431,7 @@ const ProfilePage = () => {
               </div>
             )}
           </div>
-          
+
           <div className="activity-grid">
             {activityItems.map((item) => (
               <button

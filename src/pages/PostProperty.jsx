@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { collection, addDoc, query, where, getDocs, doc, updateDoc, getDoc } from 'firebase/firestore';
+import { collection, addDoc, query, where, getDocs, doc, updateDoc, getDoc, increment } from 'firebase/firestore';
 import { db } from '../firebase';
 import PropertyForm from '../components/PropertyForm/PropertyForm';
 import SubscriptionGuard from '../components/SubscriptionGuard/SubscriptionGuard';
@@ -52,7 +52,7 @@ const PostProperty = () => {
   const [loading, setLoading] = useState(false);
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState('');
-  
+
   // Get userType from navigation state or location state
   const locationState = location.state || window.history.state?.usr;
   const [userType, setUserType] = useState(locationState?.userType || null);
@@ -63,7 +63,7 @@ const PostProperty = () => {
   const [subscriptionVerified, setSubscriptionVerified] = useState(false);
   const [currentSubscription, setCurrentSubscription] = useState(null);
   const [timerRefresh, setTimerRefresh] = useState(0); // For refreshing timers
-  
+
   const [formData, setFormData] = useState({
     title: '',
     type: '',
@@ -84,7 +84,7 @@ const PostProperty = () => {
     console.log('🔍 Checking authentication...');
     console.log('Is Authenticated:', isAuthenticated);
     console.log('Current User:', currentUser);
-    
+
     if (!isAuthenticated) {
       console.warn('⚠️ User not authenticated, redirecting to login');
       alert('Please login to post a property');
@@ -129,9 +129,40 @@ const PostProperty = () => {
     }
   }, [selectedPropertyFlow, existingProperties]);
 
-  const handleCreateNewProperty = () => {
+  const handleCreateNewProperty = async () => {
     console.log('🔍 User wants to create new property...');
-    
+
+    if (userType === "developer") {
+      setLoading(true);
+      try {
+        const userDocRef = doc(db, 'users', currentUser.uid);
+        const userDoc = await getDoc(userDocRef);
+
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          const credits = userData.property_credits || 0;
+
+          // Also check for active status just in case
+          // const isActive = userData.subscription_status === 'active' || userData.plan_status === 'active';
+
+          if (credits <= 0) {
+            alert('You do not have enough credits to post a property. Please purchase a developer subscription plan.');
+            navigate('/developer-plan');
+            return;
+          }
+        } else {
+          alert('User profile not found. Please contact support.');
+          return;
+        }
+      } catch (error) {
+        console.error('Error verifying developer credits:', error);
+        alert('Failed to verify subscription. Please try again.');
+        return;
+      } finally {
+        setLoading(false);
+      }
+    }
+
     // Always proceed to the property creation flow
     // SubscriptionGuard will handle subscription verification for individual users
     console.log('✅ Proceeding to property creation flow');
@@ -157,32 +188,32 @@ const PostProperty = () => {
     const threeDaysLater = new Date(creationDate);
     threeDaysLater.setDate(creationDate.getDate() + 3);
     const now = new Date();
-    
+
     const diffMs = threeDaysLater - now;
-    
+
     if (diffMs <= 0) {
       return { expired: true, text: 'Edit period expired' };
     }
-    
+
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
     const diffHours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
     const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-    
+
     if (diffDays > 0) {
-      return { 
-        expired: false, 
+      return {
+        expired: false,
         text: `${diffDays} day${diffDays > 1 ? 's' : ''} ${diffHours}h remaining`,
         urgent: diffDays === 0
       };
     } else if (diffHours > 0) {
-      return { 
-        expired: false, 
+      return {
+        expired: false,
         text: `${diffHours}h ${diffMinutes}m remaining`,
         urgent: true
       };
     } else {
-      return { 
-        expired: false, 
+      return {
+        expired: false,
         text: `${diffMinutes} minute${diffMinutes > 1 ? 's' : ''} remaining`,
         urgent: true
       };
@@ -191,7 +222,7 @@ const PostProperty = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    
+
     // If property type changes, reset BHK if not applicable
     if (name === 'type') {
       const newFormData = { ...formData, [name]: value };
@@ -222,7 +253,7 @@ const PostProperty = () => {
       alert('⏰ Edit period has expired!\n\nThis property was posted more than 3 days ago and can no longer be edited.');
       return;
     }
-    
+
     setEditingProperty(property);
     // Populate form with property data for editing
     setFormData({
@@ -341,7 +372,7 @@ const PostProperty = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     // If we are editing, call update function
     if (editingProperty) {
       handleUpdateProperty(e);
@@ -353,28 +384,28 @@ const PostProperty = () => {
     console.log('User Type:', userType);
     console.log('Form Data:', formData);
     console.log('Selected Property Flow:', selectedPropertyFlow);
-    
+
     // Validate required fields
     const requiredFields = ['title', 'type', 'location', 'price', 'description'];
     const missingFields = requiredFields.filter(field => !formData[field]?.trim());
-    
+
     if (missingFields.length > 0) {
       console.error('❌ Missing required fields:', missingFields);
       alert(`Please fill in all required fields: ${missingFields.join(', ')}`);
       return;
     }
-    
+
     // Validate developer fields if user is developer
     if (userType === 'developer') {
       const developerRequiredFields = ['companyName', 'projectName'];
       const missingDeveloperFields = developerRequiredFields.filter(field => !formData[field]?.trim());
-      
+
       if (missingDeveloperFields.length > 0) {
         alert(`Please fill in required developer fields: ${missingDeveloperFields.join(', ')}`);
         return;
       }
     }
-    
+
     // Note: Subscription validation is now handled by SubscriptionGuard component
     // No need to check subscription here as the form is only accessible after verification
 
@@ -425,13 +456,17 @@ const PostProperty = () => {
         propertyData.bhk = formData.bhk;
       }
 
-      // Add developer-specific fields if user is a developer
       if (userType === 'developer') {
         propertyData.company_name = formData.companyName || '';
         propertyData.project_name = formData.projectName || '';
         propertyData.total_units = formData.totalUnits || '';
         propertyData.completion_date = formData.completionDate || '';
         propertyData.rera_number = formData.reraNumber || '';
+
+        // Developer Property Logic: 12 months validity
+        const expiryDate = new Date();
+        expiryDate.setFullYear(expiryDate.getFullYear() + 1);
+        propertyData.expiry_date = expiryDate.toISOString();
       }
 
       console.log('💾 Saving to Firestore...', propertyData);
@@ -442,24 +477,32 @@ const PostProperty = () => {
 
       console.log('✅ Property posted successfully with ID:', propertyId);
 
-      // For individual users, mark subscription as used
-      if (userType === 'individual' && currentUser?.uid) {
+      // Handle post-creation updates (Credits/Subscription)
+      if (userType === 'developer') {
+        console.log('📉 Deducting developer credit...');
+        const userRef = doc(db, 'users', currentUser.uid);
+        await updateDoc(userRef, {
+          property_credits: increment(-1)
+        });
+        console.log('✅ Credit deducted');
+      } else if (userType === 'individual' && currentUser?.uid) {
+        // For individual users, mark subscription as used
         console.log('📝 Marking subscription as used...');
         const subscriptionMarked = await SubscriptionService.markSubscriptionUsed(
-          currentUser.uid, 
+          currentUser.uid,
           propertyId
         );
-        
+
         if (subscriptionMarked) {
           console.log('✅ Subscription marked as used successfully');
         } else {
           console.warn('⚠️ Failed to mark subscription as used, but property was posted');
         }
       }
-      
+
       setLoading(false);
       alert(`Property posted successfully! You can now view it in the ${userType === 'developer' ? 'Developer' : 'Individual'} Exhibition.`);
-      
+
       // Navigate to the appropriate exhibition page based on user type
       setTimeout(() => {
         if (userType === 'developer') {
@@ -468,26 +511,26 @@ const PostProperty = () => {
           navigate('/exhibition/individual');
         }
       }, 1000);
-      
+
     } catch (error) {
       console.error('❌ Error posting property:', error);
-      
+
       setLoading(false);
-      
+
       let errorMessage = 'Failed to post property. ';
       if (error.message.includes('Cloudinary')) {
-          errorMessage += 'The image upload failed. Please try again or use a different image.';
+        errorMessage += 'The image upload failed. Please try again or use a different image.';
       } else {
-          errorMessage += 'Please check your connection and try again.';
+        errorMessage += 'Please check your connection and try again.';
       }
-      
+
       alert(errorMessage);
     }
   };
 
   return (
     <div className="post-property-page">
-      <motion.div 
+      <motion.div
         className="post-property-container"
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
@@ -501,7 +544,7 @@ const PostProperty = () => {
           <div className="user-type-selection">
             <h2>I am a...</h2>
             <div className="user-type-cards">
-              <motion.div 
+              <motion.div
                 className="user-type-card"
                 whileHover={{ y: -8, scale: 1.02 }}
                 onClick={() => setUserType('individual')}
@@ -519,7 +562,7 @@ const PostProperty = () => {
                 </button>
               </motion.div>
 
-              <motion.div 
+              <motion.div
                 className="user-type-card"
                 whileHover={{ y: -8, scale: 1.02 }}
                 onClick={() => setUserType('developer')}
@@ -547,8 +590,8 @@ const PostProperty = () => {
               <span>
                 {userType === 'individual' ? '👤 Individual Owner' : '🏢 Developer'}
               </span>
-              <button 
-                type="button" 
+              <button
+                type="button"
                 className="change-type-btn"
                 onClick={() => setUserType(null)}
               >
@@ -557,7 +600,7 @@ const PostProperty = () => {
             </div>
             <h2>What would you like to do?</h2>
             <div className="property-flow-cards">
-              <motion.div 
+              <motion.div
                 className="property-flow-card"
                 whileHover={{ y: -8, scale: 1.02 }}
                 onClick={handleCreateNewProperty}
@@ -570,7 +613,7 @@ const PostProperty = () => {
                 </button>
               </motion.div>
 
-              <motion.div 
+              <motion.div
                 className="property-flow-card"
                 whileHover={{ y: -8, scale: 1.02 }}
                 onClick={() => setSelectedPropertyFlow('existing')}
@@ -598,20 +641,20 @@ const PostProperty = () => {
               >
                 <div className="selected-type-badge">
                   <span>👤 Individual Owner</span>
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     className="change-type-btn"
-                    onClick={() => {setUserType(null); setSelectedPropertyFlow(null); setEditingProperty(null);}}
+                    onClick={() => { setUserType(null); setSelectedPropertyFlow(null); setEditingProperty(null); }}
                   >
                     Change User Type
                   </button>
                 </div>
                 <div className="selected-flow-badge">
                   <span>✨ Create New Property</span>
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     className="change-type-btn"
-                    onClick={() => {setSelectedPropertyFlow(null); setEditingProperty(null);}}
+                    onClick={() => { setSelectedPropertyFlow(null); setEditingProperty(null); }}
                   >
                     Change Flow
                   </button>
@@ -635,10 +678,10 @@ const PostProperty = () => {
                   <span>
                     {userType === 'individual' ? '👤 Individual Owner' : '🏢 Developer'}
                   </span>
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     className="change-type-btn"
-                    onClick={() => {setUserType(null); setSelectedPropertyFlow(null); setEditingProperty(null);}}
+                    onClick={() => { setUserType(null); setSelectedPropertyFlow(null); setEditingProperty(null); }}
                   >
                     Change User Type
                   </button>
@@ -647,10 +690,10 @@ const PostProperty = () => {
                   <span>
                     {selectedPropertyFlow === 'new' ? '✨ Create New Property' : '📝 Editing Existing Property'}
                   </span>
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     className="change-type-btn"
-                    onClick={() => {setSelectedPropertyFlow(null); setEditingProperty(null);}}
+                    onClick={() => { setSelectedPropertyFlow(null); setEditingProperty(null); }}
                   >
                     Change Flow
                   </button>
@@ -669,17 +712,17 @@ const PostProperty = () => {
                 />
               </>
             )}
-        
-        {/* Loading Overlay */}
-        {loading && (
-          <div className="loading-overlay">
-            <div className="loading-content">
-              <div className="spinner-large"></div>
-              <h3>{editingProperty ? 'Updating Your Property...' : 'Posting Your Property...'}</h3>
-              <p>Please wait while we save your property details</p>
-            </div>
-          </div>
-        )}
+
+            {/* Loading Overlay */}
+            {loading && (
+              <div className="loading-overlay">
+                <div className="loading-content">
+                  <div className="spinner-large"></div>
+                  <h3>{editingProperty ? 'Updating Your Property...' : 'Posting Your Property...'}</h3>
+                  <p>Please wait while we save your property details</p>
+                </div>
+              </div>
+            )}
           </>
         ) : null}
 
@@ -690,10 +733,10 @@ const PostProperty = () => {
               <span>
                 {userType === 'individual' ? '👤 Individual Owner' : '🏢 Developer'}
               </span>
-              <button 
-                type="button" 
+              <button
+                type="button"
                 className="change-type-btn"
-                onClick={() => {setUserType(null); setSelectedPropertyFlow(null);}} // Reset both
+                onClick={() => { setUserType(null); setSelectedPropertyFlow(null); }} // Reset both
               >
                 Change User Type
               </button>
@@ -702,8 +745,8 @@ const PostProperty = () => {
               <span>
                 📝 Existing Property
               </span>
-              <button 
-                type="button" 
+              <button
+                type="button"
                 className="change-type-btn"
                 onClick={() => setSelectedPropertyFlow(null)}
               >
@@ -719,46 +762,46 @@ const PostProperty = () => {
                   const timeRemaining = getTimeRemaining(property.created_at);
                   const editable = isEditable(property.created_at);
                   return (
-                  <motion.div 
-                    key={property.id} 
-                    className={`property-card ${!editable ? 'expired-property' : ''}`}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    {property.image_url && <img src={property.image_url} alt={property.title} className="property-card-image" />}
-                    <div className="property-card-details">
-                      <h3>{property.title}</h3>
-                      <p><strong>Type:</strong> {property.type}</p>
-                      <p><strong>Location:</strong> {property.location}</p>
-                      <p><strong>Price:</strong> {property.price}</p>
-                      <p><strong>Posted On:</strong> {new Date(property.created_at).toLocaleDateString()}</p>
-                      
-                      {/* Time Remaining Display */}
-                      <div className={`edit-timer ${timeRemaining.expired ? 'expired' : timeRemaining.urgent ? 'urgent' : 'active'}`}>
-                        <span className="timer-icon">⏱️</span>
-                        <span className="timer-text">{timeRemaining.text}</span>
-                      </div>
-                      
-                      {editable ? (
-                        <button 
-                          className="edit-property-btn" 
-                          onClick={() => handleEditProperty(property)}
-                        >
-                          ✏️ Edit Property
-                        </button>
-                      ) : (
-                        <div className="edit-locked-section">
-                          <p className="edit-restriction-message">
-                            🔒 Editing Locked
-                          </p>
-                          <p className="edit-restriction-detail">
-                            This property can no longer be edited as the 3-day edit window has expired.
-                          </p>
+                    <motion.div
+                      key={property.id}
+                      className={`property-card ${!editable ? 'expired-property' : ''}`}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      {property.image_url && <img src={property.image_url} alt={property.title} className="property-card-image" />}
+                      <div className="property-card-details">
+                        <h3>{property.title}</h3>
+                        <p><strong>Type:</strong> {property.type}</p>
+                        <p><strong>Location:</strong> {property.location}</p>
+                        <p><strong>Price:</strong> {property.price}</p>
+                        <p><strong>Posted On:</strong> {new Date(property.created_at).toLocaleDateString()}</p>
+
+                        {/* Time Remaining Display */}
+                        <div className={`edit-timer ${timeRemaining.expired ? 'expired' : timeRemaining.urgent ? 'urgent' : 'active'}`}>
+                          <span className="timer-icon">⏱️</span>
+                          <span className="timer-text">{timeRemaining.text}</span>
                         </div>
-                      )}
-                    </div>
-                  </motion.div>
+
+                        {editable ? (
+                          <button
+                            className="edit-property-btn"
+                            onClick={() => handleEditProperty(property)}
+                          >
+                            ✏️ Edit Property
+                          </button>
+                        ) : (
+                          <div className="edit-locked-section">
+                            <p className="edit-restriction-message">
+                              🔒 Editing Locked
+                            </p>
+                            <p className="edit-restriction-detail">
+                              This property can no longer be edited as the 3-day edit window has expired.
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </motion.div>
                   );
                 })}
               </div>
