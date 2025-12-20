@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { collection, addDoc, query, where, getDocs, doc, updateDoc } from 'firebase/firestore';
+import { collection, addDoc, query, where, getDocs, doc, updateDoc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import PropertyForm from '../components/PropertyForm/PropertyForm';
 import SubscriptionGuard from '../components/SubscriptionGuard/SubscriptionGuard';
@@ -404,6 +404,21 @@ const PostProperty = () => {
         created_at: new Date().toISOString(),
         status: 'active'
       };
+
+      // Fetch user's current subscription expiry and add to property
+      try {
+        const userDocRef = doc(db, 'users', currentUser.uid);
+        const userDoc = await getDoc(userDocRef);
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          if (userData.subscription_expiry) {
+            propertyData.subscription_expiry = userData.subscription_expiry;
+            console.log('📅 Property subscription expiry set to:', userData.subscription_expiry);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching user subscription:', error);
+      }
 
       // Only add BHK if applicable
       if (showBhkType && formData.bhk) {

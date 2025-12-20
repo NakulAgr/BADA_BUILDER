@@ -6,6 +6,7 @@ import { db } from '../../firebase';
 import ViewToggle from '../../components/ViewToggle/ViewToggle';
 import PropertyCard from '../../components/PropertyCard/PropertyCard';
 import useViewPreference from '../../hooks/useViewPreference';
+import { filterAndMarkExpiredProperties } from '../../utils/propertyExpiry';
 import './Exhibition.css';
 
 const ByDeveloper = () => {
@@ -24,7 +25,7 @@ const ByDeveloper = () => {
         const propertiesRef = collection(db, 'properties');
         const q = query(propertiesRef, where('user_type', '==', 'developer'));
 
-        const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        const unsubscribe = onSnapshot(q, async (querySnapshot) => {
           const projectsData = [];
           querySnapshot.forEach((doc) => {
             const data = doc.data();
@@ -37,14 +38,17 @@ const ByDeveloper = () => {
             }
           });
           
+          // Filter out expired properties and mark them as expired
+          const activeProjects = await filterAndMarkExpiredProperties(projectsData);
+          
           // Sort by created_at on client side
-          projectsData.sort((a, b) => {
+          activeProjects.sort((a, b) => {
             const dateA = new Date(a.created_at || 0);
             const dateB = new Date(b.created_at || 0);
             return dateB - dateA;
           });
           
-          setProjects(projectsData);
+          setProjects(activeProjects);
           setLoading(false);
         }, (error) => {
           console.error('Error fetching developer projects:', error);

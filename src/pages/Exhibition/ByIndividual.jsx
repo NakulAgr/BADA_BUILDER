@@ -6,6 +6,7 @@ import { db } from '../../firebase';
 import ViewToggle from '../../components/ViewToggle/ViewToggle';
 import PropertyCard from '../../components/PropertyCard/PropertyCard';
 import useViewPreference from '../../hooks/useViewPreference';
+import { filterAndMarkExpiredProperties } from '../../utils/propertyExpiry';
 import './Exhibition.css';
 
 const ByIndividual = () => {
@@ -24,7 +25,7 @@ const ByIndividual = () => {
         const propertiesRef = collection(db, 'properties');
         const q = query(propertiesRef, where('user_type', '==', 'individual'));
 
-        const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        const unsubscribe = onSnapshot(q, async (querySnapshot) => {
           const propertiesData = [];
           querySnapshot.forEach((doc) => {
             const data = doc.data();
@@ -37,14 +38,17 @@ const ByIndividual = () => {
             }
           });
           
+          // Filter out expired properties and mark them as expired
+          const activeProperties = await filterAndMarkExpiredProperties(propertiesData);
+          
           // Sort by created_at on client side
-          propertiesData.sort((a, b) => {
+          activeProperties.sort((a, b) => {
             const dateA = new Date(a.created_at || 0);
             const dateB = new Date(b.created_at || 0);
             return dateB - dateA;
           });
           
-          setProperties(propertiesData);
+          setProperties(activeProperties);
           setLoading(false);
         }, (error) => {
           console.error('Error fetching individual properties:', error);
