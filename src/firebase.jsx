@@ -2,6 +2,7 @@
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore, enableNetwork } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
 
 
 const firebaseConfig = {
@@ -20,6 +21,7 @@ const app = initializeApp(firebaseConfig);
 // Initialize services with optimizations
 const auth = getAuth(app);
 const db = getFirestore(app);
+const storage = getStorage(app);
 
 // Optimize Firebase performance
 if (typeof window !== 'undefined') {
@@ -34,5 +36,6 @@ if (typeof window !== 'undefined') {
 export {
   app,
   auth,
-  db
+  db,
+  storage
 };

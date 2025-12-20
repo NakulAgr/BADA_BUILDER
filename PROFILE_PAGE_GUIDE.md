@@ -1,15 +1,21 @@
 # Profile Page Implementation Guide
 
 ## Overview
-A clean, modern Profile Page UI that displays user information and activity summary in a professional real-estate style design.
+A clean, modern Profile Page UI that displays user information and activity summary in a professional real-estate style design with photo upload capability.
 
 ## Features
 
 ### 1. User Profile Section
 - **Profile Photo**: 
-  - 192x192px placeholder container
+  - 200x200px container with gradient border
   - Shows user icon if no photo uploaded
-  - Rounded corners with border
+  - **Click to upload/change photo**
+  - Hover overlay with camera icon and "Change Photo" text
+  - Upload progress indicator with spinner
+  - Success message after upload
+  - Validates file type (images only) and size (max 5MB)
+  - Stores in Firebase Storage
+  - Updates Firestore user document
   
 - **User Details** (Read-only):
   - Name
@@ -18,21 +24,51 @@ A clean, modern Profile Page UI that displays user information and activity summ
   - User ID (8-character uppercase)
   - User Type (Individual/Developer badge)
 
-- **Edit Profile Button**:
-  - Located at top-right of profile card
-  - Blue button with edit icon
-  - Navigates to `/edit-profile` (to be implemented)
+### 2. Photo Upload Functionality
+**How it works:**
+1. User clicks on profile photo
+2. File picker opens (accepts images only)
+3. Validates file type and size
+4. Shows uploading spinner overlay
+5. Uploads to Firebase Storage at `profile_photos/{userId}/{timestamp}_{filename}`
+6. Gets download URL
+7. Updates Firestore user document with `profilePhoto` field
+8. Refreshes profile data
+9. Shows success message
 
-### 2. Activity Summary Section
+**Validation:**
+- File type: Must be an image (image/*)
+- File size: Maximum 5MB
+- Error alerts for invalid files
+
+### 3. Activity Summary Section
 Three clickable activity cards:
 - **Properties Uploaded**: Links to `/my-properties`
 - **Joined Live Groups**: Links to `/exhibition/live-grouping`
 - **Booked Site Visits**: Links to `/my-bookings`
 
 Each card shows:
-- Icon
+- Colored icon with hover animation
 - Title
 - Count (currently 0, will be dynamic)
+- Arrow on hover
+
+## Design Enhancements
+
+### Visual Features
+- **Background**: Purple gradient with radial overlays
+- **Cards**: White with 24px rounded corners, elevated shadows
+- **Hover Effects**: Cards lift up, shadows intensify
+- **Photo Hover**: Scales up, shows overlay with camera icon
+- **Activity Cards**: Color-coded (Blue, Purple, Green) with gradient backgrounds on hover
+- **Smooth Animations**: All transitions are smooth and professional
+
+### Color Scheme
+- Primary Purple: `#667eea` to `#764ba2`
+- Blue (Individual): `#3b82f6`
+- Purple (Developer): `#8b5cf6`
+- Green (Site Visits): `#10b981`
+- Icon backgrounds: Blue (email), Green (phone), Orange (user ID), Purple (account type)
 
 ## Routes
 
@@ -47,10 +83,11 @@ Each card shows:
 
 ## Data Integration
 
-### Current Implementation
-Uses Firebase Auth and AuthContext:
+### Firebase Services Used
 ```javascript
-const { currentUser, userProfile } = useAuth();
+import { storage, db } from '../firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { doc, updateDoc } from 'firebase/firestore';
 ```
 
 ### User Data Structure
@@ -65,81 +102,44 @@ const { currentUser, userProfile } = useAuth();
 }
 ```
 
-### Activity Counts
-Currently hardcoded to 0. To make dynamic:
-1. Fetch user's properties from Firestore
-2. Fetch user's live group memberships
-3. Fetch user's site visit bookings
-
-## Design Specifications
-
-### Colors
-- Background: `bg-gray-50` (#F9FAFB)
-- Card: `bg-white` with subtle shadow
-- Primary Blue: `#2563EB`
-- Purple (Developer): `#7C3AED`
-- Text: Gray scale (900, 600, 500)
-
-### Layout
-- **Desktop**: Photo left, details right (side-by-side)
-- **Mobile**: Photo top, details below (stacked)
-- Max width: 1280px (5xl)
-- Padding: Responsive (4-8)
-
-### Typography
-- Page title: 3xl, bold
-- Section titles: xl, semibold
-- Labels: sm, semibold
-- Values: base, normal
+### Photo Upload Process
+1. User selects image file
+2. Validates file (type and size)
+3. Creates storage reference: `profile_photos/{userId}/{timestamp}_{filename}`
+4. Uploads file to Firebase Storage
+5. Gets download URL
+6. Updates Firestore: `users/{userId}` with `profilePhoto: URL`
+7. Calls `refreshProfile()` to update UI
 
 ## Responsive Design
 
 ### Desktop (lg+)
-- Profile photo and details side-by-side
+- Photo left, details right (side-by-side)
 - Activity cards in 3-column grid
+- Photo: 200x200px
 
 ### Tablet (sm-lg)
-- Profile photo and details stacked
+- Photo and details stacked
 - Activity cards in 3-column grid
+- Photo: 200x200px
 
 ### Mobile (<sm)
 - All elements stacked
 - Activity cards in 1-column grid
-- Full-width buttons
-
-## Future Enhancements
-
-### To Implement
-1. **Edit Profile Page** (`/edit-profile`)
-   - Form to update name, phone, profile photo
-   - Photo upload to Firebase Storage
-   - Update Firestore user document
-
-2. **Dynamic Activity Counts**
-   - Query Firestore for user's properties
-   - Query live group memberships
-   - Query site visit bookings
-
-3. **Activity Detail Pages**
-   - `/my-properties`: List user's uploaded properties
-   - `/my-bookings`: List user's site visit bookings
-   - Live groups already exists at `/exhibition/live-grouping`
-
-4. **Profile Photo Upload**
-   - Click photo to upload
-   - Crop/resize functionality
-   - Store in Firebase Storage
-   - Update Firestore with photo URL
+- Photo: 160px (centered)
+- Name shows below photo
 
 ## Files Modified
 
 ### New Files
 - `src/pages/ProfilePage.jsx` - Main profile page component
+- `src/pages/ProfilePage.css` - Enhanced styling with animations
 
 ### Updated Files
 - `src/App.jsx` - Added `/profile` route
 - `src/components/Header/Header.jsx` - Added "View Profile" button in dropdown
 - `src/components/Header/Header.css` - Added `.profile-dropdown-link` styles
+- `src/firebase.jsx` - Added Firebase Storage export
 
 ## Usage
 
@@ -147,7 +147,10 @@ Currently hardcoded to 0. To make dynamic:
 1. Login to your account
 2. Click your profile avatar in the header
 3. Click "View Profile" in the dropdown
-4. View your profile information and activity
+4. Click on profile photo to upload/change
+5. Select an image (max 5MB)
+6. Wait for upload to complete
+7. See success message
 
 ### For Developers
 ```javascript
@@ -155,19 +158,37 @@ Currently hardcoded to 0. To make dynamic:
 navigate('/profile');
 
 // Access user data
-const { currentUser, userProfile } = useAuth();
+const { currentUser, userProfile, refreshProfile } = useAuth();
+
+// Upload photo
+const storageRef = ref(storage, `profile_photos/${userId}/${timestamp}_${filename}`);
+await uploadBytes(storageRef, file);
+const photoURL = await getDownloadURL(storageRef);
+await updateDoc(doc(db, 'users', userId), { profilePhoto: photoURL });
 ```
 
 ## Tech Stack
 - React 19
 - React Router DOM 7
-- Tailwind CSS 4
+- Firebase Storage (for photo uploads)
+- Firebase Firestore (for user data)
 - React Icons (Feather Icons)
-- Firebase Auth & Firestore
+- Custom CSS with animations
 
-## Notes
-- No unnecessary animations (as requested)
-- Clean, minimal design
-- Professional real-estate app look
-- Fully responsive
-- Accessible with proper semantic HTML
+## Security Notes
+- Only authenticated users can access profile page
+- Users can only upload their own profile photo
+- File validation prevents non-image uploads
+- Size limit prevents large file uploads
+- Storage path includes user ID for security
+
+## Future Enhancements
+
+### To Implement
+1. **Image Cropping**: Allow users to crop/resize before upload
+2. **Photo Preview**: Show preview before confirming upload
+3. **Delete Photo**: Option to remove profile photo
+4. **Dynamic Activity Counts**: Fetch real data from Firestore
+5. **Activity Detail Pages**: 
+   - `/my-properties`: List user's uploaded properties
+   - `/my-bookings`: List user's site visit bookings

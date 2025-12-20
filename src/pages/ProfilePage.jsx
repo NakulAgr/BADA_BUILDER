@@ -1,12 +1,18 @@
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { FiUser, FiMail, FiPhone, FiHash, FiBriefcase, FiHome, FiUsers, FiCalendar } from 'react-icons/fi';
+import { FiUser, FiMail, FiPhone, FiHash, FiBriefcase, FiHome, FiUsers, FiCalendar, FiCamera, FiUpload } from 'react-icons/fi';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { doc, updateDoc } from 'firebase/firestore';
+import { storage, db } from '../firebase';
 import './ProfilePage.css';
 
 const ProfilePage = () => {
   const navigate = useNavigate();
-  const { currentUser, userProfile } = useAuth();
+  const { currentUser, userProfile, refreshProfile } = useAuth();
+  const [uploading, setUploading] = useState(false);
+  const [uploadSuccess, setUploadSuccess] = useState(false);
+  const fileInputRef = useRef(null);
 
   // Placeholder data - will be replaced with actual Firebase data
   const userData = {
@@ -49,6 +55,62 @@ const ProfilePage = () => {
     navigate(path);
   };
 
+  const handlePhotoClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handlePhotoChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file || !currentUser) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Image size should be less than 5MB');
+      return;
+    }
+
+    try {
+      setUploading(true);
+      setUploadSuccess(false);
+
+      // Create a reference to the storage location
+      const storageRef = ref(storage, `profile_photos/${currentUser.uid}/${Date.now()}_${file.name}`);
+
+      // Upload the file
+      await uploadBytes(storageRef, file);
+
+      // Get the download URL
+      const photoURL = await getDownloadURL(storageRef);
+
+      // Update Firestore user document
+      const userDocRef = doc(db, 'users', currentUser.uid);
+      await updateDoc(userDocRef, {
+        profilePhoto: photoURL
+      });
+
+      // Refresh profile to get updated data
+      await refreshProfile();
+
+      setUploadSuccess(true);
+      setTimeout(() => setUploadSuccess(false), 3000);
+    } catch (error) {
+      console.error('Error uploading photo:', error);
+      alert('Failed to upload photo. Please try again.');
+    } finally {
+      setUploading(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
   return (
     <div className="profile-page">
       <div className="profile-container">
@@ -63,7 +125,7 @@ const ProfilePage = () => {
           <div className="profile-content">
             {/* Profile Photo */}
             <div className="profile-photo-section">
-              <div className="profile-photo-wrapper">
+              <div className="profile-photo-wrapper" onClick={handlePhotoClick}>
                 {userData.profilePhoto ? (
                   <img 
                     src={userData.profilePhoto} 
@@ -75,7 +137,33 @@ const ProfilePage = () => {
                     <FiUser className="profile-photo-icon" />
                   </div>
                 )}
+                <div className="photo-overlay">
+                  {uploading ? (
+                    <div className="photo-uploading">
+                      <div className="spinner"></div>
+                      <span>Uploading...</span>
+                    </div>
+                  ) : (
+                    <>
+                      <FiCamera className="camera-icon" />
+                      <span>Change Photo</span>
+                    </>
+                  )}
+                </div>
               </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handlePhotoChange}
+                style={{ display: 'none' }}
+              />
+              {uploadSuccess && (
+                <div className="upload-success">
+                  <FiUpload className="success-icon" />
+                  Photo updated successfully!
+                </div>
+              )}
               <div className="profile-name-mobile">
                 <h2>{userData.name}</h2>
                 <span className={`user-type-badge ${userData.userType.toLowerCase()}`}>
