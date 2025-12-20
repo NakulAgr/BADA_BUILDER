@@ -142,7 +142,7 @@ const ProfilePage = () => {
     email: currentUser?.email || 'john.doe@example.com',
     phone: userProfile?.phone || '+91 9876543210',
     userId: currentUser?.uid?.substring(0, 8).toUpperCase() || 'USER1234',
-    userType: userProfile?.userType || 'Individual',
+    userType: userProfile?.userType || '',
     profilePhoto: profilePhoto
   };
 

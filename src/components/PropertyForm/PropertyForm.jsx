@@ -12,6 +12,7 @@ const PropertyForm = ({
   userType,
   showBhkType,
   editingProperty,
+  disabled
 }) => {
   return (
     <form onSubmit={handleSubmit} className="property-form">
@@ -210,7 +211,7 @@ const PropertyForm = ({
         />
       </div>
 
-      <button type="submit" className="submit-btn" disabled={loading}>
+      <button type="submit" className="submit-btn" disabled={loading || disabled}>
         {loading ? (
           <span className="flex items-center justify-center gap-2">
             <span className="spinner"></span>

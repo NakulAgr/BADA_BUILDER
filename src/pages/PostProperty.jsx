@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { collection, addDoc, query, where, getDocs, doc, updateDoc, getDoc, increment } from 'firebase/firestore';
+import { collection, addDoc, query, where, getDocs, doc, updateDoc, getDoc, increment, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
 import PropertyForm from '../components/PropertyForm/PropertyForm';
 import SubscriptionGuard from '../components/SubscriptionGuard/SubscriptionGuard';
@@ -62,6 +62,7 @@ const PostProperty = () => {
   const [editingProperty, setEditingProperty] = useState(null);
   const [subscriptionVerified, setSubscriptionVerified] = useState(false);
   const [currentSubscription, setCurrentSubscription] = useState(null);
+  const [developerCredits, setDeveloperCredits] = useState(null); // Add developer credits state
   const [timerRefresh, setTimerRefresh] = useState(0); // For refreshing timers
 
   const [formData, setFormData] = useState({
@@ -94,6 +95,35 @@ const PostProperty = () => {
 
     // Note: Subscription check is now handled only when user clicks "Create New Property"
   }, [isAuthenticated, navigate, currentUser]);
+
+  // Effect to fetch developer credits
+  useEffect(() => {
+    if (userType === 'developer' && currentUser?.uid) {
+      const userDocRef = doc(db, 'users', currentUser.uid);
+
+      // Use onSnapshot for real-time updates
+      const unsubscribe = onSnapshot && typeof onSnapshot === 'function' ? onSnapshot(userDocRef, (docSnap) => {
+        if (docSnap.exists()) {
+          const userData = docSnap.data();
+          setDeveloperCredits(userData.property_credits || 0);
+        }
+      }) : null;
+
+      // Fallback if onSnapshot is not imported (though it should be added to imports)
+      if (!unsubscribe) {
+        getDoc(userDocRef).then((docSnap) => {
+          if (docSnap.exists()) {
+            const userData = docSnap.data();
+            setDeveloperCredits(userData.property_credits || 0);
+          }
+        });
+      }
+
+      return () => {
+        if (unsubscribe) unsubscribe();
+      };
+    }
+  }, [userType, currentUser]);
 
   // Effect to fetch existing properties
   useEffect(() => {
@@ -699,6 +729,29 @@ const PostProperty = () => {
                   </button>
                 </div>
                 <p className="subtitle">Fill in the details to list your property</p>
+
+                {/* Developer Credit Display */}
+                {userType === 'developer' && developerCredits !== null && (
+                  <div style={{
+                    background: developerCredits > 0 ? '#f0fdf4' : '#fef2f2',
+                    border: `1px solid ${developerCredits > 0 ? '#86efac' : '#fecaca'}`,
+                    color: developerCredits > 0 ? '#166534' : '#991b1b',
+                    padding: '12px',
+                    borderRadius: '8px',
+                    marginBottom: '20px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px'
+                  }}>
+                    <span style={{ fontSize: '1.2em' }}>🏢</span>
+                    {developerCredits > 0 ? (
+                      <span>You have <strong>{developerCredits}</strong> out of <strong>20</strong> properties remaining</span>
+                    ) : (
+                      <span>You have reached your posting limit. <a href="#" style={{ textDecoration: 'underline', color: 'inherit', fontWeight: 'bold' }} onClick={(e) => { e.preventDefault(); navigate('/developer-plan'); }}>Purchase plan to continue</a></span>
+                    )}
+                  </div>
+                )}
+
                 <PropertyForm
                   formData={formData}
                   handleChange={handleChange}
@@ -709,6 +762,7 @@ const PostProperty = () => {
                   userType={userType}
                   showBhkType={showBhkType}
                   editingProperty={editingProperty}
+                  disabled={userType === 'developer' && developerCredits !== null && developerCredits <= 0}
                 />
               </>
             )}
