@@ -232,3 +232,56 @@
     font-size: 14px;
   }
 }
+/* Payment Loading Styles */
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  display: inline-block;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.flex {
+  display: flex;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.justify-center {
+  justify-content: center;
+}
+
+.gap-2 {
+  gap: 8px;
+}
+
+/* Payment Gateway Loading State */
+.select-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.select-button:disabled:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+/* Payment Processing State */
+.plan-card .select-button:disabled {
+  background: #ccc;
+  color: #666;
+}
+
+.plan-card.popular .select-button:disabled,
+.plan-card.best-value .select-button:disabled {
+  background: #ccc;
+  color: #666;
+}

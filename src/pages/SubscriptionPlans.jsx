@@ -1,45 +1,77 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, updateDoc, collection, addDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import './SubscriptionPlans.css';
 
-const plans = [
+/* ---------- BASE PLANS (Individual) ---------- */
+const individualPlans = [
   {
     id: '1month',
     duration: '1 Month',
-    price: 3000,
-    features: ['Post unlimited properties', 'Featured listing for 7 days', 'Email support']
-  },
-  {
-    id: '3months',
-    duration: '3 Months',
-    price: 8000,
-    features: ['Post unlimited properties', 'Featured listing for 21 days', 'Priority email support', 'Save ₹1,000'],
-    popular: true
+    price: 100,
+    features: ['Post 1 property', 'Featured listing for 1 month', 'Email support']
   },
   {
     id: '6months',
     duration: '6 Months',
-    price: 15000,
-    features: ['Post unlimited properties', 'Featured listing for 45 days', 'Priority support', 'Save ₹3,000']
+    price: 400,
+    features: ['Post 1 property', 'Featured listing for 6 month', 'Email support'],
+    popular: true
   },
   {
     id: '12months',
-    duration: '12 Months',
-    price: 25000,
-    features: ['Post unlimited properties', 'Featured listing for 90 days', 'Dedicated support', 'Save ₹11,000'],
-    bestValue: true
+    duration: '12 Month',
+    price: 700,
+    features: ['Post 1 property', 'Featured listing for 1 year', 'Email support']
   }
 ];
 
+/* ---------- DEVELOPER / BUILDER PLAN ---------- */
+const developerPlan = {
+  id: 'dev_12months',
+  duration: '12 Month',
+  price: 20000,
+  features: [
+    'Post 20 property',
+    'Featured listing for 1 year',
+    'Email support'
+  ],
+  bestValue: true
+};
+
 const SubscriptionPlans = () => {
   const navigate = useNavigate();
-  const { currentUser, isAuthenticated } = useAuth();
-  const [loading, setLoading] = useState(false);
+  const { currentUser, isAuthenticated, userProfile } = useAuth();
+
   const [selectedPlan, setSelectedPlan] = useState(null);
+  const [paymentLoading, setPaymentLoading] = useState(false);
+  const [razorpayLoaded, setRazorpayLoaded] = useState(false);
+
+  /* ---------- LOAD RAZORPAY ---------- */
+  useEffect(() => {
+    if (window.Razorpay) {
+      setRazorpayLoaded(true);
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.onload = () => setRazorpayLoaded(true);
+    script.onerror = () => alert('Failed to load payment gateway');
+    document.body.appendChild(script);
+  }, []);
+
+  /* ---------- ROLE CHECK ---------- */
+  const isDeveloper =
+    userProfile?.role === 'developer' || userProfile?.role === 'builder';
+
+  /* ---------- FINAL PLANS LIST ---------- */
+  const plans = isDeveloper
+    ? [...individualPlans, developerPlan]
+    : individualPlans;
 
   const calculateExpiryDate = (months) => {
     const date = new Date();
@@ -47,44 +79,94 @@ const SubscriptionPlans = () => {
     return date.toISOString();
   };
 
+  const handleRazorpayPayment = async (plan) => {
+    if (!window.Razorpay) return false;
+
+    let months = 1;
+    if (plan.id === '6months') months = 6;
+    else if (plan.id === '12months' || plan.id === 'dev_12months') months = 12;
+
+    const options = {
+      key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+      amount: plan.price * 100,
+      currency: 'INR',
+      name: 'Bada Builder',
+      description: `Subscription Plan - ${plan.duration}`,
+      image: '/logo.png',
+
+      handler: async (response) => {
+        try {
+          const expiry = calculateExpiryDate(months);
+
+          await addDoc(collection(db, 'payments'), {
+            payment_id: response.razorpay_payment_id,
+            user_id: currentUser.uid,
+            amount: plan.price,
+            plan_name: plan.id,
+            payment_status: 'success',
+            created_at: new Date().toISOString()
+          });
+
+          await updateDoc(doc(db, 'users', currentUser.uid), {
+            active_plan: plan.id,
+            plan_status: 'active',
+            is_subscribed: true,
+            subscription_expiry: expiry,
+            can_post_property: true
+          });
+
+          alert('Subscription activated successfully');
+          setPaymentLoading(false);
+          navigate('/post-property', { replace: true });
+
+        } catch (err) {
+          console.error(err);
+          alert('Payment success but activation failed');
+          setPaymentLoading(false);
+        }
+      },
+
+      prefill: {
+        name: userProfile?.name || '',
+        email: userProfile?.email || '',
+        contact: userProfile?.phone || ''
+      },
+
+      modal: {
+        ondismiss: () => {
+          setPaymentLoading(false);
+          setSelectedPlan(null);
+          alert('Payment cancelled');
+        }
+      },
+
+      theme: { color: '#58335e' }
+    };
+
+    new window.Razorpay(options).open();
+    return true;
+  };
+
   const handleSelectPlan = async (plan) => {
+    if (paymentLoading) return;
+
     if (!isAuthenticated) {
-      alert('Please login to subscribe');
+      alert('Please login first');
       navigate('/login');
       return;
     }
 
+    if (!razorpayLoaded) {
+      alert('Payment gateway loading...');
+      return;
+    }
+
     setSelectedPlan(plan.id);
-    setLoading(true);
+    setPaymentLoading(true);
 
-    try {
-      // Calculate expiry date based on plan
-      let months = 1;
-      if (plan.id === '3months') months = 3;
-      else if (plan.id === '6months') months = 6;
-      else if (plan.id === '12months') months = 12;
-
-      const expiryDate = calculateExpiryDate(months);
-
-      // Update user subscription in Firestore
-      await updateDoc(doc(db, 'users', currentUser.uid), {
-        is_subscribed: true,
-        subscription_expiry: expiryDate,
-        subscription_plan: plan.id,
-        subscription_price: plan.price,
-        subscribed_at: new Date().toISOString()
-      });
-
-      console.log('Subscription updated successfully');
-      alert(`Successfully subscribed to ${plan.duration} plan!`);
-      
-      // Redirect to post property page
-      navigate('/post-property');
-    } catch (error) {
-      console.error('Error updating subscription:', error);
-      alert('Failed to subscribe. Please try again.');
-    } finally {
-      setLoading(false);
+    const ok = await handleRazorpayPayment(plan);
+    if (!ok) {
+      setPaymentLoading(false);
       setSelectedPlan(null);
     }
   };
@@ -92,74 +174,52 @@ const SubscriptionPlans = () => {
   return (
     <div className="subscription-page">
       <div className="subscription-container">
-        <motion.div 
-          className="subscription-header"
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-        >
+
+        <motion.div className="subscription-header">
           <h1>Choose Your Plan</h1>
           <p>Select a subscription plan to start posting properties</p>
         </motion.div>
 
         <div className="plans-grid">
           {plans.map((plan, index) => (
-            <motion.div 
-              key={plan.id} 
+            <motion.div
+              key={plan.id}
               className={`plan-card ${plan.popular ? 'popular' : ''} ${plan.bestValue ? 'best-value' : ''}`}
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-              whileHover={{ y: -8, transition: { duration: 0.2 } }}
             >
               {plan.popular && <div className="badge">Most Popular</div>}
-              {plan.bestValue && <div className="badge best">Best Value</div>}
-              
+              {plan.bestValue && <div className="badge best">Developer Plan</div>}
+
               <div className="plan-header">
                 <h3>{plan.duration}</h3>
                 <div className="price">
                   <span className="currency">₹</span>
-                  <span className="amount">{plan.price.toLocaleString()}</span>
+                  <span className="amount">{plan.price}</span>
                 </div>
               </div>
 
               <ul className="features-list">
-                {plan.features.map((feature, index) => (
-                  <li key={index}>
-                    <svg className="check-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    {feature}
-                  </li>
+                {plan.features.map((f, i) => (
+                  <li key={i}>✔ {f}</li>
                 ))}
               </ul>
 
               <button
                 className="select-button"
                 onClick={() => handleSelectPlan(plan)}
-                disabled={loading && selectedPlan === plan.id}
+                disabled={paymentLoading}
               >
-                {loading && selectedPlan === plan.id ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <span className="spinner"></span>
-                    Processing...
-                  </span>
-                ) : (
-                  'Select Plan'
-                )}
+                {paymentLoading && selectedPlan === plan.id
+                  ? 'Processing Payment...'
+                  : 'Choose Plan'}
               </button>
             </motion.div>
           ))}
         </div>
 
-        <motion.div 
-          className="subscription-note"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.6 }}
-        >
-          <p>Note: This is a demo implementation. In production, integrate with a payment gateway.</p>
-        </motion.div>
+        <p className="subscription-note">
+          🔒 Secure payment powered by Razorpay
+        </p>
+
       </div>
     </div>
   );
