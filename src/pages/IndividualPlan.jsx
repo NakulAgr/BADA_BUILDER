@@ -6,7 +6,7 @@ import { doc, updateDoc, collection, addDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import './SubscriptionPlans.css';
 
-/* ---------- BASE PLANS (Individual) ---------- */
+/* ---------- INDIVIDUAL PLANS (ONLY THESE 3 PLANS) ---------- */
 const individualPlans = [
   {
     id: '1month',
@@ -29,31 +29,15 @@ const individualPlans = [
   }
 ];
 
-/* ---------- DEVELOPER / BUILDER PLAN (ONLY ONE PLAN) ---------- */
-const developerPlan = [
-  {
-    id: '12months',
-    duration: '12 month',
-    price: 20000,
-    features: [
-      'Post 20 property',
-      'Featured listing for 1 year',
-      'Email support'
-    ],
-    bestValue: true
-  }
-];
-
-const SubscriptionPlans = () => {
+const IndividualPlan = () => {
   const navigate = useNavigate();
   const { currentUser, isAuthenticated, userProfile } = useAuth();
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [razorpayLoaded, setRazorpayLoaded] = useState(false);
 
-  // Get user role from navigation state or user profile
-  const locationState = window.history.state?.usr;
-  const userRole = locationState?.userType || userProfile?.user_type || 'individual';
+  // User role is always individual for this component
+  const userRole = 'individual';
 
   /* ---------- LOAD RAZORPAY ---------- */
   useEffect(() => {
@@ -83,16 +67,13 @@ const SubscriptionPlans = () => {
     loadRazorpay();
   }, []);
 
-  /* ---------- ROLE-BASED PLAN FILTERING ---------- */
-  const plans = userRole === 'developer' ? developerPlan : individualPlans;
-
   const calculateExpiryDate = (months) => {
     const date = new Date();
     date.setMonth(date.getMonth() + months);
     return date.toISOString();
   };
 
-  // Razorpay payment handler (reusing exact logic from BookSiteVisit)
+  // Razorpay payment handler (reusing exact logic from SubscriptionPlans)
   const handleRazorpayPayment = async (plan) => {
     if (!window.Razorpay) {
       alert('Payment gateway is loading. Please try again in a moment.');
@@ -112,9 +93,9 @@ const SubscriptionPlans = () => {
       amount: amount * 100, // Amount in paise
       currency: currency,
       name: 'Bada Builder',
-      description: `Property Listing Subscription Plan - ${plan.duration}`,
-      image: '/logo.png', // Your company logo
-      order_id: '', // Will be generated from backend if needed
+      description: `Individual Property Listing Plan - ${plan.duration}`,
+      image: '/logo.png',
+      order_id: '',
       handler: async function (response) {
         console.log('✅ Payment successful:', response);
         
@@ -133,7 +114,7 @@ const SubscriptionPlans = () => {
           razorpay_signature: response.razorpay_signature || '',
           payment_currency: currency,
           payment_timestamp: new Date().toISOString(),
-          user_role: userRole // Store user role with payment
+          user_role: userRole
         };
 
         // Prepare subscription data
@@ -146,7 +127,7 @@ const SubscriptionPlans = () => {
           subscription_plan: plan.id,
           subscription_price: plan.price,
           subscribed_at: new Date().toISOString(),
-          user_type: userRole // Store user role in profile
+          user_type: userRole
         };
 
         try {
@@ -160,11 +141,11 @@ const SubscriptionPlans = () => {
 
           // Show success and redirect
           setPaymentLoading(false);
-          alert(`Successfully subscribed to ${plan.duration} plan! Payment ID: ${response.razorpay_payment_id}`);
+          alert(`Successfully subscribed to Individual ${plan.duration} plan! Payment ID: ${response.razorpay_payment_id}`);
           
           // Redirect to post property page
           setTimeout(() => {
-            navigate('/post-property');
+            navigate('/post-property', { state: { userType: 'individual' } });
           }, 1000);
 
         } catch (error) {
@@ -184,7 +165,7 @@ const SubscriptionPlans = () => {
         plan_price: plan.price,
         user_id: currentUser.uid,
         user_role: userRole,
-        subscription_type: 'property_listing'
+        subscription_type: 'individual_property_listing'
       },
       theme: {
         color: '#58335e'
@@ -218,7 +199,7 @@ const SubscriptionPlans = () => {
     setSelectedPlan(plan.id);
     setPaymentLoading(true);
 
-    console.log('🚀 Starting subscription payment for plan:', plan.duration);
+    console.log('🚀 Starting Individual subscription payment for plan:', plan.duration);
     console.log('👤 User role:', userRole);
     
     // Initiate Razorpay payment
@@ -227,7 +208,6 @@ const SubscriptionPlans = () => {
       setPaymentLoading(false);
       setSelectedPlan(null);
     }
-    // Note: Subscription will be activated after successful payment in handleRazorpayPayment
   };
 
   return (
@@ -239,22 +219,15 @@ const SubscriptionPlans = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <h1>Choose Your Plan</h1>
-          <p>
-            {userRole === 'developer' 
-              ? 'Developer/Builder subscription plan for property listings' 
-              : 'Select a subscription plan to start posting properties'
-            }
-          </p>
-          {userRole === 'developer' && (
-            <div className="role-badge">
-              🏢 Developer / Builder Plan
-            </div>
-          )}
+          <h1>Individual Owner Plans</h1>
+          <p>Choose the perfect subscription plan for your property listing needs</p>
+          <div className="role-badge">
+            👤 Individual Owner Plans
+          </div>
         </motion.div>
 
         <div className="plans-grid">
-          {plans.map((plan, index) => (
+          {individualPlans.map((plan, index) => (
             <motion.div 
               key={plan.id} 
               className={`plan-card ${plan.popular ? 'popular' : ''} ${plan.bestValue ? 'best-value' : ''}`}
@@ -264,8 +237,7 @@ const SubscriptionPlans = () => {
               whileHover={{ y: -8, transition: { duration: 0.2 } }}
             >
               {plan.popular && <div className="badge">Most Popular</div>}
-              {plan.bestValue && userRole === 'developer' && <div className="badge best">Developer Plan</div>}
-              {plan.bestValue && userRole !== 'developer' && <div className="badge best">Best Value</div>}
+              {plan.bestValue && <div className="badge best">Best Value</div>}
               
               <div className="plan-header">
                 <h3>{plan.duration}</h3>
@@ -319,4 +291,4 @@ const SubscriptionPlans = () => {
   );
 };
 
-export default SubscriptionPlans;
+export default IndividualPlan;

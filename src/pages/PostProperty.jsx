@@ -117,9 +117,18 @@ const PostProperty = () => {
     
     // Check subscription only when user wants to create new property
     if (!isSubscribed()) {
-      console.warn('⚠️ User not subscribed, redirecting to subscription plans');
-      alert('Please subscribe to a plan to post properties');
-      navigate('/subscription-plans');
+      console.warn('⚠️ User not subscribed, redirecting to appropriate subscription plan');
+      
+      // Redirect to role-specific subscription plan
+      if (userType === 'developer') {
+        console.log('🏢 Redirecting to Developer Plan');
+        alert('Please subscribe to the Developer plan to post properties');
+        navigate('/developer-plan');
+      } else {
+        console.log('👤 Redirecting to Individual Plans');
+        alert('Please subscribe to a plan to post properties');
+        navigate('/individual-plan');
+      }
       return;
     }
     

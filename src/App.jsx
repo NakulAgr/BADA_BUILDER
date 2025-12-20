@@ -22,6 +22,8 @@ import Exhibition from './pages/Exhibition';
 import Working from './pages/Working';
 import Services from './pages/Services';
 import SubscriptionPlans from './pages/SubscriptionPlans';
+import DeveloperPlan from './pages/DeveloperPlan';
+import IndividualPlan from './pages/IndividualPlan';
 import PostProperty from './pages/PostProperty';
 import ByIndividual from './pages/Exhibition/ByIndividual';
 import ByDeveloper from './pages/Exhibition/ByDeveloper';
@@ -96,6 +98,8 @@ function App() {
         <Route path="/exhibition/badabuilder" element={<ByBadaBuilder />} />
         <Route path="/report" element={<Working />} />
         <Route path="/subscription-plans" element={<SubscriptionPlans />} />
+        <Route path="/developer-plan" element={<DeveloperPlan />} />
+        <Route path="/individual-plan" element={<IndividualPlan />} />
         <Route path="/post-property" element={<PostProperty />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/admin/live-grouping" element={<AdminLiveGrouping />} />
