@@ -4,12 +4,14 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
+import { formatDate } from '../utils/dateFormatter';
 import './MyBookings.css';
 
 const MyBookings = () => {
   const { currentUser, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [bookings, setBookings] = useState([]);
+  const [allBookingsCount, setAllBookingsCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -34,7 +36,7 @@ const MyBookings = () => {
       
       const bookingsRef = collection(db, 'bookings');
       
-      // Try without orderBy first to see if data exists
+      // Fetch ALL bookings (including past ones for stats)
       const q = query(
         bookingsRef,
         where('user_id', '==', currentUser.uid)
@@ -46,15 +48,17 @@ const MyBookings = () => {
       const today = new Date();
       today.setHours(0, 0, 0, 0); // Set to start of day for comparison
       
-      const bookingsData = querySnapshot.docs.map(doc => {
+      const allBookings = querySnapshot.docs.map(doc => {
         const data = doc.data();
         console.log('📄 Booking data:', data);
         return {
           id: doc.id,
           ...data
         };
-      }).filter(booking => {
-        // Filter out bookings where visit date has passed
+      });
+
+      // Filter to show only active bookings (today and future)
+      const activeBookings = allBookings.filter(booking => {
         if (booking.visit_date) {
           const visitDate = new Date(booking.visit_date);
           visitDate.setHours(0, 0, 0, 0);
@@ -69,14 +73,16 @@ const MyBookings = () => {
       });
 
       // Sort manually by created_at
-      bookingsData.sort((a, b) => {
+      activeBookings.sort((a, b) => {
         const dateA = a.created_at ? new Date(a.created_at) : new Date(0);
         const dateB = b.created_at ? new Date(b.created_at) : new Date(0);
         return dateB - dateA;
       });
 
-      console.log('✅ Active bookings loaded:', bookingsData.length);
-      setBookings(bookingsData);
+      console.log('✅ Active bookings loaded:', activeBookings.length);
+      console.log('📊 Total bookings (including past):', allBookings.length);
+      setBookings(activeBookings);
+      setAllBookingsCount(allBookings.length);
     } catch (error) {
       console.error('❌ Error fetching bookings:', error);
       console.error('Error details:', error.message);
@@ -86,14 +92,8 @@ const MyBookings = () => {
     }
   };
 
-  const formatDate = (dateString) => {
-    if (!dateString) return 'N/A';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-IN', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric'
-    });
+  const formatDateDisplay = (dateString) => {
+    return formatDate(dateString);
   };
 
   const getStatusBadgeClass = (status) => {
@@ -148,21 +148,21 @@ const MyBookings = () => {
             <span className="stat-value">{bookings.length}</span>
           </div>
           <div className="stat-item">
-            <span className="stat-label">Upcoming Visits</span>
+            <span className="stat-label">Past Bookings</span>
             <span className="stat-value">
-              {bookings.filter(b => b.status === 'pending').length}
+              {allBookingsCount - bookings.length}
             </span>
           </div>
           <div className="stat-item">
-            <span className="stat-label">This Week</span>
+            <span className="stat-label">Today's Bookings</span>
             <span className="stat-value">
               {bookings.filter(b => {
                 if (!b.visit_date) return false;
                 const visitDate = new Date(b.visit_date);
                 const today = new Date();
-                const weekFromNow = new Date();
-                weekFromNow.setDate(today.getDate() + 7);
-                return visitDate >= today && visitDate <= weekFromNow;
+                visitDate.setHours(0, 0, 0, 0);
+                today.setHours(0, 0, 0, 0);
+                return visitDate.getTime() === today.getTime();
               }).length}
             </span>
           </div>
@@ -205,7 +205,7 @@ const MyBookings = () => {
                       <span className="detail-icon">📅</span>
                       <div className="detail-content">
                         <span className="detail-label">Visit Date</span>
-                        <span className="detail-value">{booking.visit_date || 'N/A'}</span>
+                        <span className="detail-value">{formatDate(booking.visit_date)}</span>
                       </div>
                     </div>
                     <div className="detail-item">
@@ -262,7 +262,7 @@ const MyBookings = () => {
                   <div className="booking-footer">
                     <span className="booking-id">Booking ID: {booking.id}</span>
                     <span className="booking-date">
-                      Booked on: {formatDate(booking.created_at)}
+                      Booked on: {formatDateDisplay(booking.created_at)}
                     </span>
                   </div>
                 </div>

@@ -8,6 +8,7 @@ import ViewToggle from '../components/ViewToggle/ViewToggle';
 import useViewPreference from '../hooks/useViewPreference';
 import { FiEdit2, FiEye, FiTrash2, FiClock, FiMapPin, FiHome, FiCalendar } from 'react-icons/fi';
 import { isPropertyExpired, markPropertyAsExpired } from '../utils/propertyExpiry';
+import { formatDate } from '../utils/dateFormatter';
 import './MyProperties.css';
 
 const MyProperties = () => {
@@ -279,7 +280,7 @@ const MyProperties = () => {
 
           <div className="property-info-row">
             <span className="posted-date">
-              Posted: {new Date(property.created_at).toLocaleDateString()}
+              Posted: {formatDate(property.created_at)}
             </span>
           </div>
 

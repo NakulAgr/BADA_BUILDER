@@ -7,6 +7,7 @@ import { db } from '../firebase';
 import PropertyForm from '../components/PropertyForm/PropertyForm';
 import SubscriptionGuard from '../components/SubscriptionGuard/SubscriptionGuard';
 import SubscriptionService from '../services/subscriptionService';
+import { formatDate } from '../utils/dateFormatter';
 import './PostProperty.css';
 
 // --- Cloudinary Configuration ---
@@ -829,7 +830,7 @@ const PostProperty = () => {
                         <p><strong>Type:</strong> {property.type}</p>
                         <p><strong>Location:</strong> {property.location}</p>
                         <p><strong>Price:</strong> {property.price}</p>
-                        <p><strong>Posted On:</strong> {new Date(property.created_at).toLocaleDateString()}</p>
+                        <p><strong>Posted On:</strong> {formatDate(property.created_at)}</p>
 
                         {/* Time Remaining Display */}
                         <div className={`edit-timer ${timeRemaining.expired ? 'expired' : timeRemaining.urgent ? 'urgent' : 'active'}`}>

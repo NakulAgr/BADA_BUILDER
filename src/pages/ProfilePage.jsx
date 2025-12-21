@@ -103,11 +103,25 @@ const ProfilePage = () => {
     });
 
     const unsubscribeBookings = onSnapshot(bookingsQuery, (snapshot) => {
+      // Filter out past bookings - only count today and future visits
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      const activeBookings = snapshot.docs.filter(doc => {
+        const data = doc.data();
+        if (data.visit_date) {
+          const visitDate = new Date(data.visit_date);
+          visitDate.setHours(0, 0, 0, 0);
+          return visitDate >= today; // Keep only today and future bookings
+        }
+        return true; // Keep bookings without visit_date
+      });
+      
       setActivityCounts(prev => ({
         ...prev,
-        bookedSiteVisits: snapshot.size
+        bookedSiteVisits: activeBookings.length
       }));
-      console.log('✅ Real-time bookings updated:', snapshot.size);
+      console.log('✅ Real-time active bookings updated:', activeBookings.length, '(filtered from', snapshot.size, 'total)');
     }, (error) => {
       console.error('Error fetching bookings:', error);
       // Fallback for missing index or collection
