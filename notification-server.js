@@ -55,6 +55,9 @@ const transporter = nodemailer.createTransport({
   }
 });
 
+
+// Send Email Notification
+
 // Send Email Notification
 async function sendEmailNotification(bookingData) {
   const emailHTML = `
@@ -248,6 +251,154 @@ Booking Time: ${new Date(bookingData.created_at).toLocaleString('en-IN')}
   await transporter.sendMail(mailOptions);
 }
 
+// Send Property Post Confirmation to User
+async function sendUserPropertyPostEmail(propertyData) {
+  const emailHTML = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f4f7f6; }
+        .header { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+        .content { background: white; padding: 30px; border: 1px solid #e5e7eb; border-top: none; }
+        .section { margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid #f3f4f6; }
+        .section:last-child { border-bottom: none; }
+        .section-title { font-size: 18px; font-weight: bold; color: #059669; margin-bottom: 15px; }
+        .detail-row { display: flex; margin-bottom: 8px; }
+        .detail-label { font-weight: 600; width: 140px; color: #6b7280; }
+        .detail-value { flex: 1; color: #111827; }
+        .success-banner { background: #ecfdf5; border-left: 4px solid #10b981; padding: 15px; margin-bottom: 25px; color: #065f46; font-weight: 500; }
+        .footer { text-align: center; padding: 20px; color: #6b7280; font-size: 14px; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h2>Property Posted Successfully!</h2>
+          <p>Bada Builder - Real Estate</p>
+        </div>
+        <div class="content">
+          <div class="success-banner">
+            🎉 Your property listing is now live and visible to potential buyers/tenants!
+          </div>
+
+          <div class="section">
+            <div class="section-title">🏠 Property Details</div>
+            <div class="detail-row">
+              <span class="detail-label">Property Name:</span>
+              <span class="detail-value"><strong>${propertyData.title}</strong></span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Type:</span>
+              <span class="detail-value">${propertyData.type}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Location:</span>
+              <span class="detail-value">${propertyData.location}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Price:</span>
+              <span class="detail-value"><strong>${propertyData.price}</strong></span>
+            </div>
+          </div>
+
+          <p>Thank you for choosing Bada Builder. We will notify you when someone shows interest in your property.</p>
+        </div>
+        <div class="footer">
+          <p>© ${new Date().getFullYear()} Bada Builder. All rights reserved.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to: propertyData.user_email,
+    subject: `✅ Listing Confirmed: ${propertyData.title}`,
+    html: emailHTML
+  };
+
+  await transporter.sendMail(mailOptions);
+}
+
+// Send Booking Confirmation to User
+async function sendUserBookingConfirmationEmail(bookingData) {
+  const emailHTML = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f8fafc; }
+        .header { background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+        .content { background: white; padding: 30px; border: 1px solid #e2e8f0; border-top: none; }
+        .section { margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid #f1f5f9; }
+        .section:last-child { border-bottom: none; }
+        .section-title { font-size: 18px; font-weight: bold; color: #4f46e5; margin-bottom: 15px; }
+        .detail-row { display: flex; margin-bottom: 8px; }
+        .detail-label { font-weight: 600; width: 140px; color: #64748b; }
+        .detail-value { flex: 1; color: #1e293b; }
+        .booking-banner { background: #eff6ff; border-left: 4px solid #3b82f6; padding: 15px; margin-bottom: 25px; color: #1e40af; font-weight: 500; }
+        .footer { text-align: center; padding: 20px; color: #64748b; font-size: 14px; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h2>Site Visit Booked!</h2>
+          <p>Bada Builder - Verification Service</p>
+        </div>
+        <div class="content">
+          <div class="booking-banner">
+            📅 Your site visit has been scheduled successfully. Our team will arrange the pickup as per your details.
+          </div>
+
+          <div class="section">
+            <div class="section-title">📍 Visit Details</div>
+            <div class="detail-row">
+              <span class="detail-label">Property:</span>
+              <span class="detail-value"><strong>${bookingData.property_title}</strong></span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Date:</span>
+              <span class="detail-value"><strong>${bookingData.visit_date}</strong></span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Time:</span>
+              <span class="detail-value"><strong>${bookingData.visit_time}</strong></span>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-title">🚗 Pickup Info</div>
+            <div class="detail-row">
+              <span class="detail-label">Address:</span>
+              <span class="detail-value">${bookingData.pickup_address}</span>
+            </div>
+          </div>
+
+          <p><strong>Note:</strong> Please be ready at the pickup location 10 minutes before the scheduled time.</p>
+        </div>
+        <div class="footer">
+          <p>© ${new Date().getFullYear()} Bada Builder. All rights reserved.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to: bookingData.user_email,
+    subject: `🏠 Site Visit Confirmed: ${bookingData.property_title}`,
+    html: emailHTML
+  };
+
+  await transporter.sendMail(mailOptions);
+}
+
 // Send SMS Notification
 async function sendSMSNotification(bookingData) {
   // Shorter message for SMS to ensure delivery
@@ -283,18 +434,23 @@ Payment: ${bookingData.payment_method}`;
   }
 }
 
-// API Endpoint to send notifications
+// API Endpoint to send notifications for booking
 app.post('/api/notify-booking', async (req, res) => {
   try {
     const bookingData = req.body;
 
-    console.log('📧 Sending email notification...');
-    await sendEmailNotification(bookingData);
-    console.log('✅ Email sent successfully');
+    console.log(`📧 Processing notifications for booking ${bookingData.booking_id || 'new'}...`);
 
-    console.log('📱 Sending SMS notification...');
-    await sendSMSNotification(bookingData);
-    console.log('✅ SMS sent successfully');
+    const notifications = [
+      // 1. Admin Email
+      sendEmailNotification(bookingData).then(() => console.log('✅ Admin email sent')),
+      // 2. User Confirmation Email
+      sendUserBookingConfirmationEmail(bookingData).then(() => console.log('✅ User confirmation email sent')),
+      // 3. Admin SMS
+      sendSMSNotification(bookingData).then(() => console.log('✅ Admin SMS sent'))
+    ];
+
+    await Promise.allSettled(notifications);
 
     res.json({
       success: true,
@@ -303,6 +459,33 @@ app.post('/api/notify-booking', async (req, res) => {
 
   } catch (error) {
     console.error('❌ Error sending notifications:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// API Endpoint for Property Posting notification
+app.post('/api/notify-property-post', async (req, res) => {
+  try {
+    const propertyData = req.body;
+
+    if (!propertyData.user_email) {
+      throw new Error('User email is required for notification');
+    }
+
+    console.log(`📧 Sending property post confirmation to ${propertyData.user_email}...`);
+    await sendUserPropertyPostEmail(propertyData);
+    console.log('✅ Property post email sent successfully');
+
+    res.json({
+      success: true,
+      message: 'Property notification sent successfully'
+    });
+
+  } catch (error) {
+    console.error('❌ Error sending property notification:', error);
     res.status(500).json({
       success: false,
       error: error.message
@@ -496,7 +679,15 @@ app.post('/api/reset-password', async (req, res) => {
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', message: 'Notification server is running' });
+  res.json({
+    status: 'OK',
+    message: 'Notification server is running',
+    config: {
+      email_user: process.env.EMAIL_USER,
+      email_pass_length: process.env.EMAIL_PASSWORD?.length || 0,
+      has_spaces: process.env.EMAIL_PASSWORD?.includes(' ') || false
+    }
+  });
 });
 
 const PORT = process.env.NOTIFICATION_PORT || 3002;
@@ -504,6 +695,14 @@ app.listen(PORT, () => {
   console.log(`🚀 Notification Server running on port ${PORT}`);
   console.log(`📧 Email notifications will be sent to: ${ADMIN_EMAIL}`);
   console.log(`📱 SMS notifications will be sent to: ${ADMIN_PHONE}`);
+
+  console.log(`\n🔍 DEBUG CREDENTIALS:`);
+  console.log(`   EMAIL_USER: [${process.env.EMAIL_USER}]`);
+  console.log(`   EMAIL_PASSWORD Length: ${process.env.EMAIL_PASSWORD?.length || 0}`);
+  if (process.env.EMAIL_PASSWORD?.includes(' ')) {
+    console.warn('   ⚠️  WARNING: EMAIL_PASSWORD contains spaces!');
+  }
+
   console.log(`\n📍 API Endpoints:`);
   console.log(`   POST http://localhost:${PORT}/api/notify-booking`);
   console.log(`   GET  http://localhost:${PORT}/api/health`);
