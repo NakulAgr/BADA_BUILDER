@@ -24,7 +24,7 @@
   text-align: center;
 }
 
-.login-box > p {
+.login-box>p {
   margin-bottom: 30px;
   color: #666;
   text-align: center;
@@ -98,7 +98,9 @@
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .flex {
@@ -208,10 +210,12 @@
     font-size: 15px;
   }
 }
+
 /* Login & Register buttons */
 .submit-btn,
 .register-btn {
-  color: white !important; /* Text color white */
+  color: white !important;
+  /* Text color white */
 }
 
 .password-wrapper {
@@ -272,7 +276,8 @@
   z-index: 9999;
   cursor: wait;
   user-select: none;
-  pointer-events: all; /* Ensure it blocks all clicks */
+  pointer-events: all;
+  /* Ensure it blocks all clicks */
 }
 
 .loading-content {

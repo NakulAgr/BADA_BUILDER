@@ -1,19 +1,52 @@
 // Notification Server for Site Visit Bookings
-const express = require('express');
-const cors = require('cors');
-const nodemailer = require('nodemailer');
-const axios = require('axios');
-require('dotenv').config();
+import express from 'express';
+import cors from 'cors';
+import nodemailer from 'nodemailer';
+import axios from 'axios';
+import dotenv from 'dotenv';
+import admin from 'firebase-admin';
+import fs from 'fs';
+
+dotenv.config();
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+// Log incoming requests for debugging
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  next();
+});
+
+// Initialize Firebase Admin (Required for Password Reset)
+// Tries to load 'serviceAccountKey.json' from the root directory
+try {
+  if (fs.existsSync('./serviceAccountKey.json')) {
+    const serviceAccount = JSON.parse(fs.readFileSync('./serviceAccountKey.json', 'utf8'));
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount)
+    });
+    console.log("✅ Firebase Admin Initialized successfully.");
+  } else {
+    console.warn("⚠️  WARNING: 'serviceAccountKey.json' not found!");
+    console.warn("    Password Reset feature will NOT work.");
+  }
+} catch (error) {
+  console.error("❌ Firebase Admin Initialization Failed:", error.message);
+}
 
 // Admin contact details
 const ADMIN_EMAIL = 'nakulagrawal987@gmail.com';
 const ADMIN_PHONE = '7984371588';
 
 // Email configuration (using Gmail)
+// Email configuration (using Gmail)
+if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
+  console.warn('⚠️  WARNING: EMAIL_USER or EMAIL_PASSWORD not found in .env file.');
+  console.warn('    Email notifications and OTPs will NOT work.');
+}
+
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
@@ -217,41 +250,36 @@ Booking Time: ${new Date(bookingData.created_at).toLocaleString('en-IN')}
 
 // Send SMS Notification
 async function sendSMSNotification(bookingData) {
-  const message = `New Site Visit Booking!
-Property: ${bookingData.property_title}
+  // Shorter message for SMS to ensure delivery
+  const message = `New Booking!
+Prop: ${bookingData.property_title.substring(0, 20)}
 Date: ${bookingData.visit_date}
 Time: ${bookingData.visit_time}
-People: ${bookingData.number_of_people}
-Visitor: ${bookingData.person1_name}
-Pickup: ${bookingData.pickup_address.substring(0, 50)}...
-Payment: ${bookingData.payment_method}
-Check email for full details.`;
+Visitors: ${bookingData.number_of_people}
+Payment: ${bookingData.payment_method}`;
 
-  // Using Fast2SMS (you can also use MSG91 or Twilio)
-  const FAST2SMS_API_KEY = process.env.FAST2SMS_API_KEY;
-  
-  if (FAST2SMS_API_KEY) {
-    try {
-      await axios.post('https://www.fast2sms.com/dev/bulkV2', {
-        route: 'v3',
-        sender_id: 'TXTIND',
-        message: message,
-        language: 'english',
-        flash: 0,
-        numbers: ADMIN_PHONE
-      }, {
-        headers: {
-          'authorization': FAST2SMS_API_KEY,
-          'Content-Type': 'application/json'
-        }
-      });
-      console.log(`✅ SMS sent to ${ADMIN_PHONE}`);
-    } catch (error) {
-      console.error('SMS sending failed:', error.message);
+  // Using 2Factor API for Booking Notifications
+  const API_KEY = "de2e4248-df03-11f0-a6b2-0200cd936042";
+
+  try {
+    // 2Factor Open Template / Transactional SMS Endpoint
+    // Note: In India, DLT registration is required for custom templates.
+    // If this fails, it's likely due to template mismatch.
+    const url = `https://2factor.in/API/V1/${API_KEY}/ADDON_SERVICES/SEND/TSMS`;
+
+    await axios.post(url, {
+      from: "BBUILD", // Sender ID (should be approved)
+      to: ADMIN_PHONE,
+      template_id: "", // If you have a specific template ID for bookings, put it here
+      msg: message
+    });
+
+    console.log(`✅ SMS sent to ${ADMIN_PHONE} via 2Factor`);
+  } catch (error) {
+    console.error('❌ SMS sending failed via 2Factor:', error.message);
+    if (error.response) {
+      console.error('   API Response:', error.response.data);
     }
-  } else {
-    console.log(`⚠️ SMS API key not configured. Would send to: ${ADMIN_PHONE}`);
-    console.log(`Message: ${message}`);
   }
 }
 
@@ -268,16 +296,200 @@ app.post('/api/notify-booking', async (req, res) => {
     await sendSMSNotification(bookingData);
     console.log('✅ SMS sent successfully');
 
-    res.json({ 
-      success: true, 
-      message: 'Notifications sent successfully' 
+    res.json({
+      success: true,
+      message: 'Notifications sent successfully'
     });
 
   } catch (error) {
     console.error('❌ Error sending notifications:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: error.message 
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// -------------------- OTP SYSTEM --------------------
+
+// OTP Store (InMemory)
+// Format: phoneNumber -> { otp: string, expiresAt: number }
+const otpStore = new Map();
+
+// Generate 4-digit OTP
+const generateOTP = () => {
+  return Math.floor(1000 + Math.random() * 9000).toString();
+};
+
+// sendOTPvia2Factor removed as per request (Email-only registration)
+
+// Send OTP via Email
+async function sendOTPviaEmail(email, otp) {
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to: email,
+    subject: '🔐 Your Verification Code - Bada Builder',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
+        <h2 style="color: #58335e; text-align: center;">Bada Builder Verification</h2>
+        <p style="font-size: 16px; color: #333; text-align: center;">Use the code below to verify your account:</p>
+        <div style="background-color: #f3f4f6; padding: 15px; border-radius: 8px; text-align: center; margin: 20px 0;">
+          <span style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #1f2937;">${otp}</span>
+        </div>
+        <p style="font-size: 14px; color: #666; text-align: center;">This code will expire in 5 minutes.</p>
+        <p style="font-size: 12px; color: #999; text-align: center; margin-top: 30px;">If you didn't request this code, please ignore this email.</p>
+      </div>
+    `
+  };
+
+  await transporter.sendMail(mailOptions);
+  console.log(`✅ OTP Email sent to ${email}`);
+}
+
+// Endpoint: Send OTP
+app.post('/api/send-otp', async (req, res) => {
+  try {
+    const { type, identifier } = req.body; // type: 'email' (sms removed), identifier: email
+
+    if (!identifier) {
+      return res.status(400).json({ success: false, error: 'Identifier (email) is required' });
+    }
+
+    // Enforce email type if not provided, or strictly check
+    // Since frontend sends 'email', we can just proceed with email logic.
+    // If type is explicitly 'sms', we can reject or just ignore and use email implementation if identifier is email.
+    // But better to just default to email or error if not email.
+
+    // For now, ignoring 'type' parameter effectively and treating all as email requests
+    // or strictly checking equality.
+
+    // Generate and Store OTP
+    const otp = generateOTP();
+    const expiresAt = Date.now() + 5 * 60 * 1000; // 5 minutes from now
+
+    // Store uses identifier (email) as key
+    otpStore.set(identifier, { otp, expiresAt });
+
+    console.log(`🔐 Generated OTP for ${identifier} (email): ${otp}`);
+
+    await sendOTPviaEmail(identifier, otp);
+
+    res.json({
+      success: true,
+      message: `OTP sent successfully via email`
+    });
+
+  } catch (error) {
+    console.error('❌ Error sending OTP:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// Endpoint: Verify OTP
+app.post('/api/verify-otp', async (req, res) => {
+  try {
+    const { identifier, otp } = req.body; // identifier: phone | email
+
+    if (!identifier || !otp) {
+      return res.status(400).json({ success: false, error: 'Identifier and OTP are required' });
+    }
+
+    const record = otpStore.get(identifier);
+
+    if (!record) {
+      return res.status(400).json({ success: false, error: 'OTP not found. Please request a new one.' });
+    }
+
+    // Check expiry
+    if (Date.now() > record.expiresAt) {
+      otpStore.delete(identifier);
+      return res.status(400).json({ success: false, error: 'OTP expired. Please request a new one.' });
+    }
+
+    // Check match
+    if (record.otp !== otp) {
+      return res.status(400).json({ success: false, error: 'Invalid OTP' });
+    }
+
+    // Success
+    if (!req.body.checkOnly) {
+      otpStore.delete(identifier);
+    }
+
+    console.log(`✅ OTP verified for ${identifier} (checkOnly: ${!!req.body.checkOnly})`);
+
+    res.json({
+      success: true,
+      message: 'OTP verified successfully'
+    });
+
+  } catch (error) {
+    console.error('❌ Error verifying OTP:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// Endpoint: Reset Password (Forgot Password Flow)
+app.post('/api/reset-password', async (req, res) => {
+  try {
+    const { email, otp, newPassword } = req.body;
+
+    if (!email || !otp || !newPassword) {
+      return res.status(400).json({ success: false, error: 'Email, OTP, and New Password are required' });
+    }
+
+    // 1. Verify OTP
+    const record = otpStore.get(email);
+    if (!record) {
+      return res.status(400).json({ success: false, error: 'OTP not found or expired. Please request a new one.' });
+    }
+    if (Date.now() > record.expiresAt) {
+      otpStore.delete(email);
+      return res.status(400).json({ success: false, error: 'OTP expired. Please request a new one.' });
+    }
+    if (record.otp !== otp) {
+      return res.status(400).json({ success: false, error: 'Invalid OTP' });
+    }
+
+    // 2. Update Password in Firebase Auth (Requires Admin SDK)
+    if (admin.apps.length === 0) {
+      throw new Error("Server misconfigured: Firebase Admin not initialized (missing serviceAccountKey.json?)");
+    }
+
+    // We need to find the user by email to get UID (Admin SDK can do this)
+    const user = await admin.auth().getUserByEmail(email);
+
+    // Update password
+    await admin.auth().updateUser(user.uid, {
+      password: newPassword
+    });
+
+    console.log(`✅ Password updated for user: ${email}`);
+
+    // 3. Clear OTP
+    otpStore.delete(email);
+
+    res.json({
+      success: true,
+      message: 'Your password has been updated successfully. You can now login with the new password.'
+    });
+
+  } catch (error) {
+    console.error('❌ Error resetting password:', error);
+    let errorMessage = error.message;
+    if (error.code === 'auth/user-not-found') {
+      errorMessage = 'No user found with this email address.';
+    }
+
+    res.status(500).json({
+      success: false,
+      error: errorMessage
     });
   }
 });
