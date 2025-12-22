@@ -508,16 +508,6 @@ const PostProperty = () => {
 
       console.log('✅ Property posted successfully with ID:', propertyId);
 
-      // Trigger user notification (non-blocking)
-      fetch('/api/notify-property-post', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...propertyData,
-          user_email: currentUser.email
-        })
-      }).catch(err => console.error('Failed to send property notification:', err));
-
       // Handle post-creation updates (Credits/Subscription)
       if (userType === 'developer') {
         console.log('📉 Deducting developer credit...');
