@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
-import { calculateTokenAmount, formatCurrency, calculateTotalPrice, calculateSavings } from '../../utils/liveGroupingCalculations';
+import { calculateTokenAmount, formatCurrency, calculateTotalPrice, calculateSavings, calculatePriceRange, formatPriceRange } from '../../utils/liveGroupingCalculations';
 import './LiveGroupingDetails.css';
 
 const LiveGroupingDetails = () => {
@@ -59,6 +59,11 @@ const LiveGroupingDetails = () => {
       image: "/placeholder-property.jpg",
       type: "3 BHK Apartment",
       area: "1450 sq.ft",
+      units: [
+        { name: "2 BHK", area: 1200 },
+        { name: "3 BHK", area: 1450 },
+        { name: "3 BHK Premium", area: 1650 }
+      ],
       totalSlots: 20,
       filledSlots: 14,
       timeLeft: "2 Days 5 Hours",
@@ -92,6 +97,11 @@ const LiveGroupingDetails = () => {
       image: "/placeholder-property.jpg",
       type: "4 BHK Villa",
       area: "2200 sq.ft",
+      units: [
+        { name: "3 BHK Villa", area: 2000 },
+        { name: "4 BHK Villa", area: 2200 },
+        { name: "4 BHK Duplex", area: 2500 }
+      ],
       totalSlots: 15,
       filledSlots: 15,
       timeLeft: "Closing Soon",
@@ -125,6 +135,11 @@ const LiveGroupingDetails = () => {
       image: "/placeholder-property.jpg",
       type: "Luxury Penthouse",
       area: "3500 sq.ft",
+      units: [
+        { name: "Penthouse 3 BHK", area: 3000 },
+        { name: "Penthouse 4 BHK", area: 3500 },
+        { name: "Penthouse Duplex", area: 4200 }
+      ],
       totalSlots: 10,
       filledSlots: 6,
       timeLeft: "5 Days 12 Hours",
@@ -388,6 +403,68 @@ const LiveGroupingDetails = () => {
                   <span className="amount group-highlight">₹{property.groupPricePerSqFt?.toLocaleString() || 'N/A'} / sq ft</span>
                 </div>
               </div>
+
+              {/* Price Range for Multiple Units */}
+              {property.units && property.units.length > 0 && (
+                <div className="price-range-section-details">
+                  <h4>Price Range (Multiple Units)</h4>
+                  
+                  <div className="range-item-details">
+                    <span className="range-label-details">Regular Price Range:</span>
+                    <span className="range-value-details">
+                      {formatPriceRange(calculatePriceRange(property.pricePerSqFt, property.units))}
+                    </span>
+                  </div>
+                  
+                  {/* Visual Range Bar */}
+                  <div className="range-bar-container-details">
+                    <div className="range-bar-details">
+                      <div className="range-bar-fill-details regular"></div>
+                    </div>
+                    <div className="range-labels-details">
+                      <span className="range-min-details">
+                        {formatCurrency(calculatePriceRange(property.pricePerSqFt, property.units).min)}
+                      </span>
+                      <span className="range-max-details">
+                        {formatCurrency(calculatePriceRange(property.pricePerSqFt, property.units).max)}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="range-item-details group-range-details">
+                    <span className="range-label-details">🎯 Group Price Range:</span>
+                    <span className="range-value-details highlight">
+                      {formatPriceRange(calculatePriceRange(property.groupPricePerSqFt, property.units))}
+                    </span>
+                  </div>
+                  
+                  {/* Visual Range Bar for Group Price */}
+                  <div className="range-bar-container-details">
+                    <div className="range-bar-details">
+                      <div className="range-bar-fill-details group"></div>
+                    </div>
+                    <div className="range-labels-details">
+                      <span className="range-min-details group">
+                        {formatCurrency(calculatePriceRange(property.groupPricePerSqFt, property.units).min)}
+                      </span>
+                      <span className="range-max-details group">
+                        {formatCurrency(calculatePriceRange(property.groupPricePerSqFt, property.units).max)}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="units-info-details">
+                    <span className="units-label-details">Available Units:</span>
+                    <div className="units-list-details">
+                      {property.units.map((unit, idx) => (
+                        <span key={idx} className="unit-badge-details">
+                          {unit.name} ({unit.area} sq ft)
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <div className="pricing-note">
                 <p>💡 <strong>Note:</strong> Final price depends on total area selected</p>

@@ -6,7 +6,7 @@ import { db } from '../../firebase';
 import ViewToggle from '../../components/ViewToggle/ViewToggle';
 import PropertyCard from '../../components/PropertyCard/PropertyCard';
 import useViewPreference from '../../hooks/useViewPreference';
-import { calculateTokenAmount, formatCurrency } from '../../utils/liveGroupingCalculations';
+import { calculateTokenAmount, formatCurrency, calculatePriceRange, formatPriceRange } from '../../utils/liveGroupingCalculations';
 import './Exhibition.css';
 import './LiveGrouping.css';
 
@@ -77,7 +77,11 @@ const LiveGrouping = () => {
       discount: "9% OFF",
       image: "/placeholder-property.jpg",
       type: "3 BHK Apartment",
-      area: "1450 sq.ft",
+      units: [
+        { name: "2 BHK", area: 1200 },
+        { name: "3 BHK", area: 1450 },
+        { name: "3 BHK Premium", area: 1650 }
+      ],
       totalSlots: 20,
       filledSlots: 14,
       timeLeft: "2 Days 5 Hours",
@@ -95,7 +99,11 @@ const LiveGrouping = () => {
       discount: "11% OFF",
       image: "/placeholder-property.jpg",
       type: "4 BHK Villa",
-      area: "2200 sq.ft",
+      units: [
+        { name: "3 BHK Villa", area: 2000 },
+        { name: "4 BHK Villa", area: 2200 },
+        { name: "4 BHK Duplex", area: 2500 }
+      ],
       totalSlots: 15,
       filledSlots: 15,
       timeLeft: "Closing Soon",
@@ -113,7 +121,11 @@ const LiveGrouping = () => {
       discount: "12% OFF",
       image: "/placeholder-property.jpg",
       type: "Luxury Penthouse",
-      area: "3500 sq.ft",
+      units: [
+        { name: "Penthouse 3 BHK", area: 3000 },
+        { name: "Penthouse 4 BHK", area: 3500 },
+        { name: "Penthouse Duplex", area: 4200 }
+      ],
       totalSlots: 10,
       filledSlots: 6,
       timeLeft: "5 Days 12 Hours",
@@ -289,7 +301,7 @@ const LiveGrouping = () => {
                     </div>
                   </div>
 
-                  {/* Pricing - Per Sq Ft Only */}
+                  {/* Pricing - Per Sq Ft & Price Range */}
                   <div className="pricing-section">
                     <div className="price-comparison">
                       <div className="original-price">
@@ -301,8 +313,69 @@ const LiveGrouping = () => {
                         <span className="amount group-highlight">₹{group.groupPricePerSqFt?.toLocaleString() || 'N/A'} / sq ft</span>
                       </div>
                     </div>
+                    
+                    {/* Price Range for Multiple Units */}
+                    {group.units && group.units.length > 0 && (
+                      <div className="price-range-section">
+                        <div className="range-item">
+                          <span className="range-label">Regular Price Range:</span>
+                          <span className="range-value">
+                            {formatPriceRange(calculatePriceRange(group.pricePerSqFt, group.units))}
+                          </span>
+                        </div>
+                        
+                        {/* Visual Range Bar */}
+                        <div className="range-bar-container">
+                          <div className="range-bar">
+                            <div className="range-bar-fill regular"></div>
+                          </div>
+                          <div className="range-labels">
+                            <span className="range-min">
+                              {formatCurrency(calculatePriceRange(group.pricePerSqFt, group.units).min)}
+                            </span>
+                            <span className="range-max">
+                              {formatCurrency(calculatePriceRange(group.pricePerSqFt, group.units).max)}
+                            </span>
+                          </div>
+                        </div>
+                        
+                        <div className="range-item group-range">
+                          <span className="range-label">🎯 Group Price Range:</span>
+                          <span className="range-value highlight">
+                            {formatPriceRange(calculatePriceRange(group.groupPricePerSqFt, group.units))}
+                          </span>
+                        </div>
+                        
+                        {/* Visual Range Bar for Group Price */}
+                        <div className="range-bar-container">
+                          <div className="range-bar">
+                            <div className="range-bar-fill group"></div>
+                          </div>
+                          <div className="range-labels">
+                            <span className="range-min group">
+                              {formatCurrency(calculatePriceRange(group.groupPricePerSqFt, group.units).min)}
+                            </span>
+                            <span className="range-max group">
+                              {formatCurrency(calculatePriceRange(group.groupPricePerSqFt, group.units).max)}
+                            </span>
+                          </div>
+                        </div>
+                        
+                        <div className="units-info">
+                          <span className="units-label">Available Units:</span>
+                          <div className="units-list">
+                            {group.units.map((unit, idx) => (
+                              <span key={idx} className="unit-badge">
+                                {unit.name} ({unit.area} sq ft)
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    
                     <div className="savings-note">
-                      💡 Final price depends on total area selected
+                      💡 Final price depends on unit & area selected
                     </div>
                   </div>
 
@@ -415,7 +488,7 @@ const LiveGrouping = () => {
                     </div>
                   </div>
 
-                  {/* Pricing - Per Sq Ft Only */}
+                  {/* Pricing - Per Sq Ft & Price Range */}
                   <div className="pricing-section">
                     <div className="price-comparison">
                       <div className="original-price">
@@ -427,6 +500,18 @@ const LiveGrouping = () => {
                         <span className="amount group-highlight">₹{group.groupPricePerSqFt?.toLocaleString() || 'N/A'} / sq ft</span>
                       </div>
                     </div>
+                    
+                    {/* Price Range for Multiple Units */}
+                    {group.units && group.units.length > 0 && (
+                      <div className="price-range-section">
+                        <div className="range-item group-range">
+                          <span className="range-label">🎯 Final Price Range:</span>
+                          <span className="range-value highlight">
+                            {formatPriceRange(calculatePriceRange(group.groupPricePerSqFt, group.units))}
+                          </span>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Closed Status */}

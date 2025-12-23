@@ -76,6 +76,50 @@ export const formatCurrency = (amount) => {
 };
 
 /**
+ * Calculate price range for multiple units
+ * @param {number} pricePerSqFt - Price per sq ft (same for all units)
+ * @param {Array} units - Array of unit objects with area
+ * @returns {Object} Price range {min, max}
+ */
+export const calculatePriceRange = (pricePerSqFt, units) => {
+  if (!pricePerSqFt || !units || units.length === 0) {
+    return { min: 0, max: 0 };
+  }
+
+  const prices = units.map(unit => {
+    const area = typeof unit.area === 'string' 
+      ? parseFloat(unit.area.replace(/[^0-9.]/g, '')) 
+      : unit.area;
+    return pricePerSqFt * area;
+  });
+
+  return {
+    min: Math.min(...prices),
+    max: Math.max(...prices)
+  };
+};
+
+/**
+ * Format price range display
+ * @param {Object} range - Price range {min, max}
+ * @returns {string} Formatted range string
+ */
+export const formatPriceRange = (range) => {
+  if (!range || range.min === 0 || range.max === 0) {
+    return 'N/A';
+  }
+
+  const minFormatted = formatCurrency(range.min);
+  const maxFormatted = formatCurrency(range.max);
+
+  if (range.min === range.max) {
+    return minFormatted;
+  }
+
+  return `${minFormatted} - ${maxFormatted}`;
+};
+
+/**
  * Calculate discount percentage
  * @param {number} regularPrice - Regular price
  * @param {number} groupPrice - Group price
