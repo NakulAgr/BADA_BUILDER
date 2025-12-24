@@ -2,7 +2,6 @@ import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import listings from '../data/listings';
 import './ProjectDetails.css';
-import balajiLogo from '../assets/balaji.png';
 
 const ProjectDetails = () => {
   const { id } = useParams();
@@ -107,13 +106,6 @@ const ProjectDetails = () => {
           <div>
             <p className="font-semibold text-lg">Shree Balaji Builders</p>
             <p className="text-sm text-gray-400">Builder</p>
-          </div>
-          <div className="ml-4 flex-shrink-0">
-            <img
-              src={balajiLogo}
-              alt="Shree Balaji Builders Logo"
-              className="h-12 w-auto object-contain"
-            />
           </div>
         </div>
       </div>

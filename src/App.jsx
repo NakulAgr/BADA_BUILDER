@@ -109,36 +109,36 @@ function App() {
         <Route path="/admin/live-grouping" element={<AdminLiveGrouping />} />
 
         {/* Learn */}
-        <Route path="/learn/lease-and-asset-management" element = {<LAM/>}></Route>
+        <Route path="/learn/lease-and-asset-management" element={<LAM />}></Route>
         <Route path="/learn/market-and-investment-analysis" element={<MarketInvestmentAnalysis />} />
         <Route path="/learn/real-estate-financial-modelling" element={<RealEstateFinancialModelling />} />
         <Route path="/learn/risk-assessment-due-diligence" element={<RADD />} />
         <Route path="/learn/real-estate-market-research" element={<RealEstateReport />} />
-        <Route path = "/learn/reit-valuation-and-compliance" element={<REITValuationCompliance />}/>
-        <Route path = "/learn/stakeholder-communication" element={<REITStakeholderCommunication />}/>
-        <Route path = "/learn/taxation-in-reits" element={<REITTaxation />}/>
-        <Route path = "/learn/job-profiles-in-reits" element={<REITJobProfiles />}/>
-        <Route path = "/learn/types-of-reits-india" element={<REITJobProfiles />}/>
-        <Route path = "/learn/types-of-reits-india" element={<TypesOfREITs />}/>
-        <Route path = "/learn/work-of-job-profiles" element={<JobProfilesWork />}/>
+        <Route path="/learn/reit-valuation-and-compliance" element={<REITValuationCompliance />} />
+        <Route path="/learn/stakeholder-communication" element={<REITStakeholderCommunication />} />
+        <Route path="/learn/taxation-in-reits" element={<REITTaxation />} />
+        <Route path="/learn/job-profiles-in-reits" element={<REITJobProfiles />} />
+        <Route path="/learn/types-of-reits-india" element={<REITJobProfiles />} />
+        <Route path="/learn/types-of-reits-india" element={<TypesOfREITs />} />
+        <Route path="/learn/work-of-job-profiles" element={<JobProfilesWork />} />
 
         {/* Calculator  */}
-        <Route path = "/calculator/FFO" element={<FFOCalculator />}/>
-        <Route path = "/calculator/AFFO" element={<AFFOCalculator />}/>
-        <Route path = "/calculator/NOI" element={<NOICalculator />}/>
-        <Route path = "/calculator/CapRate" element={<CapRateCalculator />}/>
-        <Route path = "/calculator/NAV" element={<NAVCalculator />}/>
-        <Route path = "/calculator/LTV" element={<LTVCalculator />}/>
-        <Route path = "/calculator/DividendYield" element={<DividendYieldCalculator />}/>
-        <Route path = "/calculator/PayoutRatio" element={<PayoutRatioCalculator />}/>
-        <Route path = "/calculator/DSCR" element={<DSCRCalculator />}/>
-        <Route path = "/calculator/IRR" element={<IRRCalculator />}/>
-        <Route path = "/calculator/TotalReturn" element={<TotalReturnCalculator />}/>
-         <Route path = "/calculator/OccupancyRate" element={<OccupancyRateCalculator />}/>
-          <Route path = "/calculator/EBITDAre" element={<EBITDAreCalculator />}/>
-        <Route path = "/calculator/PFFO" element={<PFFOCalculator />}/>
-        <Route path = "/calculator/DCF" element={<DCFCalculator />}/>
-        <Route path = "/calculator/NPV" element={<NPVCalculator />}/>
+        <Route path="/calculator/FFO" element={<FFOCalculator />} />
+        <Route path="/calculator/AFFO" element={<AFFOCalculator />} />
+        <Route path="/calculator/NOI" element={<NOICalculator />} />
+        <Route path="/calculator/CapRate" element={<CapRateCalculator />} />
+        <Route path="/calculator/NAV" element={<NAVCalculator />} />
+        <Route path="/calculator/LTV" element={<LTVCalculator />} />
+        <Route path="/calculator/DividendYield" element={<DividendYieldCalculator />} />
+        <Route path="/calculator/PayoutRatio" element={<PayoutRatioCalculator />} />
+        <Route path="/calculator/DSCR" element={<DSCRCalculator />} />
+        <Route path="/calculator/IRR" element={<IRRCalculator />} />
+        <Route path="/calculator/TotalReturn" element={<TotalReturnCalculator />} />
+        <Route path="/calculator/OccupancyRate" element={<OccupancyRateCalculator />} />
+        <Route path="/calculator/EBITDAre" element={<EBITDAreCalculator />} />
+        <Route path="/calculator/PFFO" element={<PFFOCalculator />} />
+        <Route path="/calculator/DCF" element={<DCFCalculator />} />
+        <Route path="/calculator/NPV" element={<NPVCalculator />} />
 
 
 
