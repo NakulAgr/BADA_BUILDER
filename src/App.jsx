@@ -30,7 +30,7 @@ import ByDeveloper from './pages/Exhibition/ByDeveloper';
 import ByBadaBuilder from './pages/Exhibition/ByBadaBuilder';
 import LiveGrouping from './pages/Exhibition/LiveGrouping';
 import LiveGroupingDetails from './pages/Exhibition/LiveGroupingDetails';
-// import ThreeDView from './pages/Exhibition/ThreeDView'; // Temporarily disabled due to @react-three/drei error
+import ThreeDView from './pages/Exhibition/ThreeDView';
 import AdminLiveGrouping from './pages/Admin/AdminLiveGrouping';
 import ProfilePage from './pages/ProfilePage';
 import MyProperties from './pages/MyProperties';
@@ -103,7 +103,7 @@ function App() {
         <Route path="/exhibition/developer" element={<ByDeveloper />} />
         <Route path="/exhibition/live-grouping" element={<LiveGrouping />} />
         <Route path="/exhibition/live-grouping/:id" element={<LiveGroupingDetails />} />
-        {/* <Route path="/3d-view" element={<ThreeDView />} /> */} {/* Temporarily disabled due to @react-three/drei error */}
+        <Route path="/3d-view" element={<ThreeDView />} />
         <Route path="/exhibition/badabuilder" element={<ByBadaBuilder />} />
         <Route path="/report" element={<Working />} />
         <Route path="/subscription-plans" element={<SubscriptionPlans />} />
