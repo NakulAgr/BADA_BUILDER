@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase';
-import './ProjectDetails.css'; // Using the same CSS as Gracewood Elegance
+import './ProjectDetails.css';
 import { FiPhone, FiCheckCircle, FiInfo, FiMap } from 'react-icons/fi';
+import { FaChevronLeft, FaChevronRight, FaExpand } from 'react-icons/fa';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const PropertyDetails = () => {
   const { id } = useParams();
@@ -11,10 +13,10 @@ const PropertyDetails = () => {
   const navigate = useNavigate();
   const [property, setProperty] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   useEffect(() => {
     const getPropertyData = async () => {
-      // Get property from location state or fetch from database
       if (location.state?.property) {
         setProperty(location.state.property);
         setLoading(false);
@@ -37,6 +39,16 @@ const PropertyDetails = () => {
 
     getPropertyData();
   }, [id, location.state]);
+
+  const nextImage = () => {
+    if (!propertyImages.length) return;
+    setCurrentImageIndex((prev) => (prev + 1) % propertyImages.length);
+  };
+
+  const prevImage = () => {
+    if (!propertyImages.length) return;
+    setCurrentImageIndex((prev) => (prev - 1 + propertyImages.length) % propertyImages.length);
+  };
 
   if (loading) {
     return (
@@ -61,12 +73,11 @@ const PropertyDetails = () => {
     );
   }
 
-  // Prepare dynamic data with fallbacks
+  // Prepare dynamic data
   const isDeveloper = property.user_type === 'developer';
   const propertyTitle = property.project_name || property.projectName || property.title;
   const propertyImages = property.project_images || property.images || (property.image_url ? [property.image_url] : []) || [];
 
-  // Consolidate Tags
   const propertyTags = isDeveloper
     ? [property.scheme_type || property.type, property.possession_status].filter(Boolean)
     : property.tags || [property.status, property.type].filter(Boolean);
@@ -76,9 +87,6 @@ const PropertyDetails = () => {
   }
 
   const propertyFacilities = property.amenities || property.facilities || [];
-  const propertyAdvantages = property.advantages || property.nearbyPlaces || [];
-  const propertyFloorPlans = property.floorPlans || property.configurations || [];
-
   const displayPrice = property.price ||
     (property.base_price && property.max_price ? `₹ ${property.base_price} - ₹ ${property.max_price}` : null) ||
     property.groupPrice ||
@@ -87,34 +95,73 @@ const PropertyDetails = () => {
 
   return (
     <div className="max-w-7xl mx-auto p-4 sm:p-6 pb-20">
-      {/* Image Gallery */}
-      <div className="relative">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-          {propertyImages.length > 0 ? (
-            propertyImages.slice(0, 6).map((img, idx) => (
-              <img
-                key={idx}
-                src={img}
-                alt={`Property Image ${idx + 1}`}
-                className={`w-full object-cover rounded shadow-md ${idx === 0 ? 'sm:col-span-2 lg:col-span-2 h-96' : 'h-48'}`}
+
+      {/* Modern Image Slider */}
+      <div className="relative w-full h-[300px] md:h-[500px] bg-gray-900 rounded-3xl overflow-hidden shadow-2xl mb-8 group flex items-center justify-center">
+        {propertyImages.length > 0 ? (
+          <>
+            <AnimatePresence mode='wait'>
+              <motion.img
+                key={currentImageIndex}
+                src={propertyImages[currentImageIndex]}
+                alt={`Property Image ${currentImageIndex + 1}`}
+                className="max-w-full max-h-full object-contain"
+                initial={{ opacity: 0, x: 100 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -100 }}
+                transition={{ duration: 0.4 }}
               />
-            ))
-          ) : (
-            <div className="col-span-full h-96 bg-gray-800 flex items-center justify-center rounded">
-              <p className="text-gray-500">No images available</p>
+            </AnimatePresence>
+
+            {/* Controls */}
+            <div className="absolute inset-0 flex items-center justify-between p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <button
+                onClick={(e) => { e.stopPropagation(); prevImage(); }}
+                className="p-3 bg-white/20 backdrop-blur-md rounded-full text-white hover:bg-white/40 transition-all hover:scale-110"
+              >
+                <FaChevronLeft size={24} />
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); nextImage(); }}
+                className="p-3 bg-white/20 backdrop-blur-md rounded-full text-white hover:bg-white/40 transition-all hover:scale-110"
+              >
+                <FaChevronRight size={24} />
+              </button>
             </div>
-          )}
-        </div>
-        {(property.brochure_url || property.brochure) && (
-          <div className="absolute top-4 right-4">
-            <a
-              href={property.brochure_url || property.brochure}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-4 py-2 bg-white text-black text-sm font-bold rounded shadow-lg hover:bg-gray-100 transition"
-            >
-              Download Brochure
-            </a>
+
+            {/* Brochure and Count Badge */}
+            <div className="absolute top-4 right-4 flex gap-3">
+              <span className="bg-black/50 backdrop-blur-md text-white px-3 py-1 rounded-full text-sm font-medium">
+                {currentImageIndex + 1} / {propertyImages.length}
+              </span>
+              {(property.brochure_url || property.brochure) && (
+                <a
+                  href={property.brochure_url || property.brochure}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-4 py-1.5 bg-white text-black text-sm font-bold rounded-full shadow-lg hover:bg-gray-200 transition"
+                >
+                  Download Brochure
+                </a>
+              )}
+            </div>
+
+            {/* Thumbnails Strip */}
+            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2 overflow-x-auto max-w-[90%] p-2 bg-black/30 backdrop-blur-sm rounded-2xl scrollbar-hide">
+              {propertyImages.map((img, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setCurrentImageIndex(idx)}
+                  className={`relative w-16 h-12 flex-shrink-0 rounded-lg overflow-hidden border-2 transition-all ${currentImageIndex === idx ? 'border-blue-500 scale-110' : 'border-transparent opacity-70 hover:opacity-100'}`}
+                >
+                  <img src={img} alt={`Thumb ${idx}`} className="w-full h-full object-cover" />
+                </button>
+              ))}
+            </div>
+          </>
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-gray-900">
+            <p className="text-gray-500">No images available</p>
           </div>
         )}
       </div>

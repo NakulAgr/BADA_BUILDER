@@ -161,7 +161,7 @@ const Investments = () => {
                 {category.subCategories.map((sub) => (
                   <Link
                     key={sub.name}
-                    to={`/investment-details/${sub.type}`}
+                    to={`/investments/${sub.type}`}
                   >
                     <motion.div
                       className={`

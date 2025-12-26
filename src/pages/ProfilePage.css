@@ -13,7 +13,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: 
+  background:
     radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
     radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
   pointer-events: none;
@@ -208,6 +208,7 @@
     opacity: 0;
     transform: translateY(-10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -442,6 +443,10 @@
   color: #10b981;
 }
 
+.activity-card.orange {
+  color: #f97316;
+}
+
 .activity-card:hover {
   transform: translateY(-8px);
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
@@ -462,6 +467,10 @@
 
 .activity-card.green:hover {
   background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+}
+
+.activity-card.orange:hover {
+  background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
 }
 
 .activity-icon-wrapper {
@@ -693,6 +702,7 @@
     font-size: 24px;
   }
 }
+
 /* Activity Loading Indicator */
 .activity-loading {
   display: flex;
@@ -713,6 +723,11 @@
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }

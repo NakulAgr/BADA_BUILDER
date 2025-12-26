@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { FiUser, FiMail, FiPhone, FiHash, FiBriefcase, FiHome, FiUsers, FiCalendar, FiUpload, FiTrash2, FiEdit3 } from 'react-icons/fi';
+import { FiUser, FiMail, FiPhone, FiHash, FiBriefcase, FiHome, FiUsers, FiCalendar, FiUpload, FiTrash2, FiEdit3, FiTrendingUp } from 'react-icons/fi';
 import { doc, updateDoc, collection, query, where, getDocs, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
 import './ProfilePage.css';
@@ -51,7 +51,8 @@ const ProfilePage = () => {
   const [activityCounts, setActivityCounts] = useState({
     propertiesUploaded: 0,
     joinedLiveGroups: 0,
-    bookedSiteVisits: 0
+    bookedSiteVisits: 0,
+    investments: 0
   });
   const [loadingActivity, setLoadingActivity] = useState(true);
   const fileInputRef = useRef(null);
@@ -91,6 +92,9 @@ const ProfilePage = () => {
     const liveGroupInteractionsRef = collection(db, 'liveGroupInteractions');
     const liveGroupQuery = query(liveGroupInteractionsRef, where('userId', '==', currentUser.uid));
 
+    const investmentsRef = collection(db, 'investments');
+    const investmentsQuery = query(investmentsRef, where('user_id', '==', currentUser.uid));
+
     // Real-time listeners
     const unsubscribeProperties = onSnapshot(propertiesQuery, (snapshot) => {
       setActivityCounts(prev => ({
@@ -106,7 +110,7 @@ const ProfilePage = () => {
       // Filter out past bookings - only count today and future visits
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      
+
       const activeBookings = snapshot.docs.filter(doc => {
         const data = doc.data();
         if (data.visit_date) {
@@ -116,7 +120,7 @@ const ProfilePage = () => {
         }
         return true; // Keep bookings without visit_date
       });
-      
+
       setActivityCounts(prev => ({
         ...prev,
         bookedSiteVisits: activeBookings.length
@@ -143,10 +147,20 @@ const ProfilePage = () => {
       console.log('Live group interactions not available yet');
     });
 
+    const unsubscribeInvestments = onSnapshot(investmentsQuery, (snapshot) => {
+      setActivityCounts(prev => ({
+        ...prev,
+        investments: snapshot.size
+      }));
+    }, (error) => {
+      console.error('Error fetching investments:', error);
+    });
+
     return () => {
       unsubscribeProperties();
       unsubscribeBookings();
       unsubscribeLiveGroups();
+      unsubscribeInvestments();
     };
   }, [currentUser]);
 
@@ -184,6 +198,14 @@ const ProfilePage = () => {
       count: loadingActivity ? '...' : activityCounts.bookedSiteVisits,
       path: '/my-bookings',
       color: 'green'
+    },
+    {
+      id: 4,
+      title: 'Investments',
+      icon: <FiTrendingUp className="activity-icon" />,
+      count: loadingActivity ? '...' : activityCounts.investments,
+      path: '/profile/investments',
+      color: 'orange' // Reusing or adding a new color class if needed, checking css might be good but inline styles or existing classes work. ProfilePage.css likely has color classes.
     }
   ];
 

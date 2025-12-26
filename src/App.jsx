@@ -19,6 +19,7 @@ import BookSiteVisit from './pages/BookSiteVisit';
 import PropertyDetails from './pages/PropertyDetails';
 import Investments from './pages/Investments';
 import InvestmentDetails from './pages/InvestmentDetails';
+import InvestmentListing from './pages/InvestmentListing';
 import Exhibition from './pages/Exhibition';
 import Working from './pages/Working';
 import Services from './pages/Services';
@@ -34,6 +35,7 @@ import LiveGroupingDetails from './pages/Exhibition/LiveGroupingDetails';
 import ThreeDView from './pages/Exhibition/ThreeDView';
 import AdminLiveGrouping from './pages/Admin/AdminLiveGrouping';
 import ProfilePage from './pages/ProfilePage';
+import MyInvestments from './pages/MyInvestments';
 import MyProperties from './pages/MyProperties';
 import MyBookings from './pages/MyBookings';
 import LAM from './pages/Report Data/LAM';
@@ -112,10 +114,12 @@ function App() {
         <Route path="/individual-plan" element={<IndividualPlan />} />
         <Route path="/post-property" element={<PostProperty />} />
         <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/profile/investments" element={<MyInvestments />} />
         <Route path="/my-properties" element={<MyProperties />} />
         <Route path="/my-bookings" element={<MyBookings />} />
         <Route path="/admin/live-grouping" element={<AdminLiveGrouping />} />
-        <Route path="/investment-details/:type" element={<InvestmentDetails />} />
+        <Route path="/investments/:type" element={<InvestmentListing />} />
+        <Route path="/investment-details/:id" element={<InvestmentDetails />} />
 
         {/* Admin Panel Routes */}
         <Route path="/admin-panel/login" element={<AdminLogin />} />
