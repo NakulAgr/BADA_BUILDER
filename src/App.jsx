@@ -34,6 +34,7 @@ import LiveGrouping from './pages/Exhibition/LiveGrouping';
 import LiveGroupingDetails from './pages/Exhibition/LiveGroupingDetails';
 // ThreeDView removed due to dependency issues
 import ShortStayLanding from './pages/ShortStay/ShortStayLanding';
+import HomeLoans from './pages/HomeLoans/HomeLoans';
 import AdminLiveGrouping from './pages/Admin/AdminLiveGrouping';
 import ProfilePage from './pages/ProfilePage';
 import MyInvestments from './pages/MyInvestments';
@@ -108,6 +109,7 @@ function App() {
         <Route path="/exhibition/live-grouping" element={<LiveGrouping />} />
         <Route path="/exhibition/live-grouping/:id" element={<LiveGroupingDetails />} />
         <Route path="/short-stay" element={<ShortStayLanding />} />
+        <Route path="/home-loans" element={<HomeLoans />} />
         <Route path="/exhibition/badabuilder" element={<ByBadaBuilder />} />
         <Route path="/report" element={<Working />} />
         <Route path="/subscription-plans" element={<SubscriptionPlans />} />

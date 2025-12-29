@@ -18,7 +18,7 @@ const services = [
     description: 'Get the best home loan deals with competitive interest rates',
     icon: '🏦',
     features: ['Low interest rates', 'Quick approval', 'Flexible repayment'],
-    link: null
+    link: '/home-loans'
   },
   {
     id: 3,
