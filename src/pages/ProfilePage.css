@@ -443,6 +443,10 @@
   color: #10b981;
 }
 
+.activity-card.teal {
+  color: #14b8a6;
+}
+
 .activity-card.orange {
   color: #f97316;
 }
@@ -467,6 +471,10 @@
 
 .activity-card.green:hover {
   background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+}
+
+.activity-card.teal:hover {
+  background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%);
 }
 
 .activity-card.orange:hover {

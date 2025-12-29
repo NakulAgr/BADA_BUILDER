@@ -52,6 +52,7 @@ const ProfilePage = () => {
     propertiesUploaded: 0,
     joinedLiveGroups: 0,
     bookedSiteVisits: 0,
+    shortStayBookings: 0,
     investments: 0
   });
   const [loadingActivity, setLoadingActivity] = useState(true);
@@ -156,11 +157,25 @@ const ProfilePage = () => {
       console.error('Error fetching investments:', error);
     });
 
+    // Short Stay Bookings listener
+    const shortStayBookingsRef = collection(db, 'short_stay_bookings');
+    const shortStayBookingsQuery = query(shortStayBookingsRef, where('guestId', '==', currentUser.uid));
+    
+    const unsubscribeShortStayBookings = onSnapshot(shortStayBookingsQuery, (snapshot) => {
+      setActivityCounts(prev => ({
+        ...prev,
+        shortStayBookings: snapshot.size
+      }));
+    }, (error) => {
+      console.log('Short stay bookings not available yet');
+    });
+
     return () => {
       unsubscribeProperties();
       unsubscribeBookings();
       unsubscribeLiveGroups();
       unsubscribeInvestments();
+      unsubscribeShortStayBookings();
     };
   }, [currentUser]);
 
@@ -201,11 +216,19 @@ const ProfilePage = () => {
     },
     {
       id: 4,
+      title: 'Short Stay Bookings',
+      icon: <FiHome className="activity-icon" />,
+      count: loadingActivity ? '...' : activityCounts.shortStayBookings,
+      path: '/short-stay/my-bookings',
+      color: 'teal'
+    },
+    {
+      id: 5,
       title: 'Investments',
       icon: <FiTrendingUp className="activity-icon" />,
       count: loadingActivity ? '...' : activityCounts.investments,
       path: '/profile/investments',
-      color: 'orange' // Reusing or adding a new color class if needed, checking css might be good but inline styles or existing classes work. ProfilePage.css likely has color classes.
+      color: 'orange'
     }
   ];
 
