@@ -226,6 +226,9 @@ const LiveGrouping = () => {
           <Link to="/exhibition/badabuilder" className="tab">
             By Bada Builder
           </Link>
+          <Link to="/go-global" className="tab">
+            🌍 Go Global
+          </Link>
         </motion.div>
 
         {/* View Toggle */}

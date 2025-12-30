@@ -271,13 +271,6 @@ const Header = () => {
           </Link>
 
           <Link
-            to="/go-global"
-            className="nav-link relative py-2 px-3 text-gray-900 hover:text-[#58335e] transition-all duration-200 after:content-[''] after:absolute after:w-0 after:h-0.5 after:bg-[#58335e] after:left-0 after:bottom-0 after:transition-all after:duration-300 hover:after:w-full whitespace-nowrap"
-          >
-            🌍 Go Global
-          </Link>
-
-          <Link
             to="/contact"
             className="nav-link relative py-2 px-3 text-gray-900 hover:text-[#58335e] transition-all duration-200 after:content-[''] after:absolute after:w-0 after:h-0.5 after:bg-[#58335e] after:left-0 after:bottom-0 after:transition-all after:duration-300 hover:after:w-full whitespace-nowrap"
           >
@@ -539,10 +532,6 @@ const Header = () => {
 
                 <Link to="/100-months" onClick={toggleMobileMenu} className="mobile-menu-item">
                   💰 100 Months
-                </Link>
-
-                <Link to="/go-global" onClick={toggleMobileMenu} className="mobile-menu-item">
-                  🌍 Go Global
                 </Link>
 
                 <Link to="/contact" onClick={toggleMobileMenu} className="mobile-menu-item">
