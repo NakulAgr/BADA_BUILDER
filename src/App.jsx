@@ -32,10 +32,14 @@ import ByDeveloper from './pages/Exhibition/ByDeveloper';
 import ByBadaBuilder from './pages/Exhibition/ByBadaBuilder';
 import LiveGrouping from './pages/Exhibition/LiveGrouping';
 import LiveGroupingDetails from './pages/Exhibition/LiveGroupingDetails';
-// ThreeDView removed due to dependency issues
+import ThreeDView from './pages/Exhibition/ThreeDView';
 import ShortStayLanding from './pages/ShortStay/ShortStayLanding';
 import HomeLoans from './pages/HomeLoans/HomeLoans';
 import AdminLiveGrouping from './pages/Admin/AdminLiveGrouping';
+import LongLiveBrowse from './pages/LongLive/LongLiveBrowse';
+import LongLivePost from './pages/LongLive/LongLivePost';
+import HundredMonths from './pages/PaymentPlans/HundredMonths';
+import GoGlobal from './pages/Global/GoGlobal';
 import ProfilePage from './pages/ProfilePage';
 import MyInvestments from './pages/MyInvestments';
 import MyProperties from './pages/MyProperties';
@@ -108,8 +112,13 @@ function App() {
         <Route path="/exhibition/developer" element={<ByDeveloper />} />
         <Route path="/exhibition/live-grouping" element={<LiveGrouping />} />
         <Route path="/exhibition/live-grouping/:id" element={<LiveGroupingDetails />} />
+        <Route path="/exhibition/3d-view" element={<ThreeDView />} />
         <Route path="/short-stay" element={<ShortStayLanding />} />
         <Route path="/home-loans" element={<HomeLoans />} />
+        <Route path="/long-live/browse" element={<LongLiveBrowse />} />
+        <Route path="/long-live/post" element={<LongLivePost />} />
+        <Route path="/100-months" element={<HundredMonths />} />
+        <Route path="/go-global" element={<GoGlobal />} />
         <Route path="/exhibition/badabuilder" element={<ByBadaBuilder />} />
         <Route path="/report" element={<Working />} />
         <Route path="/subscription-plans" element={<SubscriptionPlans />} />

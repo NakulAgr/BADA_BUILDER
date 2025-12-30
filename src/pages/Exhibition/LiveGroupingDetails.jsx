@@ -201,10 +201,8 @@ const LiveGroupingDetails = () => {
   };
 
   const handleJoinGroup = () => {
-    const tokenAmount = calculateTokenAmount(property.groupPricePerSqFt, property.area);
-    const formattedToken = formatCurrency(tokenAmount);
-    
-    alert(`Joining group for ${property.title}!\n\nToken Amount: ${formattedToken} (0.5% of discounted price)`);
+    // Navigate to 3D view to join the group
+    navigate('/exhibition/3d-view', { state: { property } });
   };
 
   return (

@@ -9,26 +9,16 @@ import { auth } from '../../firebase';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
-// Real Estate menu removed as per user request
-
-const dropdownItems = [
-  { label: 'Lease and asset management', href: '/learn/lease-and-asset-management' },
-  { label: 'Market and investment analysis', href: '/learn/market-and-investment-analysis' },
-  { label: 'Real estate financial modelling', href: '/learn/real-estate-financial-modelling' },
-  { label: 'Real estate market research', href: '/learn/real-estate-market-research' },
-  { label: 'Reit valuation and compliance', href: '/learn/reit-valuation-and-compliance' },
-  { label: 'Risk assessment & due diligence', href: '/learn/risk-assessment-due-diligence' },
-  { label: 'Stakeholder communication in Reit', href: '/learn/stakeholder-communication' },
-  { label: 'Types of Reits in India', href: '/learn/types-of-reits-india' },
-  { label: 'Taxation in Reits', href: '/learn/taxation-in-reits' },
-  { label: 'Types Job profiles in Reits', href: '/learn/job-profiles-in-reits' },
-  { label: 'Work of Different job profiles', href: '/learn/work-of-job-profiles' }
+// Long Live dropdown items for long-term rentals
+const longLiveItems = [
+  { label: 'Browse Rental Properties', href: '/long-live/browse' },
+  { label: 'Post Rental Property', href: '/long-live/post' }
 ];
 
 const Header = () => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [mobileLearnOpen, setMobileLearnOpen] = useState(false);
+  const [mobileLongLiveOpen, setMobileLongLiveOpen] = useState(false);
   const [isUserTypeModalOpen, setIsUserTypeModalOpen] = useState(false);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -124,7 +114,7 @@ const Header = () => {
 
   if (loading) {
     return (
-      <header className="custom-header flex justify-between items-center px-4 md:px-8 py-4 bg-white shadow-sm sticky top-0 z-50">
+      <header className="custom-header flex justify-between items-center px-3 md:px-6 py-3 bg-white shadow-sm sticky top-0 z-50">
         <div className="flex-1 flex justify-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#58335e]"></div>
         </div>
@@ -135,12 +125,12 @@ const Header = () => {
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
     if (isMobileMenuOpen) {
-      setMobileLearnOpen(false);
+      setMobileLongLiveOpen(false);
     }
   };
 
-  const toggleMobileLearn = () => {
-    setMobileLearnOpen(!mobileLearnOpen);
+  const toggleMobileLongLive = () => {
+    setMobileLongLiveOpen(!mobileLongLiveOpen);
   };
 
   const handleMouseEnter = () => {
@@ -207,7 +197,7 @@ const Header = () => {
 
   return (
     <>
-      <header className="custom-header flex justify-between items-center px-4 md:px-8 py-4 bg-white shadow-sm sticky top-0 z-50 backdrop-blur-sm bg-opacity-95">
+      <header className="custom-header flex justify-between items-center px-3 md:px-6 py-3 bg-white shadow-sm sticky top-0 z-50 backdrop-blur-sm bg-opacity-95">
         {/* Logo */}
         <div className="logo-container flex-shrink-0">
           <Link to="/" className="logo-link inline-block transition-transform duration-200 hover:scale-105">
@@ -216,7 +206,7 @@ const Header = () => {
         </div>
 
         {/* Desktop Navigation */}
-        <nav className="flex items-center space-x-6 hidden lg:flex font-semibold text-gray-900">
+        <nav className="flex items-center space-x-3 hidden lg:flex font-semibold text-gray-900">
           <Link
             to="/exhibition"
             className="nav-link relative py-2 px-3 text-gray-900 hover:text-[#58335e] transition-all duration-200 after:content-[''] after:absolute after:w-0 after:h-0.5 after:bg-[#58335e] after:left-0 after:bottom-0 after:transition-all after:duration-300 hover:after:w-full whitespace-nowrap"
@@ -238,32 +228,30 @@ const Header = () => {
             Short Stay
           </Link>
 
-          {/* Learn Reit's Dropdown */}
+          {/* Long Live Dropdown */}
           <div
             className="relative inline-block text-left"
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
           >
             <div className={`nav-link cursor-pointer py-2 px-3 text-gray-900 transition-all duration-200 flex items-center gap-1 relative after:content-[''] after:absolute after:w-0 after:h-0.5 after:bg-[#58335e] after:left-0 after:bottom-0 after:transition-all after:duration-300 whitespace-nowrap ${showDropdown ? 'text-[#58335e] after:w-full' : 'hover:text-[#58335e] hover:after:w-full'}`}>
-              Learn Reit's
+              Long Live
               <span className={`inline-block transition-transform duration-200 ${showDropdown ? 'rotate-180' : ''}`}>
                 ▾
               </span>
             </div>
 
             {showDropdown && (
-              <div className="dropdown-menu absolute left-0 mt-1 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-20 py-2 animate-fadeIn">
-                <div className="max-h-96 overflow-y-auto">
-                  {dropdownItems.map((item, index) => (
-                    <Link
-                      key={index}
-                      to={item.href}
-                      className="block px-5 py-3 text-sm text-gray-800 hover:bg-purple-50 hover:text-[#58335e] transition-all duration-150 border-l-4 border-transparent hover:border-[#58335e] font-semibold"
-                    >
-                      {item.label}
-                    </Link>
-                  ))}
-                </div>
+              <div className="dropdown-menu absolute left-0 mt-1 w-64 bg-white rounded-lg shadow-xl border border-gray-200 z-20 py-2 animate-fadeIn">
+                {longLiveItems.map((item, index) => (
+                  <Link
+                    key={index}
+                    to={item.href}
+                    className="block px-5 py-3 text-sm text-gray-800 hover:bg-purple-50 hover:text-[#58335e] transition-all duration-150 border-l-4 border-transparent hover:border-[#58335e] font-semibold"
+                  >
+                    {item.label}
+                  </Link>
+                ))}
               </div>
             )}
           </div>
@@ -273,6 +261,20 @@ const Header = () => {
             className="nav-link relative py-2 px-3 text-gray-900 hover:text-[#58335e] transition-all duration-200 cursor-pointer after:content-[''] after:absolute after:w-0 after:h-0.5 after:bg-[#58335e] after:left-0 after:bottom-0 after:transition-all after:duration-300 hover:after:w-full whitespace-nowrap"
           >
             Investment
+          </Link>
+
+          <Link
+            to="/100-months"
+            className="nav-link relative py-2 px-3 text-gray-900 hover:text-[#58335e] transition-all duration-200 after:content-[''] after:absolute after:w-0 after:h-0.5 after:bg-[#58335e] after:left-0 after:bottom-0 after:transition-all after:duration-300 hover:after:w-full whitespace-nowrap"
+          >
+            💰 100 Months
+          </Link>
+
+          <Link
+            to="/go-global"
+            className="nav-link relative py-2 px-3 text-gray-900 hover:text-[#58335e] transition-all duration-200 after:content-[''] after:absolute after:w-0 after:h-0.5 after:bg-[#58335e] after:left-0 after:bottom-0 after:transition-all after:duration-300 hover:after:w-full whitespace-nowrap"
+          >
+            🌍 Go Global
           </Link>
 
           <Link
@@ -502,18 +504,18 @@ const Header = () => {
                   Short Stay
                 </Link>
 
-                {/* Mobile Learn Reit's Dropdown */}
+                {/* Mobile Long Live Dropdown */}
                 <div className="mobile-dropdown">
-                  <button onClick={toggleMobileLearn} className="mobile-dropdown-btn">
-                    <span>Learn Reit's</span>
-                    <span className={`mobile-dropdown-icon ${mobileLearnOpen ? 'rotate' : ''}`}>
+                  <button onClick={toggleMobileLongLive} className="mobile-dropdown-btn">
+                    <span>Long Live</span>
+                    <span className={`mobile-dropdown-icon ${mobileLongLiveOpen ? 'rotate' : ''}`}>
                       ▾
                     </span>
                   </button>
 
-                  {mobileLearnOpen && (
+                  {mobileLongLiveOpen && (
                     <div className="mobile-dropdown-content">
-                      {dropdownItems.map((item, index) => (
+                      {longLiveItems.map((item, index) => (
                         <Link
                           key={index}
                           to={item.href}
@@ -533,6 +535,14 @@ const Header = () => {
                   className="mobile-menu-item cursor-pointer"
                 >
                   Investment
+                </Link>
+
+                <Link to="/100-months" onClick={toggleMobileMenu} className="mobile-menu-item">
+                  💰 100 Months
+                </Link>
+
+                <Link to="/go-global" onClick={toggleMobileMenu} className="mobile-menu-item">
+                  🌍 Go Global
                 </Link>
 
                 <Link to="/contact" onClick={toggleMobileMenu} className="mobile-menu-item">

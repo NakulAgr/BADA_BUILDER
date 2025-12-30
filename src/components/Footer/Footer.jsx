@@ -7,7 +7,7 @@ import "./Footer.css";
 const Footer = () => {
   return (
     <footer className="text-white py-10 px-6 md:px-20">
-      <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
+      <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-10">
 
         {/* Updated Logo Section */}
         <div>
@@ -81,6 +81,23 @@ const Footer = () => {
             <li><Link to="/investments" className="footer-link hover:text-white transition-colors">Investments</Link></li>
             <li><Link to="/login" className="footer-link hover:text-white transition-colors">Login / Sign Up</Link></li>
             <li><Link to="/about" className="footer-link hover:text-white transition-colors">About Us</Link></li>
+          </ul>
+        </div>
+
+        {/* Learn REITs */}
+        <div>
+          <h3 className="text-lg font-medium mb-4">Learn REITs</h3>
+          <ul className="space-y-2 text-gray-400 text-sm">
+            <li><Link to="/learn/lease-and-asset-management" className="footer-link hover:text-white transition-colors">Lease & Asset Management</Link></li>
+            <li><Link to="/learn/market-and-investment-analysis" className="footer-link hover:text-white transition-colors">Market & Investment Analysis</Link></li>
+            <li><Link to="/learn/real-estate-financial-modelling" className="footer-link hover:text-white transition-colors">Financial Modelling</Link></li>
+            <li><Link to="/learn/real-estate-market-research" className="footer-link hover:text-white transition-colors">Market Research</Link></li>
+            <li><Link to="/learn/reit-valuation-and-compliance" className="footer-link hover:text-white transition-colors">Valuation & Compliance</Link></li>
+            <li><Link to="/learn/risk-assessment-due-diligence" className="footer-link hover:text-white transition-colors">Risk Assessment</Link></li>
+            <li><Link to="/learn/stakeholder-communication" className="footer-link hover:text-white transition-colors">Stakeholder Communication</Link></li>
+            <li><Link to="/learn/types-of-reits-india" className="footer-link hover:text-white transition-colors">Types of REITs</Link></li>
+            <li><Link to="/learn/taxation-in-reits" className="footer-link hover:text-white transition-colors">Taxation in REITs</Link></li>
+            <li><Link to="/learn/job-profiles-in-reits" className="footer-link hover:text-white transition-colors">Job Profiles</Link></li>
           </ul>
         </div>
 

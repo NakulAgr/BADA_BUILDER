@@ -421,9 +421,7 @@ const LiveGrouping = () => {
                         className="view-details-btn-grouping"
                         onClick={(e) => {
                           e.stopPropagation();
-                          navigate(`/property-details/${group.id}`, {
-                            state: { property: group, type: 'grouping' }
-                          });
+                          navigate(`/exhibition/live-grouping/${group.id}`);
                         }}
                       >
                         View Details
@@ -448,7 +446,7 @@ const LiveGrouping = () => {
                       className={`join-group-btn ${group.status}`}
                       onClick={(e) => {
                         e.stopPropagation();
-                        navigate('/3d-view', { state: { property: group } });
+                        navigate('/exhibition/3d-view', { state: { property: group } });
                       }}
                       disabled={group.status === 'closed'}
                     >
