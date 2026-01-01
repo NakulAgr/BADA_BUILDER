@@ -13,10 +13,23 @@ import {
   FaWarehouse,
   FaIndustry,
   FaStoreAlt,
-  FaRegBuilding
+  FaRegBuilding,
+  FaServer
 } from 'react-icons/fa';
 
 const investmentsData = [
+  {
+    id: 'data-centres',
+    title: 'Data Centres',
+    icon: <FaServer className="text-3xl" />,
+    description: 'Invest in cutting-edge data centre infrastructure with stable returns and institutional-grade assets.',
+    subCategories: [],
+    bgGradient: 'from-indigo-50 to-white',
+    hoverBorder: 'hover:border-indigo-400',
+    iconColor: 'text-indigo-600',
+    buttonColor: 'text-indigo-700',
+    featured: true
+  },
   {
     id: 'commercial',
     title: 'Commercial',
@@ -181,9 +194,9 @@ const Investments = () => {
                 ))}
               </div>
             ) : (
-              // Fallback for categories without sub-items (e.g. Co-Working)
+              // Fallback for categories without sub-items (e.g. Co-Working, Data Centres)
               <div className="relative z-10 mt-auto">
-                <Link to={`/search?category=${category.id}`}>
+                <Link to={category.id === 'data-centres' ? '/investments/data-centres' : `/search?category=${category.id}`}>
                   <motion.button
                     className={`
                                 w-full h-14 rounded-full border border-gray-200 bg-white

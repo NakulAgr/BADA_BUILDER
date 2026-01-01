@@ -40,6 +40,7 @@ import LongLiveBrowse from './pages/LongLive/LongLiveBrowse';
 import LongLivePost from './pages/LongLive/LongLivePost';
 import HundredMonths from './pages/PaymentPlans/HundredMonths';
 import GoGlobal from './pages/Global/GoGlobal';
+import DataCentres from './pages/Investments/DataCentres';
 import ProfilePage from './pages/ProfilePage';
 import MyInvestments from './pages/MyInvestments';
 import MyProperties from './pages/MyProperties';
@@ -119,6 +120,7 @@ function App() {
         <Route path="/long-live/post" element={<LongLivePost />} />
         <Route path="/100-months" element={<HundredMonths />} />
         <Route path="/go-global" element={<GoGlobal />} />
+        <Route path="/investments/data-centres" element={<DataCentres />} />
         <Route path="/exhibition/badabuilder" element={<ByBadaBuilder />} />
         <Route path="/report" element={<Working />} />
         <Route path="/subscription-plans" element={<SubscriptionPlans />} />
