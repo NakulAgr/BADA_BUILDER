@@ -41,6 +41,8 @@ import LongLivePost from './pages/LongLive/LongLivePost';
 import HundredMonths from './pages/PaymentPlans/HundredMonths';
 import GoGlobal from './pages/Global/GoGlobal';
 import DataCentres from './pages/Investments/DataCentres';
+import DataCentreDetails from './pages/Investments/DataCentreDetails';
+import RegisterComplaint from './pages/Complaints/RegisterComplaint';
 import ProfilePage from './pages/ProfilePage';
 import MyInvestments from './pages/MyInvestments';
 import MyProperties from './pages/MyProperties';
@@ -121,6 +123,8 @@ function App() {
         <Route path="/100-months" element={<HundredMonths />} />
         <Route path="/go-global" element={<GoGlobal />} />
         <Route path="/investments/data-centres" element={<DataCentres />} />
+        <Route path="/investments/data-centres/:id" element={<DataCentreDetails />} />
+        <Route path="/register-complaint" element={<RegisterComplaint />} />
         <Route path="/exhibition/badabuilder" element={<ByBadaBuilder />} />
         <Route path="/report" element={<Working />} />
         <Route path="/subscription-plans" element={<SubscriptionPlans />} />

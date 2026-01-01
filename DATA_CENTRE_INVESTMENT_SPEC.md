@@ -215,13 +215,13 @@ Structured sections:
 - Create basic listing page
 - Set up routing
 
-### Phase 2: Core Features (In Progress)
+### Phase 2: Core Features ✅
 - Data centre listing with filters
 - Details page with all sections
 - Investment calculator
-- Payment integration
+- Payment integration (ready for Razorpay)
 
-### Phase 3: User Features
+### Phase 3: User Features (Next)
 - Portfolio dashboard
 - Payout tracking
 - Document management
@@ -248,4 +248,4 @@ Structured sections:
 - **Forms**: React Hook Form
 - **Validation**: Yup
 
-## Status: Phase 1 Complete, Phase 2 In Progress
+## Status: Phase 1 & 2 Complete, Phase 3 Ready to Start
