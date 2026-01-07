@@ -66,6 +66,7 @@
 .property-card-wrapper.list-view .property-title {
   font-size: 15px;
   -webkit-line-clamp: 1;
+  line-clamp: 1;
   margin: 0;
   min-width: 150px;
   max-width: 200px;
@@ -103,7 +104,8 @@
 }
 
 .property-card-wrapper.list-view .property-description {
-  display: none; /* Hide description in thin strip view */
+  display: none;
+  /* Hide description in thin strip view */
 }
 
 .property-card-wrapper.list-view .property-actions {
@@ -191,6 +193,7 @@
   line-height: 1.3;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -252,6 +255,7 @@
   margin: 8px 0;
   display: -webkit-box;
   -webkit-line-clamp: 3;
+  line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -310,96 +314,96 @@
 @media (max-width: 768px) {
   .property-card-wrapper.list-view {
     flex-direction: row;
-    min-height: 110px;
-    max-height: 130px;
+    min-height: 100px;
+    max-height: 140px;
+    width: 100%;
   }
 
   .property-card-wrapper.list-view .property-card-image {
-    width: 110px;
-    min-width: 110px;
+    width: 100px;
+    min-width: 100px;
     height: 100%;
   }
 
   .property-card-wrapper.list-view .property-card-content {
-    padding: 10px 12px;
-    gap: 10px;
+    padding: 8px 12px;
+    gap: 8px;
     overflow-x: auto;
     overflow-y: hidden;
     flex-wrap: nowrap;
-    scrollbar-width: thin;
-    scrollbar-color: #cbd5e1 transparent;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    scrollbar-width: none;
+    /* Hide scrollbar for cleaner look */
   }
 
   .property-card-wrapper.list-view .property-card-content::-webkit-scrollbar {
-    height: 4px;
-  }
-
-  .property-card-wrapper.list-view .property-card-content::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  .property-card-wrapper.list-view .property-card-content::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
-    border-radius: 2px;
+    display: none;
   }
 
   .property-card-wrapper.list-view .property-title {
-    font-size: 14px;
-    min-width: 120px;
-    max-width: 150px;
+    font-size: 13px;
+    min-width: 100px;
+    max-width: 140px;
     flex-shrink: 0;
   }
 
   .property-card-wrapper.list-view .property-price {
-    font-size: 15px;
-    min-width: 90px;
+    font-size: 14px;
+    min-width: 80px;
     flex-shrink: 0;
+    text-align: left;
   }
 
   .property-card-wrapper.list-view .property-location {
-    font-size: 12px;
-    min-width: 100px;
-    max-width: 120px;
+    font-size: 11px;
+    min-width: 90px;
+    max-width: 110px;
     flex-shrink: 0;
   }
 
   .property-card-wrapper.list-view .highlight-item {
-    padding: 4px 8px;
-    font-size: 11px;
+    padding: 3px 6px;
+    font-size: 10px;
     flex-shrink: 0;
   }
 
   .property-card-wrapper.list-view .property-highlights {
-    gap: 6px;
-    min-width: 120px;
+    gap: 4px;
+    min-width: auto;
     flex-shrink: 0;
   }
 
   .property-card-wrapper.list-view .property-actions {
     flex-direction: row;
-    gap: 6px;
+    gap: 5px;
     flex-shrink: 0;
+    margin-left: auto;
   }
 
   .property-card-wrapper.list-view .property-actions button {
-    padding: 8px 12px;
-    font-size: 11px;
-    min-width: 70px;
+    padding: 6px 10px;
+    font-size: 10px;
+    min-width: 60px;
     flex-shrink: 0;
   }
 
   .property-card-wrapper.list-view .property-status-badge,
   .property-card-wrapper.list-view .featured-badge {
-    padding: 4px 8px;
-    font-size: 10px;
+    padding: 3px 6px;
+    font-size: 9px;
   }
 
   .property-actions {
-    flex-direction: column;
+    flex-direction: row;
+    gap: 8px;
   }
 
   .property-actions button {
     width: 100%;
+    padding: 10px 12px;
+    font-size: 13px;
   }
 }
 
@@ -455,6 +459,7 @@
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);

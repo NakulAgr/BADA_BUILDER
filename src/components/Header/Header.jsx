@@ -8,6 +8,18 @@ import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { auth } from '../../firebase';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import {
+  FiGrid,
+  FiSettings,
+  FiClock,
+  FiActivity,
+  FiTrendingUp,
+  FiDollarSign,
+  FiPhone,
+  FiUsers,
+  FiLogOut,
+  FiUser
+} from 'react-icons/fi';
 
 // Long Live dropdown items for long-term rentals
 const longLiveItems = [
@@ -374,8 +386,8 @@ const Header = () => {
           )}
         </div>
 
-        {/* Mobile Menu Button */}
-        <div className="lg:hidden flex items-center">
+        {/* Mobile Menu Button - Strictly hidden on desktop */}
+        <div className="mobile-menu-toggle-wrapper items-center ml-2">
           <button
             onClick={toggleMobileMenu}
             className="p-2 rounded-md text-gray-700 hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-[#58335e] transition-all duration-200"
@@ -392,25 +404,27 @@ const Header = () => {
 
       {/* Mobile Menu Overlay */}
       {isMobileMenuOpen && (
-        <div className="lg:hidden fixed inset-0 z-50 bg-black bg-opacity-50" onClick={toggleMobileMenu}>
+        <div className="lg:hidden fixed inset-0 z-50 mobile-menu-overlay" onClick={toggleMobileMenu}>
           <div
-            className="absolute top-0 right-0 w-80 max-w-full h-full bg-white shadow-xl transform transition-transform duration-300 ease-out"
+            className="mobile-menu-panel"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Mobile Menu Header */}
-            <div className="flex justify-between items-center px-6 py-5 border-b border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-900">Menu</h2>
+            <div className="mobile-menu-top-header">
+              <div className="mobile-menu-title-container">
+                <span className="mobile-menu-indicator"></span>
+                <h2 className="mobile-menu-title">Menu</h2>
+              </div>
               <button
                 onClick={toggleMobileMenu}
-                className="p-2 rounded-md text-gray-700 hover:text-gray-900 hover:bg-gray-100 focus:outline-none"
+                className="mobile-close-btn-premium"
+                aria-label="Close menu"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                <div className="mobile-close-cross"></div>
               </button>
             </div>
 
-            {/* Mobile Menu Content */}
+            {/* Mobile Menu Content Scrollable Area */}
             <div className="mobile-menu-content">
               <nav className="mobile-nav">
                 {/* Mobile Login/Profile */}
@@ -472,49 +486,68 @@ const Header = () => {
                   </Link>
                 )}
 
-                {/* Post Property Button */}
-                <button
-                  onClick={() => {
-                    toggleMobileMenu();
-                    setIsUserTypeModalOpen(true);
-                  }}
-                  className="mobile-post-btn"
-                >
-                  <span className="mobile-btn-icon">📝</span>
-                  <span>Post Property</span>
-                </button>
+                {/* Post Property Button Section */}
+                <div className="mobile-action-section">
+                  <button
+                    onClick={() => {
+                      toggleMobileMenu();
+                      setIsUserTypeModalOpen(true);
+                    }}
+                    className="mobile-post-listing-btn"
+                  >
+                    <span className="mobile-btn-icon-bg">📝</span>
+                    <div className="mobile-btn-text">
+                      <span className="main-text">Post Property</span>
+                      <span className="sub-text">List your project fast</span>
+                    </div>
+                    <svg className="w-5 h-5 ml-auto opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                </div>
 
-                {/* Regular Menu Items */}
-                <Link to="/exhibition" onClick={toggleMobileMenu} className="mobile-menu-item">
-                  Exhibition
+                <div className="mobile-menu-divider">
+                  <span>Explore BADA BUILDER</span>
+                </div>
+
+                {/* Regular Menu Items with Icons */}
+                <Link to="/exhibition" onClick={toggleMobileMenu} className="mobile-nav-item">
+                  <span className="mobile-icon-box"><FiGrid /></span>
+                  <span>Exhibition</span>
                 </Link>
 
-                <Link to="/services" onClick={toggleMobileMenu} className="mobile-menu-item">
-                  Services
+                <Link to="/services" onClick={toggleMobileMenu} className="mobile-nav-item">
+                  <span className="mobile-icon-box"><FiSettings /></span>
+                  <span>Services</span>
                 </Link>
 
-                <Link to="/short-stay" onClick={toggleMobileMenu} className="mobile-menu-item">
-                  Short Stay
+                <Link to="/short-stay" onClick={toggleMobileMenu} className="mobile-nav-item">
+                  <span className="mobile-icon-box"><FiClock /></span>
+                  <span>Short Stay</span>
                 </Link>
 
                 {/* Mobile Long Live Dropdown */}
-                <div className="mobile-dropdown">
-                  <button onClick={toggleMobileLongLive} className="mobile-dropdown-btn">
-                    <span>Long Live</span>
-                    <span className={`mobile-dropdown-icon ${mobileLongLiveOpen ? 'rotate' : ''}`}>
+                <div className="mobile-nav-dropdown">
+                  <button onClick={() => setMobileLongLiveOpen(!mobileLongLiveOpen)} className="mobile-nav-dropdown-btn">
+                    <div className="flex items-center gap-3.5">
+                      <span className="mobile-icon-box"><FiActivity /></span>
+                      <span>Long Live</span>
+                    </div>
+                    <span className={`transition-transform duration-200 ${mobileLongLiveOpen ? 'rotate-180' : ''}`}>
                       ▾
                     </span>
                   </button>
 
                   {mobileLongLiveOpen && (
-                    <div className="mobile-dropdown-content">
+                    <div className="mobile-nav-dropdown-content">
                       {longLiveItems.map((item, index) => (
                         <Link
                           key={index}
                           to={item.href}
                           onClick={toggleMobileMenu}
-                          className="mobile-dropdown-item"
+                          className="mobile-nav-dropdown-link"
                         >
+                          <span className="dot"></span>
                           {item.label}
                         </Link>
                       ))}
@@ -525,23 +558,34 @@ const Header = () => {
                 <Link
                   to="/investments"
                   onClick={toggleMobileMenu}
-                  className="mobile-menu-item cursor-pointer"
+                  className="mobile-nav-item"
                 >
-                  Investment
+                  <span className="mobile-icon-box"><FiTrendingUp /></span>
+                  <span>Investment</span>
                 </Link>
 
-                <Link to="/100-months" onClick={toggleMobileMenu} className="mobile-menu-item">
-                  💰 100 Months
+                <Link to="/100-months" onClick={toggleMobileMenu} className="mobile-nav-item">
+                  <span className="mobile-icon-box"><FiDollarSign /></span>
+                  <span>100 Months</span>
                 </Link>
 
-                <Link to="/contact" onClick={toggleMobileMenu} className="mobile-menu-item">
-                  Contact Us
+                <div className="mobile-menu-divider-thin"></div>
+
+                <Link to="/contact" onClick={toggleMobileMenu} className="mobile-nav-item secondary">
+                  <span className="mobile-icon-box"><FiPhone /></span>
+                  <span>Contact Us</span>
                 </Link>
 
-                <Link to="/about" onClick={toggleMobileMenu} className="mobile-menu-item">
-                  Who are we
+                <Link to="/about" onClick={toggleMobileMenu} className="mobile-nav-item secondary">
+                  <span className="mobile-icon-box"><FiUsers /></span>
+                  <span>Who are we</span>
                 </Link>
               </nav>
+
+              {/* Mobile Footer Area */}
+              <div className="mobile-menu-footer">
+                <p>© 2026 BADA BUILDER. Premium Real Estate</p>
+              </div>
             </div>
           </div>
         </div>

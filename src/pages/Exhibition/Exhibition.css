@@ -339,8 +339,8 @@
 /* Responsive */
 @media (max-width: 768px) {
   .exhibition-page {
-    padding: 80px 0 40px;
-    width: 100vw;
+    padding: 80px 12px 40px;
+    width: 100%;
     overflow-x: hidden;
   }
 
@@ -348,50 +348,69 @@
     width: 100%;
     max-width: 100%;
     margin: 0;
-    padding: 0 1rem;
+    padding: 0;
   }
 
   .exhibition-header h1 {
-    font-size: 32px;
+    font-size: 28px;
+    padding: 0 10px;
   }
 
   .exhibition-header p {
-    font-size: 16px;
+    font-size: 15px;
+    padding: 0 15px;
   }
 
   .exhibition-tabs {
-    gap: 10px;
+    gap: 8px;
+    padding: 0 5px;
+    margin-bottom: 30px;
   }
 
   .tab {
-    padding: 10px 20px;
-    font-size: 14px;
+    padding: 8px 16px;
+    font-size: 13px;
+    flex: 1 1 auto;
+    text-align: center;
+    min-width: calc(50% - 8px);
   }
 
   .properties-grid {
-    grid-template-columns: 1fr;
-    gap: 24px;
+    grid-template-columns: 1fr !important;
+    gap: 20px;
+    padding: 0 5px;
+  }
+
+  .properties-grid.grid-view {
+    grid-template-columns: 1fr !important;
   }
 
   .property-image {
-    height: 200px;
+    height: 180px;
+  }
+
+  .property-info {
+    padding: 16px;
+  }
+
+  .property-info h3 {
+    font-size: 18px;
   }
 
   .why-choose-section {
-    padding: 40px 1rem;
-    border-radius: 0;
-    margin-left: 0;
-    margin-right: 0;
-    width: 100%;
+    padding: 30px 16px;
+    border-radius: 12px;
+    margin: 40px 10px 0;
+    width: auto;
   }
 
   .why-choose-section h2 {
-    font-size: 26px;
+    font-size: 22px;
   }
 
   .benefits-grid {
     grid-template-columns: 1fr;
-    gap: 20px;
+    gap: 16px;
   }
 }
 

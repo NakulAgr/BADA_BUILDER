@@ -666,35 +666,85 @@
 /* Responsive */
 @media (max-width: 768px) {
   .how-it-works {
-    padding: 30px 20px;
+    padding: 25px 15px;
+    margin-bottom: 30px;
   }
 
   .how-it-works h2 {
-    font-size: 26px;
+    font-size: 24px;
+    margin-bottom: 25px;
   }
 
   .steps-grid {
     grid-template-columns: 1fr;
-    gap: 20px;
+    gap: 16px;
   }
 
+  .step-card {
+    padding: 20px 15px;
+  }
 
+  .section-title {
+    font-size: 24px;
+    padding: 0 10px;
+  }
 
-  .price-comparison {
-    flex-direction: column;
-    gap: 12px;
+  .section-subtitle {
+    font-size: 14px;
+    padding: 0 10px;
+    margin-bottom: 20px;
+  }
+
+  .pricing-section {
+    padding: 12px;
+  }
+
+  .group-price .amount {
+    font-size: 18px;
+  }
+
+  .price-range-section {
+    padding: 12px;
+  }
+
+  .range-value {
+    font-size: 14px;
+  }
+
+  .range-value.highlight {
+    font-size: 15px;
+  }
+
+  .units-list {
+    gap: 4px;
+  }
+
+  .unit-badge {
+    font-size: 10px;
+    padding: 4px 8px;
   }
 
   .faq-section {
-    padding: 30px 20px;
+    padding: 30px 15px;
+    margin-top: 40px;
   }
 
   .faq-section h2 {
-    font-size: 26px;
+    font-size: 24px;
+    margin-bottom: 25px;
   }
 
   .faq-grid {
     grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .faq-card {
+    padding: 16px;
+  }
+
+  .live-group-card .property-info h3 {
+    font-size: 20px;
   }
 }
 
