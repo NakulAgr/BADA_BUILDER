@@ -48,6 +48,7 @@ import ProfilePage from './pages/ProfilePage';
 import MyInvestments from './pages/MyInvestments';
 import MyProperties from './pages/MyProperties';
 import MyBookings from './pages/MyBookings';
+import About from './pages/About';
 import LAM from './pages/Report Data/LAM';
 import MarketInvestmentAnalysis from './pages/Report Data/MarketInvestmentAnalysis';
 import RealEstateFinancialModelling from './pages/Report Data/RealEstateFinancialModelling';
@@ -141,6 +142,7 @@ function App() {
           <Route path="/admin/live-grouping" element={<AdminLiveGrouping />} />
           <Route path="/investments/:type" element={<InvestmentListing />} />
           <Route path="/investment-details/:id" element={<InvestmentDetails />} />
+          <Route path="/about" element={<About />} />
 
           {/* Admin Panel Routes */}
           <Route path="/admin-panel/login" element={<AdminLogin />} />
