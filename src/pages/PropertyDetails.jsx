@@ -155,6 +155,17 @@ const PropertyDetails = () => {
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.3 }}
+                    drag="x"
+                    dragConstraints={{ left: 0, right: 0 }}
+                    dragElastic={1}
+                    onDragEnd={(e, { offset, velocity }) => {
+                      const swipe = Math.abs(offset.x) * velocity.x;
+                      if (swipe < -100) {
+                        nextImage();
+                      } else if (swipe > 100) {
+                        prevImage();
+                      }
+                    }}
                   />
                 </AnimatePresence>
 

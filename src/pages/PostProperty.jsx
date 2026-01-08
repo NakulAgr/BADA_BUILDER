@@ -10,6 +10,7 @@ import SubscriptionGuard from '../components/SubscriptionGuard/SubscriptionGuard
 import SubscriptionService from '../services/subscriptionService';
 import { formatDate } from '../utils/dateFormatter';
 import PropertyTemplateEditor from '../components/PropertyTemplateEditor/PropertyTemplateEditor';
+import { compressImage } from '../utils/imageCompressor';
 import './PostProperty.css';
 
 // --- Cloudinary Configuration ---
@@ -574,6 +575,7 @@ const PostProperty = () => {
     await handleFinalSubmit(finalData);
   };
 
+
   const handleFinalSubmit = async (dataOverride = null) => {
     const activeData = dataOverride || formData;
 
@@ -581,13 +583,73 @@ const PostProperty = () => {
     setLoading(true);
 
     try {
-      let imageUrl = '';
+      // --- OPTIMIZATION START: Image Compression & Parallel Uploads ---
 
-      // Upload Main Cover Image
+      // 1. Prepare files and Compress
+      let compressedCoverFile = null;
       if (imageFile) {
-        console.log('📸 Uploading image to Cloudinary...');
-        imageUrl = await uploadToCloudinary(imageFile);
+        // Only compress if it's a new file (not already uploaded/url)
+        console.log('📉 Compressing cover image...');
+        try {
+          compressedCoverFile = await compressImage(imageFile);
+        } catch (err) {
+          console.warn('Cover compression failed, using original', err);
+          compressedCoverFile = imageFile;
+        }
       }
+
+      let filesToUpload = [];
+      if (activeData.extraFiles && activeData.extraFiles.length > 0) {
+        filesToUpload = activeData.extraFiles;
+      } else if (userType === 'developer') {
+        filesToUpload = projectImages;
+      }
+
+      let compressedExtraFiles = [];
+      if (filesToUpload.length > 0) {
+        console.log(`📉 Compressing ${filesToUpload.length} extra images...`);
+        compressedExtraFiles = await Promise.all(
+          filesToUpload.map(async (file) => {
+            try { return await compressImage(file); }
+            catch (e) { return file; }
+          })
+        );
+      }
+
+      // 2. Parallel Uploads (Cover + Extras at same time)
+      console.log('☁️ Uploading images in parallel...');
+
+      const uploadPromises = [];
+
+      // Promise for Cover
+      let coverUploadPromise = Promise.resolve('');
+      if (compressedCoverFile) {
+        coverUploadPromise = uploadToCloudinary(compressedCoverFile).catch(err => {
+          console.error("Cover upload failed", err);
+          throw new Error("Cover image upload failed");
+        });
+      }
+
+      // Promise for Extras
+      let extrasUploadPromise = Promise.resolve([]);
+      if (compressedExtraFiles.length > 0) {
+        extrasUploadPromise = Promise.all(
+          compressedExtraFiles.map(file => uploadToCloudinary(file))
+        ).catch(err => {
+          console.error("Extra images upload failed", err);
+          throw new Error("Some gallery images failed to upload");
+        });
+      }
+
+      // Wait for all uploads
+      const [imageUrl, extraImageUrls] = await Promise.all([
+        coverUploadPromise,
+        extrasUploadPromise
+      ]);
+
+      console.log('✅ All uploads complete.');
+
+      // --- END OPTIMIZATION ---
 
       // Prepare base property data
       const propertyData = {
@@ -606,7 +668,6 @@ const PostProperty = () => {
 
       // Subscription logic...
       try {
-        // ... existing subscription fetch ...
         const userDocRef = doc(db, 'users', currentUser.uid);
         const userDoc = await getDoc(userDocRef);
         if (userDoc.exists() && userDoc.data().subscription_expiry) {
@@ -616,32 +677,11 @@ const PostProperty = () => {
 
       if (showBhkType && formData.bhk) propertyData.bhk = formData.bhk;
 
-      // --- Handle Multiple Images (Developer OR Template Extras) ---
-      let filesToUpload = [];
-      if (activeData.extraFiles && activeData.extraFiles.length > 0) {
-        filesToUpload = activeData.extraFiles;
-      } else if (userType === 'developer') {
-        filesToUpload = projectImages; // Fallback to state for standard form
-      }
-
-      let extraImageUrls = [];
-      if (filesToUpload.length > 0) {
-        console.log(`📸 Uploading ${filesToUpload.length} extra/project images...`);
-        extraImageUrls = await Promise.all(
-          filesToUpload.map(async (file) => {
-            try { return await uploadToCloudinary(file); }
-            catch (err) { throw new Error('Failed to upload extra images.'); }
-          })
-        );
-      }
-
       // Map images to schema
       if (extraImageUrls.length > 0) {
         propertyData.images = extraImageUrls;
         propertyData.project_images = extraImageUrls; // Maintain compatibility
-        // If no cover image was set differently, maybe use first? 
-        // But we generally have imageFile for cover.
-        // If imageUrl is empty but we have extras, use first extra as cover?
+        // Fallback for cover if missing
         if (!imageUrl && extraImageUrls.length > 0) {
           propertyData.image_url = extraImageUrls[0];
         }

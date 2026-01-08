@@ -526,6 +526,8 @@ img {
 .line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
+  /* Standard property */
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -533,6 +535,8 @@ img {
 .line-clamp-3 {
   display: -webkit-box;
   -webkit-line-clamp: 3;
+  line-clamp: 3;
+  /* Standard property */
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -577,8 +581,10 @@ img {
   position: absolute;
   top: 2rem;
   right: 2rem;
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
+  background: #ffffff;
+  /* High contrast white background */
+  color: #000000;
+  /* Black icon */
   border: none;
   border-radius: 50%;
   width: 3.5rem;
@@ -589,10 +595,11 @@ img {
   cursor: pointer;
   z-index: 1010;
   transition: all 0.2s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .fullscreen-close-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: #f3f4f6;
   transform: scale(1.1);
 }
 
@@ -660,15 +667,20 @@ img {
 /* Mobile Adjustments for Full Screen */
 @media (max-width: 768px) {
   .fullscreen-close-btn {
-    top: 1rem;
-    right: 1rem;
-    width: 2.5rem;
-    height: 2.5rem;
+    top: 1.5rem;
+    right: 1.5rem;
+    width: 44px;
+    /* Ensure 44px min touch target */
+    height: 44px;
+    background: #ffffff;
+    color: #000000;
   }
 
   .fullscreen-close-btn svg {
-    width: 20px;
-    height: 20px;
+    width: 32px;
+    height: 32px;
+    stroke-width: 6px;
+    /* Bold stroke for visibility */
   }
 
   .fullscreen-nav-btn {
