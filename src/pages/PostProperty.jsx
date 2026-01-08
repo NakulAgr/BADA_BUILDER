@@ -48,6 +48,63 @@ const uploadToCloudinary = async (file) => {
 };
 
 
+
+const NewPropertySelectionContent = ({ userType, setUserType, setSelectedPropertyFlow, handleCreateNewProperty }) => (
+  <>
+    <div className="selected-type-badge">
+      <span>
+        {userType === 'individual' ? '👤 Individual Owner' : '🏢 Developer'}
+      </span>
+      <button
+        type="button"
+        className="change-type-btn"
+        onClick={() => { setUserType(null); setSelectedPropertyFlow(null); }}
+      >
+        Change User Type
+      </button>
+    </div>
+    <div className="selected-flow-badge">
+      <span>✨ Create New Property</span>
+      <button
+        type="button"
+        className="change-type-btn"
+        onClick={() => setSelectedPropertyFlow(null)}
+      >
+        Change Flow
+      </button>
+    </div>
+
+    <h2>How would you like to post?</h2>
+    <div className="property-flow-cards">
+      <motion.div
+        className="property-flow-card"
+        whileHover={{ y: -8, scale: 1.02 }}
+        onClick={handleCreateNewProperty}
+      >
+        <div className="card-icon">📝</div>
+        <h3>Fill Standard Form</h3>
+        <p>Enter details manually step-by-step</p>
+        <button type="button" className="select-type-btn">
+          Select
+        </button>
+      </motion.div>
+
+      <motion.div
+        className="property-flow-card"
+        whileHover={{ y: -8, scale: 1.02 }}
+        onClick={() => setSelectedPropertyFlow('template')}
+      >
+        <div className="card-icon">📋</div>
+        <h3>Post Using Template</h3>
+        <p>Use a pre-filled, editable text template</p>
+        <button type="button" className="select-type-btn">
+          Select
+        </button>
+      </motion.div>
+    </div>
+  </>
+);
+
 const PostProperty = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -181,42 +238,11 @@ const PostProperty = () => {
   }, [selectedPropertyFlow, existingProperties]);
 
   const handleCreateNewProperty = async () => {
-    console.log('🔍 User wants to create new property...');
+    console.log('🔍 User wants to fill standard form...');
+    // Developer credits are checked at flow entry
+    // Individual subscription is checked at flow entry (via Guard)
 
-    if (userType === "developer") {
-      setLoading(true);
-      try {
-        const userDocRef = doc(db, 'users', currentUser.uid);
-        const userDoc = await getDoc(userDocRef);
-
-        if (userDoc.exists()) {
-          const userData = userDoc.data();
-          const credits = userData.property_credits || 0;
-
-          // Also check for active status just in case
-          // const isActive = userData.subscription_status === 'active' || userData.plan_status === 'active';
-
-          if (credits <= 0) {
-            alert('You do not have enough credits to post a property. Please purchase a developer subscription plan.');
-            navigate('/developer-plan');
-            return;
-          }
-        } else {
-          alert('User profile not found. Please contact support.');
-          return;
-        }
-      } catch (error) {
-        console.error('Error verifying developer credits:', error);
-        alert('Failed to verify subscription. Please try again.');
-        return;
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    // Always proceed to the property creation flow
-    // SubscriptionGuard will handle subscription verification for individual users
-    console.log('✅ Proceeding to property creation flow');
+    console.log('✅ Proceeding to standard form');
     setSelectedPropertyFlow('new');
   };
 
@@ -682,6 +708,21 @@ const PostProperty = () => {
 
 
 
+  const handleFlowEntry = (flow) => {
+    if (flow === 'new_selection' && userType === 'developer') {
+      if (developerCredits === null) {
+        alert('Please wait, checking developer credits...');
+        return;
+      }
+      if (developerCredits <= 0) {
+        alert('You do not have enough credits to post a property. Please purchase a developer subscription plan.');
+        navigate('/developer-plan');
+        return;
+      }
+    }
+    setSelectedPropertyFlow(flow);
+  };
+
   return (
     <div className="post-property-page">
       <motion.div
@@ -757,7 +798,7 @@ const PostProperty = () => {
               <motion.div
                 className="property-flow-card"
                 whileHover={{ y: -8, scale: 1.02 }}
-                onClick={() => setSelectedPropertyFlow('new_selection')}
+                onClick={() => handleFlowEntry('new_selection')}
               >
                 <div className="card-icon">✨</div>
                 <h3>Create New Property</h3>
@@ -786,57 +827,28 @@ const PostProperty = () => {
         {/* Step 2.5: Sub-selection for New Property (Form vs Template) */}
         {userType && selectedPropertyFlow === 'new_selection' && (
           <div className="property-flow-selection">
-            <div className="selected-type-badge">
-              <span>
-                {userType === 'individual' ? '👤 Individual Owner' : '🏢 Developer'}
-              </span>
-              <button
-                type="button"
-                className="change-type-btn"
-                onClick={() => { setUserType(null); setSelectedPropertyFlow(null); }}
+            {/* Wrap in SubscriptionGuard for Individuals */}
+            {userType === 'individual' ? (
+              <SubscriptionGuard
+                userType="individual"
+                action="post a property"
+                onSubscriptionVerified={handleSubscriptionVerified}
               >
-                Change User Type
-              </button>
-            </div>
-            <div className="selected-flow-badge">
-              <span>✨ Create New Property</span>
-              <button
-                type="button"
-                className="change-type-btn"
-                onClick={() => setSelectedPropertyFlow(null)}
-              >
-                Change Flow
-              </button>
-            </div>
-
-            <h2>How would you like to post?</h2>
-            <div className="property-flow-cards">
-              <motion.div
-                className="property-flow-card"
-                whileHover={{ y: -8, scale: 1.02 }}
-                onClick={handleCreateNewProperty}
-              >
-                <div className="card-icon">📝</div>
-                <h3>Fill Standard Form</h3>
-                <p>Enter details manually step-by-step</p>
-                <button type="button" className="select-type-btn">
-                  Select
-                </button>
-              </motion.div>
-
-              <motion.div
-                className="property-flow-card"
-                whileHover={{ y: -8, scale: 1.02 }}
-                onClick={() => setSelectedPropertyFlow('template')}
-              >
-                <div className="card-icon">📋</div>
-                <h3>Post Using Template</h3>
-                <p>Use a pre-filled, editable text template</p>
-                <button type="button" className="select-type-btn">
-                  Select
-                </button>
-              </motion.div>
-            </div>
+                <NewPropertySelectionContent
+                  userType={userType}
+                  setUserType={setUserType}
+                  setSelectedPropertyFlow={setSelectedPropertyFlow}
+                  handleCreateNewProperty={handleCreateNewProperty}
+                />
+              </SubscriptionGuard>
+            ) : (
+              <NewPropertySelectionContent
+                userType={userType}
+                setUserType={setUserType}
+                setSelectedPropertyFlow={setSelectedPropertyFlow}
+                handleCreateNewProperty={handleCreateNewProperty}
+              />
+            )}
           </div>
         )}
 
