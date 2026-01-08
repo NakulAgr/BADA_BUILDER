@@ -4,25 +4,23 @@
     /* Container styles can be mostly inherited from parent or handled by Tailwind classes in JSX */
 }
 
-/* Custom placeholder color for inputs to look decent on dark/light mode if raw CSS used */
+/* Custom placeholder color for inputs to look decent on light mode */
 ::placeholder {
-    color: #475569;
+    color: #9ca3af;
     opacity: 1;
-    /* Firefox */
 }
 
-/* Ensure inputs in the 'dark' themed details page have visible placeholders */
+/* Ensure inputs have visible placeholders */
 input::placeholder,
 textarea::placeholder {
-    color: #6b7280;
-    /* gray-500 */
+    color: #9ca3af;
 }
 
-/* Focus styles for inputs to indicating editability */
+/* Focus styles for inputs */
 input:focus,
 textarea:focus,
 select:focus {
-    background-color: rgba(255, 255, 255, 0.05);
+    background-color: rgba(255, 255, 255, 0.8);
 }
 
 /* Hide scrollbar for textarea but keep function */
@@ -30,8 +28,8 @@ textarea {
     resize: none;
 }
 
-/* Override for select dropdowns to have dark background */
+/* Override for select dropdowns to have light background */
 select option {
-    background-color: #0f172a;
-    color: white;
+    background-color: #ffffff;
+    color: #1f2937;
 }

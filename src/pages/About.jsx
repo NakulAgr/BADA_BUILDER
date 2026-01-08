@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 
 // Import creatives (just add more imports if needed)
 import liveGroupingImg from '../assets/creatives/live_grouping.png';
@@ -7,7 +8,9 @@ import individualListingImg from '../assets/creatives/individual_listing.png';
 import developerListingImg from '../assets/creatives/developer_listing.png';
 
 /* ---------- SIMPLE CREATIVE CARD ---------- */
-const CreativeCard = ({ title, image }) => {
+const CreativeCard = ({ title, image, link }) => {
+    const navigate = useNavigate();
+
     return (
         <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -15,6 +18,7 @@ const CreativeCard = ({ title, image }) => {
             viewport={{ once: true }}
             transition={{ duration: 0.4 }}
             whileHover={{ y: -8 }}
+            onClick={() => link && navigate(link)}
             className="bg-white rounded-2xl shadow-lg hover:shadow-2xl overflow-hidden cursor-pointer border border-gray-100"
         >
             <div className="aspect-square overflow-hidden">
@@ -59,16 +63,19 @@ const About = () => {
                     <CreativeCard
                         title="Live Grouping"
                         image={liveGroupingImg}
+                        link="/exhibition/live-grouping"
                     />
 
                     <CreativeCard
                         title="Individual Property Listings"
                         image={individualListingImg}
+                        link="/exhibition/individual"
                     />
 
                     <CreativeCard
                         title="Developer Property Listings"
                         image={developerListingImg}
+                        link="/exhibition/developer"
                     />
 
 

@@ -14,12 +14,14 @@
   font-size: 3rem;
   margin-bottom: 1rem;
   font-weight: 700;
+  color: #ffffff;
 }
 
 .hero-subtitle {
   font-size: 1.3rem;
   margin-bottom: 2rem;
-  opacity: 0.95;
+  opacity: 1;
+  color: #ffffff;
 }
 
 .hero-features {
@@ -44,13 +46,19 @@
   font-size: 1.2rem;
 }
 
-.how-it-works, .benefits-section-100, .properties-section-100, .faq-section-100 {
+.how-it-works,
+.benefits-section-100,
+.properties-section-100,
+.faq-section-100 {
   max-width: 1200px;
   margin: 4rem auto;
   padding: 0 2rem;
 }
 
-.how-it-works h2, .benefits-section-100 h2, .properties-section-100 h2, .faq-section-100 h2 {
+.how-it-works h2,
+.benefits-section-100 h2,
+.properties-section-100 h2,
+.faq-section-100 h2 {
   text-align: center;
   font-size: 2.5rem;
   color: #58335e;
@@ -162,12 +170,14 @@
   transition: all 0.3s;
 }
 
-.filter-btn-100:hover, .filter-btn-100.active {
+.filter-btn-100:hover,
+.filter-btn-100.active {
   background: #58335e;
   color: white;
 }
 
-.loading-state, .empty-state {
+.loading-state,
+.empty-state {
   text-align: center;
   padding: 4rem 2rem;
 }
@@ -183,8 +193,13 @@
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .properties-grid-100 {

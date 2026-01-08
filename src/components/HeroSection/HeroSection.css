@@ -1,5 +1,5 @@
 .hero-section {
-  background: linear-gradient(135deg, #667eea 0%, #dfd7e7 50%, #b91cd2 100%);
+  background: linear-gradient(135deg, #667eea 0%, #dfd7e7 50%, #cf8bda 100%);
   background-size: cover;
   background-position: center;
   padding: 100px 20px 80px;
@@ -31,6 +31,7 @@
   font-size: 56px;
   font-weight: 800;
   margin-bottom: 16px;
+  color: #ffffff;
   text-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   line-height: 1.2;
 }
@@ -38,7 +39,8 @@
 .hero-content p {
   font-size: 20px;
   margin-bottom: 40px;
-  opacity: 0.95;
+  opacity: 1;
+  color: #ffffff;
   font-weight: 400;
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }

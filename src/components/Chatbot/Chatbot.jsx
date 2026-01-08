@@ -75,7 +75,7 @@ const Chatbot = () => {
     if (message.includes('location') || message.includes('where') || message.includes('city') || message.includes('area')) {
       const cities = ['mumbai', 'delhi', 'bangalore', 'hyderabad', 'pune', 'ahmedabad', 'chennai', 'kolkata'];
       const foundCity = cities.find(city => message.includes(city));
-      
+
       if (foundCity) {
         return {
           text: `Great choice! ${foundCity.charAt(0).toUpperCase() + foundCity.slice(1)} has many excellent properties. Let me show you available options.`,
@@ -297,7 +297,7 @@ const Chatbot = () => {
                   <h3>Bada Builder Assistant</h3>
                   <p className="status">
                     <span className="status-dot"></span>
-                    Online
+                    <span className="status-text">Online</span>
                   </p>
                 </div>
               </div>
@@ -341,7 +341,7 @@ const Chatbot = () => {
                   {msg.type === 'user' && <div className="message-avatar user">👤</div>}
                 </motion.div>
               ))}
-              
+
               {isTyping && (
                 <motion.div
                   className="message bot"

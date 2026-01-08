@@ -1,55 +1,88 @@
-/* project-details.css */
+/* project-details.css - Redesigned Light Theme */
 
-/* Global overrides or additions */
+:root {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f9fafb;
+  --text-primary: #2c3e50;
+  --accent-color: #1e90ff;
+}
 
-/* Brochure Viewer (Optional style for iframe) */
+.project-details-container {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  min-height: 100vh;
+}
+
+.ui-bg {
+  background-color: var(--bg-primary);
+  border: 1px solid #e5e7eb;
+  border-radius: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
 .brochure-viewer {
-  border: 2px solid #3a3a3a;
-  border-radius: 0.5rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 1rem;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
-/* Callback button hover enhancement */
 .request-callback-btn {
-  transition: all 0.3s ease;
+  background-color: var(--accent-color) !important;
+  color: white !important;
+  font-weight: 700;
+  border-radius: 0.75rem;
+  transition: all 0.2s ease;
 }
 
 .request-callback-btn:hover {
-  background-color: #1e40af; /* darker blue */
+  background-color: #1c86ee !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(30, 144, 255, 0.3);
 }
 
-.ui-bg{
-  border: 3px solid #474545;
-  background-color: #080918;
-}
-
-/* Floor plan card custom hover effect */
 .floor-plan-card {
-  transition: transform 0.3s ease;
+  transition: all 0.3s ease;
+  border: 1px solid #e5e7eb;
+  border-radius: 1rem;
+  overflow: hidden;
+  background: white;
 }
 
 .floor-plan-card:hover {
-  transform: scale(1.02);
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+  border-color: var(--accent-color);
 }
 
-/* Facility icons styling (if you use icons later) */
-.facility-icon {
-  width: 40px;
-  height: 40px;
-  margin-bottom: 0.5rem;
-}
-
-/* Location cards */
 .location-card {
-  border-radius: 0.5rem;
-  transition: box-shadow 0.2s ease;
+  border: 1px solid #e5e7eb;
+  border-radius: 1rem;
+  transition: all 0.2s ease;
+  background: white;
+  padding: 1.5rem;
 }
 
 .location-card:hover {
-  box-shadow: 0 4px 14px rgba(174, 174, 174, 0.07);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+  border-color: var(--accent-color);
 }
 
-/* Responsive fixes for brochure image */
+.facility-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  padding: 1rem;
+  border-radius: 1rem;
+  text-align: center;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.facility-card:hover {
+  border-color: var(--accent-color);
+  background: #eff6ff;
+  transform: scale(1.05);
+}
+
 @media (max-width: 640px) {
   .brochure-viewer {
     height: 400px;

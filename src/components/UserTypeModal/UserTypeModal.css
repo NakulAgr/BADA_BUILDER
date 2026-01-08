@@ -29,23 +29,43 @@
   position: absolute;
   top: 20px;
   right: 20px;
-  background: #f3f4f6;
-  border: none;
+  background: #d1d5db;
+  /* Darker gray background */
+  border: 2px solid #9ca3af;
+  /* Darker border */
   border-radius: 50%;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.3s;
-  color: #666;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  /* Only animate colors, no movement */
+  color: #000000;
+  /* Pure black */
+  z-index: 100;
+  font-size: 32px;
+  /* Large text size */
+  line-height: 1;
+  /* Reset line height */
+  padding: 0;
+  /* Remove any padding that might distort shape */
 }
 
+/* Removed SVG styles as we switched to text */
+
 .modal-close-btn:hover {
-  background: #e5e7eb;
-  color: #1a1a1a;
-  transform: rotate(90deg);
+  background: #4b5563;
+  /* Dark gray on hover */
+  border-color: #374151;
+  color: #ffffff;
+  /* Removed transform: rotate(90deg) to stop moving */
+}
+
+.modal-close-btn:hover svg {
+  stroke: #ffffff;
+  /* White icon on hover */
 }
 
 .modal-header {
@@ -108,9 +128,12 @@
 }
 
 @keyframes bounce {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0);
   }
+
   50% {
     transform: translateY(-10px);
   }
@@ -157,7 +180,9 @@
 }
 
 @keyframes spin {
-  to { transform: translate(-50%, -50%) rotate(360deg); }
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
 }
 
 .modal-footer {

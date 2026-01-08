@@ -20,7 +20,7 @@ const UserTypeModal = ({ isOpen, onClose }) => {
 
   const handleTypeSelection = async (type) => {
     if (isChecking) return; // Prevent multiple clicks
-    
+
     setSelectedType(type);
     setIsChecking(true);
 
@@ -49,7 +49,7 @@ const UserTypeModal = ({ isOpen, onClose }) => {
   return (
     <AnimatePresence>
       <div className="user-type-modal-overlay" onClick={onClose}>
-        <motion.div 
+        <motion.div
           className="user-type-modal-content"
           initial={{ opacity: 0, scale: 0.9, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -59,9 +59,7 @@ const UserTypeModal = ({ isOpen, onClose }) => {
         >
           {/* Close Button */}
           <button className="modal-close-btn" onClick={onClose}>
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            &times;
           </button>
 
           <div className="modal-header">
@@ -70,7 +68,7 @@ const UserTypeModal = ({ isOpen, onClose }) => {
           </div>
 
           <div className="user-type-options">
-            <motion.div 
+            <motion.div
               className={`type-option-card ${selectedType === 'individual' ? 'selected' : ''} ${isChecking && selectedType === 'individual' ? 'checking' : ''}`}
               whileHover={{ y: -5, scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
@@ -89,7 +87,7 @@ const UserTypeModal = ({ isOpen, onClose }) => {
               )}
             </motion.div>
 
-            <motion.div 
+            <motion.div
               className={`type-option-card ${selectedType === 'developer' ? 'selected' : ''} ${isChecking && selectedType === 'developer' ? 'checking' : ''}`}
               whileHover={{ y: -5, scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
