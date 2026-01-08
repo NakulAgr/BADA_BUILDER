@@ -9,6 +9,7 @@ import DeveloperForm from '../components/DeveloperForm/DeveloperForm';
 import SubscriptionGuard from '../components/SubscriptionGuard/SubscriptionGuard';
 import SubscriptionService from '../services/subscriptionService';
 import { formatDate } from '../utils/dateFormatter';
+import PropertyTemplateEditor from '../components/PropertyTemplateEditor/PropertyTemplateEditor';
 import './PostProperty.css';
 
 // --- Cloudinary Configuration ---
@@ -527,32 +528,49 @@ const PostProperty = () => {
     handleFinalSubmit();
   };
 
-  const handleFinalSubmit = async () => {
-    console.log('🚀 Starting final submission...');
-    console.log('Current User:', currentUser);
-    console.log('User Type:', userType);
-    console.log('Form Data:', formData);
 
+
+  const handleTemplateSubmit = async (parsedData) => {
+    // Extract extra images if present (files)
+    const { extraImages, ...dataWithoutImages } = parsedData;
+
+    // Merge data
+    const finalData = { ...formData, ...dataWithoutImages };
+
+    // Attach files to finalData for handleFinalSubmit to clean pickup
+    if (extraImages && extraImages.length > 0) {
+      finalData.extraFiles = extraImages;
+    }
+
+    setFormData(finalData);
+
+    console.log("📝 Submitting via Template:", finalData);
+    await handleFinalSubmit(finalData);
+  };
+
+  const handleFinalSubmit = async (dataOverride = null) => {
+    const activeData = dataOverride || formData;
+
+    console.log('🚀 Starting final submission...');
     setLoading(true);
 
     try {
       let imageUrl = '';
 
-      // Upload image to Cloudinary if a file is selected
+      // Upload Main Cover Image
       if (imageFile) {
         console.log('📸 Uploading image to Cloudinary...');
         imageUrl = await uploadToCloudinary(imageFile);
-        console.log('✅ Image uploaded successfully:', imageUrl);
       }
 
-      // Prepare base property data for Firestore
+      // Prepare base property data
       const propertyData = {
-        title: userType === 'developer' ? (formData.projectName || '') : (formData.title || ''),
-        type: userType === 'developer' ? (formData.schemeType || '') : (formData.type || ''),
-        location: userType === 'developer' ? (formData.projectLocation || '') : (formData.location || ''),
-        price: userType === 'developer' ? `₹${formData.basePrice} - ₹${formData.maxPrice}` : (formData.price || ''),
-        description: formData.description || '',
-        facilities: formData.facilities ? formData.facilities.split(',').map(f => f.trim()).filter(f => f) : [],
+        title: userType === 'developer' ? (activeData.projectName || '') : (activeData.title || ''),
+        type: userType === 'developer' ? (activeData.schemeType || '') : (activeData.type || ''),
+        location: userType === 'developer' ? (activeData.projectLocation || '') : (activeData.location || ''),
+        price: userType === 'developer' ? `₹${activeData.basePrice} - ₹${activeData.maxPrice}` : (activeData.price || ''),
+        description: activeData.description || '',
+        facilities: activeData.facilities ? (Array.isArray(activeData.facilities) ? activeData.facilities : activeData.facilities.split(',').map(f => f.trim()).filter(f => f)) : [],
         image_url: imageUrl,
         user_id: currentUser.uid || '',
         user_type: userType || 'individual',
@@ -560,137 +578,109 @@ const PostProperty = () => {
         status: 'active'
       };
 
-      // Fetch user's current subscription expiry and add to property
+      // Subscription logic...
       try {
+        // ... existing subscription fetch ...
         const userDocRef = doc(db, 'users', currentUser.uid);
         const userDoc = await getDoc(userDocRef);
-        if (userDoc.exists()) {
-          const userData = userDoc.data();
-          if (userData.subscription_expiry) {
-            propertyData.subscription_expiry = userData.subscription_expiry;
-          }
+        if (userDoc.exists() && userDoc.data().subscription_expiry) {
+          propertyData.subscription_expiry = userDoc.data().subscription_expiry;
         }
-      } catch (error) {
-        console.error('Error fetching user subscription:', error);
+      } catch (e) { console.error(e); }
+
+      if (showBhkType && formData.bhk) propertyData.bhk = formData.bhk;
+
+      // --- Handle Multiple Images (Developer OR Template Extras) ---
+      let filesToUpload = [];
+      if (activeData.extraFiles && activeData.extraFiles.length > 0) {
+        filesToUpload = activeData.extraFiles;
+      } else if (userType === 'developer') {
+        filesToUpload = projectImages; // Fallback to state for standard form
       }
 
-      // Only add BHK if applicable (Individual flow usually)
-      if (showBhkType && formData.bhk) {
-        propertyData.bhk = formData.bhk;
-      }
-
-      if (userType === 'developer') {
-        console.log('📸 Uploading project images...');
-        // Upload multiple project images
-        const projectImageUrls = await Promise.all(
-          projectImages.map(async (file) => {
-            try {
-              return await uploadToCloudinary(file);
-            } catch (err) {
-              console.error('Failed to upload one of the project images:', err);
-              throw new Error('One or more project images failed to upload. Please check your connection.');
-            }
+      let extraImageUrls = [];
+      if (filesToUpload.length > 0) {
+        console.log(`📸 Uploading ${filesToUpload.length} extra/project images...`);
+        extraImageUrls = await Promise.all(
+          filesToUpload.map(async (file) => {
+            try { return await uploadToCloudinary(file); }
+            catch (err) { throw new Error('Failed to upload extra images.'); }
           })
         );
+      }
 
-        propertyData.project_images = projectImageUrls;
-        propertyData.images = projectImageUrls; // Also save to 'images' for PropertyDetails compatibility
-        propertyData.image_url = projectImageUrls[0] || ''; // Set first image as main thumbnail
-
-        // Brochure (PDF)
-        if (brochureFile) {
-          try {
-            propertyData.brochure_url = await uploadToCloudinary(brochureFile);
-          } catch (err) {
-            console.error('Failed to upload brochure:', err);
-            // Non-critical failure for brochure? User might want it fixed though.
-            throw new Error('Failed to upload brochure. Please try again.');
-          }
+      // Map images to schema
+      if (extraImageUrls.length > 0) {
+        propertyData.images = extraImageUrls;
+        propertyData.project_images = extraImageUrls; // Maintain compatibility
+        // If no cover image was set differently, maybe use first? 
+        // But we generally have imageFile for cover.
+        // If imageUrl is empty but we have extras, use first extra as cover?
+        if (!imageUrl && extraImageUrls.length > 0) {
+          propertyData.image_url = extraImageUrls[0];
         }
+      }
 
-        // Additional Developer specific fields (consistent with existing logic)
-        propertyData.scheme_type = formData.schemeType || '';
-        propertyData.residential_options = formData.residentialOptions || [];
-        propertyData.commercial_options = formData.commercialOptions || [];
-        propertyData.base_price = formData.basePrice || '';
-        propertyData.max_price = formData.maxPrice || '';
-        propertyData.project_location = formData.projectLocation || '';
-        propertyData.amenities = formData.amenities || [];
-        propertyData.owner_name = formData.ownerName || '';
-        propertyData.company_name = formData.ownerName || ''; // For ByDeveloper.jsx compatibility
-        propertyData.possession_status = formData.possessionStatus || '';
-        propertyData.rera_status = formData.reraStatus || 'No';
-        propertyData.rera_number = formData.reraNumber || '';
-        propertyData.project_name = formData.projectName || '';
-        propertyData.project_stats = formData.projectStats || { towers: '', floors: '', units: '', area: '' };
-        propertyData.contact_phone = formData.contactPhone || '';
-        propertyData.completion_date = formData.completionDate || '';
+      // Developer fields...
+      if (userType === 'developer') {
+        // ... existing dev fields mapping ...
+        // Note: activeData contains the merged template data which has these fields
+        if (brochureFile) propertyData.brochure_url = await uploadToCloudinary(brochureFile);
 
-        // Developer Property Logic: 12 months validity
+        propertyData.scheme_type = activeData.schemeType || '';
+        propertyData.residential_options = activeData.residentialOptions || [];
+        propertyData.commercial_options = activeData.commercialOptions || [];
+        propertyData.base_price = activeData.basePrice || activeData.minPrice || ''; // handle key vars
+        propertyData.max_price = activeData.maxPrice || '';
+        propertyData.project_location = activeData.projectLocation || '';
+        propertyData.amenities = activeData.amenities || [];
+        propertyData.owner_name = activeData.ownerName || '';
+        propertyData.company_name = activeData.ownerName || '';
+        propertyData.possession_status = activeData.possessionStatus || '';
+        propertyData.rera_status = activeData.reraStatus || 'No';
+        propertyData.rera_number = activeData.reraNumber || '';
+        propertyData.project_name = activeData.projectName || '';
+        propertyData.project_stats = activeData.projectStats || { towers: '', floors: '', units: '', area: '' };
+        propertyData.contact_phone = activeData.contactPhone || '';
+        propertyData.completionDate = activeData.completionDate || '';
+
         const expiryDate = new Date();
         expiryDate.setFullYear(expiryDate.getFullYear() + 1);
         propertyData.expiry_date = expiryDate.toISOString();
+      } else {
+        // Pass owner/contact for Individual too if template sent them
+        if (activeData.ownerName) propertyData.owner_name = activeData.ownerName;
+        if (activeData.contactPhone) propertyData.contact_phone = activeData.contactPhone;
       }
 
       console.log('💾 Saving to Firestore...', propertyData);
-
-      // Save document to Firestore
       const docRef = await addDoc(collection(db, 'properties'), propertyData);
       const propertyId = docRef.id;
 
-      console.log('✅ Property posted successfully with ID:', propertyId);
-
-      // Handle post-creation updates (Credits/Subscription)
+      // ... Credits/Subscription deduction (Reuse existing logic block if possible or copy) ...
       if (userType === 'developer') {
-        console.log('📉 Deducting developer credit...');
         const userRef = doc(db, 'users', currentUser.uid);
-        await updateDoc(userRef, {
-          property_credits: increment(-1)
-        });
-        console.log('✅ Credit deducted');
+        await updateDoc(userRef, { property_credits: increment(-1) });
       } else if (userType === 'individual' && currentUser?.uid) {
-        // For individual users, mark subscription as used
-        console.log('📝 Marking subscription as used...');
-        const subscriptionMarked = await SubscriptionService.markSubscriptionUsed(
-          currentUser.uid,
-          propertyId
-        );
-
-        if (subscriptionMarked) {
-          console.log('✅ Subscription marked as used successfully');
-        } else {
-          console.warn('⚠️ Failed to mark subscription as used, but property was posted');
-        }
+        await SubscriptionService.markSubscriptionUsed(currentUser.uid, propertyId);
       }
 
       setLoading(false);
-      setShowDisclaimer(false); // Close disclaimer if open
-      // alert(`Property posted successfully! You can now view it in the ${userType === 'developer' ? 'Developer' : 'Individual'} Exhibition.`);
-
-      // Navigate to the appropriate exhibition page based on user type
+      setShowDisclaimer(false);
       setTimeout(() => {
-        if (userType === 'developer') {
-          navigate('/exhibition/developer');
-        } else {
-          navigate('/exhibition/individual');
-        }
+        navigate(userType === 'developer' ? '/exhibition/developer' : '/exhibition/individual');
       }, 500);
 
     } catch (error) {
       console.error('❌ Error posting property:', error);
-
       setLoading(false);
-
-      let errorMessage = 'Failed to post property. ';
-      if (error.message.includes('Cloudinary')) {
-        errorMessage += 'The image upload failed. Please try again or use a different image.';
-      } else {
-        errorMessage += 'Please check your connection and try again.';
-      }
-
-      alert(errorMessage);
+      alert('Failed to post property: ' + error.message);
     }
   };
+
+
+
+
 
   return (
     <div className="post-property-page">
@@ -767,7 +757,7 @@ const PostProperty = () => {
               <motion.div
                 className="property-flow-card"
                 whileHover={{ y: -8, scale: 1.02 }}
-                onClick={handleCreateNewProperty}
+                onClick={() => setSelectedPropertyFlow('new_selection')}
               >
                 <div className="card-icon">✨</div>
                 <h3>Create New Property</h3>
@@ -793,8 +783,98 @@ const PostProperty = () => {
           </div>
         )}
 
+        {/* Step 2.5: Sub-selection for New Property (Form vs Template) */}
+        {userType && selectedPropertyFlow === 'new_selection' && (
+          <div className="property-flow-selection">
+            <div className="selected-type-badge">
+              <span>
+                {userType === 'individual' ? '👤 Individual Owner' : '🏢 Developer'}
+              </span>
+              <button
+                type="button"
+                className="change-type-btn"
+                onClick={() => { setUserType(null); setSelectedPropertyFlow(null); }}
+              >
+                Change User Type
+              </button>
+            </div>
+            <div className="selected-flow-badge">
+              <span>✨ Create New Property</span>
+              <button
+                type="button"
+                className="change-type-btn"
+                onClick={() => setSelectedPropertyFlow(null)}
+              >
+                Change Flow
+              </button>
+            </div>
+
+            <h2>How would you like to post?</h2>
+            <div className="property-flow-cards">
+              <motion.div
+                className="property-flow-card"
+                whileHover={{ y: -8, scale: 1.02 }}
+                onClick={handleCreateNewProperty}
+              >
+                <div className="card-icon">📝</div>
+                <h3>Fill Standard Form</h3>
+                <p>Enter details manually step-by-step</p>
+                <button type="button" className="select-type-btn">
+                  Select
+                </button>
+              </motion.div>
+
+              <motion.div
+                className="property-flow-card"
+                whileHover={{ y: -8, scale: 1.02 }}
+                onClick={() => setSelectedPropertyFlow('template')}
+              >
+                <div className="card-icon">📋</div>
+                <h3>Post Using Template</h3>
+                <p>Use a pre-filled, editable text template</p>
+                <button type="button" className="select-type-btn">
+                  Select
+                </button>
+              </motion.div>
+            </div>
+          </div>
+        )}
+
         {/* Step 3: Property Creation Form */}
-        {(userType && selectedPropertyFlow === 'new') || (editingProperty && selectedPropertyFlow === 'existing') ? (
+        {(userType && selectedPropertyFlow === 'template') ? (
+          <div className="template-editor-wrapper">
+            <div className="selected-type-badge">
+              <span>
+                {userType === 'individual' ? '👤 Individual Owner' : '🏢 Developer'}
+              </span>
+              <button
+                type="button"
+                className="change-type-btn"
+                onClick={() => { setUserType(null); setSelectedPropertyFlow(null); setEditingProperty(null); }}
+              >
+                Change User Type
+              </button>
+            </div>
+            <div className="selected-flow-badge">
+              <span>📋 Post Using Template</span>
+              <button
+                type="button"
+                className="change-type-btn"
+                onClick={() => { setSelectedPropertyFlow('new_selection'); }}
+              >
+                Change Method
+              </button>
+            </div>
+
+            <PropertyTemplateEditor
+              userType={userType}
+              onCancel={() => setSelectedPropertyFlow(null)}
+              onSubmit={handleTemplateSubmit}
+              handleImageChange={handleImageChange}
+              imagePreview={imagePreview}
+            />
+          </div>
+        ) : (userType && selectedPropertyFlow === 'new') || (editingProperty && selectedPropertyFlow === 'existing') ? (
           <>
             {/* For Individual users creating new properties, enforce subscription */}
             {userType === 'individual' && selectedPropertyFlow === 'new' && !editingProperty ? (
@@ -818,9 +898,9 @@ const PostProperty = () => {
                   <button
                     type="button"
                     className="change-type-btn"
-                    onClick={() => { setSelectedPropertyFlow(null); setEditingProperty(null); }}
+                    onClick={() => { setSelectedPropertyFlow('new_selection'); setEditingProperty(null); }}
                   >
-                    Change Flow
+                    Change Method
                   </button>
                 </div>
                 <p className="subtitle">Fill in the details to list your property</p>
@@ -857,9 +937,13 @@ const PostProperty = () => {
                   <button
                     type="button"
                     className="change-type-btn"
-                    onClick={() => { setSelectedPropertyFlow(null); setEditingProperty(null); }}
+                    onClick={() => {
+                      if (selectedPropertyFlow === 'new') setSelectedPropertyFlow('new_selection');
+                      else setSelectedPropertyFlow(null);
+                      setEditingProperty(null);
+                    }}
                   >
-                    Change Flow
+                    Change {selectedPropertyFlow === 'new' ? 'Method' : 'Flow'}
                   </button>
                 </div>
                 <p className="subtitle">Fill in the details to list your property</p>

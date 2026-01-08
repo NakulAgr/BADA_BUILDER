@@ -108,9 +108,12 @@
 }
 
 @keyframes pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 1;
   }
+
   50% {
     opacity: 0.5;
   }
@@ -170,6 +173,7 @@
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -240,9 +244,13 @@
 }
 
 @keyframes typing {
-  0%, 60%, 100% {
+
+  0%,
+  60%,
+  100% {
     transform: translateY(0);
   }
+
   30% {
     transform: translateY(-10px);
   }
@@ -380,13 +388,27 @@
   }
 
   .chatbot-window {
-    bottom: 0;
-    right: 0;
+    position: fixed;
+    top: 0;
     left: 0;
-    width: 100%;
-    height: 100vh;
+    right: 0;
+    bottom: 0;
+    width: auto;
+    height: 100dvh;
+    max-width: none;
+    max-height: none;
     border-radius: 0;
-    max-height: 100vh;
+    margin: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    z-index: 99999;
+  }
+
+  .chatbot-header {
+    padding-right: 60px;
+    /* Extra padding for close button visibility */
   }
 
   .chatbot-messages {
@@ -411,6 +433,7 @@
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -421,6 +444,7 @@
     transform: translateY(20px);
     opacity: 0;
   }
+
   to {
     transform: translateY(0);
     opacity: 1;
