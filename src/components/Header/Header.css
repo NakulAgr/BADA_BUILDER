@@ -1152,3 +1152,26 @@ body.mobile-menu-open {
 body.modal-open {
   overflow: hidden;
 }
+
+/* Clean Avatar Button Reset */
+.clean-avatar-btn {
+  background: transparent !important;
+  padding: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+  margin: 0 !important;
+  margin-left: -6px !important;
+  outline: none !important;
+  cursor: pointer;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: transform 0.2s ease !important;
+  border-radius: 50% !important;
+  overflow: hidden !important;
+}
+
+.clean-avatar-btn:hover {
+  transform: scale(1.05) !important;
+  background: transparent !important;
+}

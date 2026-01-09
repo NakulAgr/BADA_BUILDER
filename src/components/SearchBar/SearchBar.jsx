@@ -24,7 +24,7 @@ const SearchBar = ({ variant = 'default' }) => {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    
+
     // Build search query parameters
     const params = new URLSearchParams();
     if (searchQuery) params.append('q', searchQuery);
@@ -32,7 +32,7 @@ const SearchBar = ({ variant = 'default' }) => {
     // Only add BHK if it's applicable for the property type
     if (bhkType && showBhkType) params.append('bhk', bhkType);
     if (location) params.append('location', location);
-    
+
     // Navigate to search results page
     navigate(`/search?${params.toString()}`);
   };

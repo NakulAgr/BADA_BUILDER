@@ -6,7 +6,7 @@ import './GlobalSearchBar.css';
 const GlobalSearchBar = () => {
   const location = useLocation();
   const [serviceSearch, setServiceSearch] = useState('');
-  
+
   // Don't show on these pages
   if (location.pathname === '/search' || location.pathname === '/') {
     return null;
@@ -17,15 +17,15 @@ const GlobalSearchBar = () => {
     const handleServiceSearch = (e) => {
       e.preventDefault();
       const searchValue = serviceSearch.toLowerCase();
-      
+
       // Find all service cards
       const serviceCards = document.querySelectorAll('.service-card');
       let foundCount = 0;
-      
+
       serviceCards.forEach(card => {
         const title = card.querySelector('h3')?.textContent.toLowerCase() || '';
         const description = card.querySelector('p')?.textContent.toLowerCase() || '';
-        
+
         if (searchValue === '' || title.includes(searchValue) || description.includes(searchValue)) {
           card.style.display = 'block';
           foundCount++;
@@ -70,11 +70,11 @@ const GlobalSearchBar = () => {
                   const searchValue = e.target.value.toLowerCase();
                   const serviceCards = document.querySelectorAll('.service-card');
                   let foundCount = 0;
-                  
+
                   serviceCards.forEach(card => {
                     const title = card.querySelector('h3')?.textContent.toLowerCase() || '';
                     const description = card.querySelector('p')?.textContent.toLowerCase() || '';
-                    
+
                     if (searchValue === '' || title.includes(searchValue) || description.includes(searchValue)) {
                       card.style.display = 'block';
                       foundCount++;

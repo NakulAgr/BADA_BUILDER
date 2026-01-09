@@ -1,6 +1,6 @@
 import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, onSnapshot } from 'firebase/firestore';
 import { auth, db } from '../firebase';
 
 const AuthContext = createContext();
@@ -13,49 +13,62 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [profileLoading, setProfileLoading] = useState(false);
 
-  // Memoized function to fetch user profile
+  // No need for separate fetchUserProfile with onSnapshot
+  // We keep it for manual refresh if strictly needed, but onSnapshot handles it auto.
   const fetchUserProfile = useCallback(async (uid) => {
+    // Legacy support or manual force if needed, but onSnapshot does the work.
+    // We can just keep it as a no-op or simple getter if needed by other components.
     if (!uid) return null;
-    
     try {
-      setProfileLoading(true);
       const userDoc = await getDoc(doc(db, 'users', uid));
-      if (userDoc.exists()) {
-        const profileData = userDoc.data();
-        setUserProfile(profileData);
-        return profileData;
-      } else {
-        setUserProfile(null);
-        return null;
-      }
-    } catch (error) {
-      console.error('Error fetching user profile:', error);
-      setUserProfile(null);
+      if (userDoc.exists()) return userDoc.data();
       return null;
-    } finally {
-      setProfileLoading(false);
-    }
+    } catch (e) { console.error(e); return null; }
   }, []);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    let profileUnsubscribe;
+
+    const authUnsubscribe = onAuthStateChanged(auth, async (user) => {
       setCurrentUser(user);
-      
+
       if (user) {
-        // Only fetch profile if we don't have it or if it's a different user
-        if (!userProfile || userProfile.email !== user.email) {
-          // Fetch profile in background - don't block auth state
-          fetchUserProfile(user.uid);
-        }
+        setProfileLoading(true);
+        // Real-time listener for user profile
+        profileUnsubscribe = onSnapshot(doc(db, 'users', user.uid),
+          (docSnapshot) => {
+            if (docSnapshot.exists()) {
+              const data = docSnapshot.data();
+              console.log("👤 User Profile Updated:", data); // Debug log
+              setUserProfile(data);
+            } else {
+              console.log("⚠️ No User Profile Found");
+              setUserProfile(null);
+            }
+            setProfileLoading(false);
+          },
+          (error) => {
+            console.error("❌ Error listening to profile:", error);
+            setUserProfile(null);
+            setProfileLoading(false);
+          }
+        );
       } else {
         setUserProfile(null);
+        if (profileUnsubscribe) {
+          profileUnsubscribe();
+          profileUnsubscribe = null;
+        }
       }
-      
+
       setLoading(false);
     });
 
-    return unsubscribe;
-  }, [fetchUserProfile, userProfile]);
+    return () => {
+      authUnsubscribe();
+      if (profileUnsubscribe) profileUnsubscribe();
+    };
+  }, []);
 
   const logout = useCallback(async () => {
     try {
@@ -70,17 +83,17 @@ export const AuthProvider = ({ children }) => {
   const isSubscribed = useCallback(() => {
     console.log('🔍 Checking subscription status...');
     console.log('User Profile:', userProfile);
-    
+
     if (!userProfile) {
       console.log('❌ No user profile found');
       return false;
     }
-    
+
     if (!userProfile.is_subscribed) {
       console.log('❌ User is not subscribed');
       return false;
     }
-    
+
     // Check if subscription is still valid
     if (userProfile.subscription_expiry) {
       const expiryDate = new Date(userProfile.subscription_expiry);
@@ -89,7 +102,7 @@ export const AuthProvider = ({ children }) => {
       console.log('📅 Is valid:', isValid);
       return isValid;
     }
-    
+
     // If no expiry date, assume it's valid (lifetime subscription)
     console.log('✅ No expiry date, assuming valid subscription');
     return true;

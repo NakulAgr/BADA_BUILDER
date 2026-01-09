@@ -8,6 +8,7 @@ import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { auth } from '../../firebase';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import PreloaderLink from '../Preloader/PreloaderLink';
 import {
   FiGrid,
   FiSettings,
@@ -27,8 +28,50 @@ const longLiveItems = [
   { label: 'Post Rental Property', href: '/long-live/post' }
 ];
 
+const ProfileAvatar = ({ photo, initials, sizeClass = "w-10 h-10", fontSizeClass = "text-sm", className = "" }) => {
+  const [hasError, setHasError] = useState(false);
+
+  useEffect(() => {
+    setHasError(false);
+    if (photo) {
+      const img = new Image();
+      img.src = photo;
+      img.onerror = () => setHasError(true);
+    }
+  }, [photo]);
+
+  if (photo && !hasError) {
+    return (
+      <div
+        className={`${sizeClass} rounded-full overflow-hidden relative flex-shrink-0 ${className}`}
+        style={{
+          backgroundImage: `url("${photo}")`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat'
+        }}
+        role="img"
+        aria-label="Profile"
+      />
+    );
+  }
+
+  // Fallback to initials with custom styling that mimics .profile-avatar but supports dynamic sizing
+  return (
+    <div
+      className={`${sizeClass} rounded-full flex items-center justify-center text-white font-semibold tracking-wide border-2 border-gray-200 shadow-sm flex-shrink-0 ${className} ${fontSizeClass}`}
+      style={{
+        background: 'linear-gradient(135deg, #58335e 0%, #6d4575 100%)',
+      }}
+    >
+      {initials}
+    </div>
+  );
+};
+
 const Header = () => {
   const [showDropdown, setShowDropdown] = useState(false);
+  // ... existing state ...
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [mobileLongLiveOpen, setMobileLongLiveOpen] = useState(false);
   const [isUserTypeModalOpen, setIsUserTypeModalOpen] = useState(false);
@@ -50,6 +93,8 @@ const Header = () => {
     setIsLoggedIn(!!currentUser);
     setLoading(authLoading);
   }, [currentUser, authLoading]);
+
+  // ... existing effects ...
 
   useEffect(() => {
     return () => {
@@ -219,26 +264,32 @@ const Header = () => {
 
         {/* Desktop Navigation */}
         <nav className="flex items-center space-x-3 hidden lg:flex font-semibold text-gray-900">
-          <Link
+          <PreloaderLink
             to="/exhibition"
+            icon={<FiGrid />}
+            text="Exhibition"
             className="nav-link relative py-2 px-3 text-gray-900 hover:text-[#58335e] transition-all duration-200 after:content-[''] after:absolute after:w-0 after:h-0.5 after:bg-[#58335e] after:left-0 after:bottom-0 after:transition-all after:duration-300 hover:after:w-full whitespace-nowrap"
           >
             Exhibition
-          </Link>
+          </PreloaderLink>
 
-          <Link
+          <PreloaderLink
             to="/services"
+            icon={<FiSettings />}
+            text="Services"
             className="nav-link relative py-2 px-3 text-gray-900 hover:text-[#58335e] transition-all duration-200 after:content-[''] after:absolute after:w-0 after:h-0.5 after:bg-[#58335e] after:left-0 after:bottom-0 after:transition-all after:duration-300 hover:after:w-full whitespace-nowrap"
           >
             Services
-          </Link>
+          </PreloaderLink>
 
-          <Link
+          <PreloaderLink
             to="/short-stay"
+            icon={<FiClock />}
+            text="Short Stay"
             className="nav-link relative py-2 px-3 text-gray-900 hover:text-[#58335e] transition-all duration-200 after:content-[''] after:absolute after:w-0 after:h-0.5 after:bg-[#58335e] after:left-0 after:bottom-0 after:transition-all after:duration-300 hover:after:w-full whitespace-nowrap"
           >
             Short Stay
-          </Link>
+          </PreloaderLink>
 
           {/* Long Live Dropdown */}
           <div
@@ -256,45 +307,55 @@ const Header = () => {
             {showDropdown && (
               <div className="dropdown-menu absolute left-0 mt-1 w-64 bg-white rounded-lg shadow-xl border border-gray-200 z-20 py-2 animate-fadeIn">
                 {longLiveItems.map((item, index) => (
-                  <Link
+                  <PreloaderLink
                     key={index}
                     to={item.href}
+                    icon={<FiActivity />}
+                    text={item.label}
                     className="block px-5 py-3 text-sm text-gray-800 hover:bg-purple-50 hover:text-[#58335e] transition-all duration-150 border-l-4 border-transparent hover:border-[#58335e] font-semibold"
                   >
                     {item.label}
-                  </Link>
+                  </PreloaderLink>
                 ))}
               </div>
             )}
           </div>
 
-          <Link
+          <PreloaderLink
             to="/investments"
+            icon={<FiTrendingUp />}
+            text="Investment"
             className="nav-link relative py-2 px-3 text-gray-900 hover:text-[#58335e] transition-all duration-200 cursor-pointer after:content-[''] after:absolute after:w-0 after:h-0.5 after:bg-[#58335e] after:left-0 after:bottom-0 after:transition-all after:duration-300 hover:after:w-full whitespace-nowrap"
           >
             Investment
-          </Link>
+          </PreloaderLink>
 
-          <Link
+          <PreloaderLink
             to="/100-months"
+            icon={<FiDollarSign />}
+            text="100 Months"
             className="nav-link relative py-2 px-3 text-gray-900 hover:text-[#58335e] transition-all duration-200 after:content-[''] after:absolute after:w-0 after:h-0.5 after:bg-[#58335e] after:left-0 after:bottom-0 after:transition-all after:duration-300 hover:after:w-full whitespace-nowrap"
           >
             💰 100 Months
-          </Link>
+          </PreloaderLink>
 
-          <Link
+          <PreloaderLink
             to="/contact"
+            icon={<FiPhone />}
+            text="Contact Us"
             className="nav-link relative py-2 px-3 text-gray-900 hover:text-[#58335e] transition-all duration-200 after:content-[''] after:absolute after:w-0 after:h-0.5 after:bg-[#58335e] after:left-0 after:bottom-0 after:transition-all after:duration-300 hover:after:w-full whitespace-nowrap"
           >
             Contact Us
-          </Link>
+          </PreloaderLink>
 
-          <Link
+          <PreloaderLink
             to="/about"
+            icon={<FiUsers />}
+            text="Who are we"
             className="nav-link relative py-2 px-2 text-gray-900 hover:text-[#58335e] transition-all duration-200 after:content-[''] after:absolute after:w-0 after:h-0.5 after:bg-[#58335e] after:left-0 after:bottom-0 after:transition-all after:duration-300 hover:after:w-full"
           >
             Who are we
-          </Link>
+          </PreloaderLink>
         </nav>
 
         {/* Desktop Buttons */}
@@ -311,18 +372,23 @@ const Header = () => {
               onMouseEnter={handleProfileMouseEnter}
               onMouseLeave={handleProfileMouseLeave}
             >
-              <button className="profile-avatar">
-                <span className="profile-initials">
-                  {getUserInitials()}
-                </span>
+              <button className="clean-avatar-btn" style={{ background: 'transparent', padding: 0, border: 'none', boxShadow: 'none' }}>
+                <ProfileAvatar
+                  photo={userProfile?.profilePhoto}
+                  initials={getUserInitials()}
+                  sizeClass="w-10 h-10"
+                />
               </button>
 
               {showProfileDropdown && (
                 <div className="profile-dropdown">
                   <div className="profile-dropdown-header">
-                    <div className="profile-dropdown-avatar">
-                      {getUserInitials()}
-                    </div>
+                    <ProfileAvatar
+                      photo={userProfile?.profilePhoto}
+                      initials={getUserInitials()}
+                      sizeClass="w-12 h-12"
+                      fontSizeClass="text-base"
+                    />
                     <div className="profile-dropdown-info">
                       <div className="profile-dropdown-name">
                         {getUserDisplayName()}
@@ -431,9 +497,12 @@ const Header = () => {
                 {isLoggedIn ? (
                   <div className="mobile-profile-section">
                     <div className="mobile-profile-header">
-                      <div className="mobile-profile-avatar">
-                        {getUserInitials()}
-                      </div>
+                      <ProfileAvatar
+                        photo={userProfile?.profilePhoto}
+                        initials={getUserInitials()}
+                        sizeClass="w-[50px] h-[50px]"
+                        fontSizeClass="text-lg"
+                      />
                       <div className="mobile-profile-info">
                         <div className="mobile-profile-name">
                           {getUserDisplayName()}
@@ -511,20 +580,38 @@ const Header = () => {
                 </div>
 
                 {/* Regular Menu Items with Icons */}
-                <Link to="/exhibition" onClick={toggleMobileMenu} className="mobile-nav-item">
+                <PreloaderLink
+                  to="/exhibition"
+                  icon={<FiGrid />}
+                  text="Exhibition"
+                  onClick={toggleMobileMenu}
+                  className="mobile-nav-item"
+                >
                   <span className="mobile-icon-box"><FiGrid /></span>
                   <span>Exhibition</span>
-                </Link>
+                </PreloaderLink>
 
-                <Link to="/services" onClick={toggleMobileMenu} className="mobile-nav-item">
+                <PreloaderLink
+                  to="/services"
+                  icon={<FiSettings />}
+                  text="Services"
+                  onClick={toggleMobileMenu}
+                  className="mobile-nav-item"
+                >
                   <span className="mobile-icon-box"><FiSettings /></span>
                   <span>Services</span>
-                </Link>
+                </PreloaderLink>
 
-                <Link to="/short-stay" onClick={toggleMobileMenu} className="mobile-nav-item">
+                <PreloaderLink
+                  to="/short-stay"
+                  icon={<FiClock />}
+                  text="Short Stay"
+                  onClick={toggleMobileMenu}
+                  className="mobile-nav-item"
+                >
                   <span className="mobile-icon-box"><FiClock /></span>
                   <span>Short Stay</span>
-                </Link>
+                </PreloaderLink>
 
                 {/* Mobile Long Live Dropdown */}
                 <div className="mobile-nav-dropdown">
@@ -541,45 +628,67 @@ const Header = () => {
                   {mobileLongLiveOpen && (
                     <div className="mobile-nav-dropdown-content">
                       {longLiveItems.map((item, index) => (
-                        <Link
+                        <PreloaderLink
                           key={index}
                           to={item.href}
+                          icon={<FiActivity />}
+                          text={item.label}
                           onClick={toggleMobileMenu}
                           className="mobile-nav-dropdown-link"
                         >
                           <span className="dot"></span>
                           {item.label}
-                        </Link>
+                        </PreloaderLink>
                       ))}
                     </div>
                   )}
                 </div>
 
-                <Link
+                <PreloaderLink
                   to="/investments"
+                  icon={<FiTrendingUp />}
+                  text="Investment"
                   onClick={toggleMobileMenu}
                   className="mobile-nav-item"
                 >
                   <span className="mobile-icon-box"><FiTrendingUp /></span>
                   <span>Investment</span>
-                </Link>
+                </PreloaderLink>
 
-                <Link to="/100-months" onClick={toggleMobileMenu} className="mobile-nav-item">
+                <PreloaderLink
+                  to="/100-months"
+                  icon={<FiDollarSign />}
+                  text="100 Months"
+                  onClick={toggleMobileMenu}
+                  className="mobile-nav-item"
+                >
                   <span className="mobile-icon-box"><FiDollarSign /></span>
                   <span>100 Months</span>
-                </Link>
+                </PreloaderLink>
 
                 <div className="mobile-menu-divider-thin"></div>
 
-                <Link to="/contact" onClick={toggleMobileMenu} className="mobile-nav-item secondary">
+                <PreloaderLink
+                  to="/contact"
+                  icon={<FiPhone />}
+                  text="Contact Us"
+                  onClick={toggleMobileMenu}
+                  className="mobile-nav-item secondary"
+                >
                   <span className="mobile-icon-box"><FiPhone /></span>
                   <span>Contact Us</span>
-                </Link>
+                </PreloaderLink>
 
-                <Link to="/about" onClick={toggleMobileMenu} className="mobile-nav-item secondary">
+                <PreloaderLink
+                  to="/about"
+                  icon={<FiUsers />}
+                  text="Who are we"
+                  onClick={toggleMobileMenu}
+                  className="mobile-nav-item secondary"
+                >
                   <span className="mobile-icon-box"><FiUsers /></span>
                   <span>Who are we</span>
-                </Link>
+                </PreloaderLink>
               </nav>
 
               {/* Mobile Footer Area */}
