@@ -103,6 +103,7 @@ function App() {
 
   return (
     <Router>
+<<<<<<< Updated upstream
       <PreloaderProvider>
         <ScrollToTop />
         <Preloader />
@@ -136,7 +137,6 @@ function App() {
             <Route path="/investments/data-centres" element={<DataCentres />} />
             <Route path="/investments/data-centres/:id" element={<DataCentreDetails />} />
             <Route path="/register-complaint" element={<RegisterComplaint />} />
-            <Route path="/my-complaints" element={<MyComplaints />} />
             <Route path="/exhibition/badabuilder" element={<ByBadaBuilder />} />
             <Route path="/report" element={<Working />} />
             <Route path="/subscription-plans" element={<SubscriptionPlans />} />
@@ -151,6 +151,51 @@ function App() {
             <Route path="/investments/:type" element={<InvestmentListing />} />
             <Route path="/investment-details/:id" element={<InvestmentDetails />} />
             <Route path="/about" element={<About />} />
+=======
+      <Header />
+      <GlobalSearchBar />
+      <LeadModal isOpen={showLeadModal} onClose={() => setShowLeadModal(false)} />
+      <Chatbot />
+      <Routes>
+        <Route path="/" element={
+          <>
+            <HeroSection />
+            <RecommendedProjects />
+          </>
+        } />
+        {/* <Route path="/projects" element={<Projects />} /> */}
+        <Route path="/services" element={<Services />} />
+        <Route path="/investments" element={<Investments />} />
+        <Route path="/exhibition" element={<Exhibition />} />
+        <Route path="/exhibition/individual" element={<ByIndividual />} />
+        <Route path="/exhibition/developer" element={<ByDeveloper />} />
+        <Route path="/exhibition/live-grouping" element={<LiveGrouping />} />
+        <Route path="/exhibition/live-grouping/:id" element={<LiveGroupingDetails />} />
+        <Route path="/exhibition/3d-view" element={<ThreeDView />} />
+        <Route path="/short-stay" element={<ShortStayLanding />} />
+        <Route path="/home-loans" element={<HomeLoans />} />
+        <Route path="/long-live/browse" element={<LongLiveBrowse />} />
+        <Route path="/long-live/post" element={<LongLivePost />} />
+        <Route path="/100-months" element={<HundredMonths />} />
+        <Route path="/go-global" element={<GoGlobal />} />
+        <Route path="/investments/data-centres" element={<DataCentres />} />
+        <Route path="/investments/data-centres/:id" element={<DataCentreDetails />} />
+        <Route path="/register-complaint" element={<RegisterComplaint />} />
+        <Route path="/my-complaints" element={<MyComplaints />} />
+        <Route path="/exhibition/badabuilder" element={<ByBadaBuilder />} />
+        <Route path="/report" element={<Working />} />
+        <Route path="/subscription-plans" element={<SubscriptionPlans />} />
+        <Route path="/developer-plan" element={<DeveloperPlan />} />
+        <Route path="/individual-plan" element={<IndividualPlan />} />
+        <Route path="/post-property" element={<PostProperty />} />
+        <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/profile/investments" element={<MyInvestments />} />
+        <Route path="/my-properties" element={<MyProperties />} />
+        <Route path="/my-bookings" element={<MyBookings />} />
+        <Route path="/admin/live-grouping" element={<AdminLiveGrouping />} />
+        <Route path="/investments/:type" element={<InvestmentListing />} />
+        <Route path="/investment-details/:id" element={<InvestmentDetails />} />
+>>>>>>> Stashed changes
 
             {/* Admin Panel Routes */}
             <Route path="/admin-panel/login" element={<AdminLogin />} />
