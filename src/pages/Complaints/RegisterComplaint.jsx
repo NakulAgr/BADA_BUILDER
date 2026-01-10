@@ -159,10 +159,8 @@ const RegisterComplaint = () => {
       const generatedId = `CMP${timestamp}`;
 
       // Save to Firestore
-      const user = auth.currentUser;
       await addDoc(collection(db, 'complaints'), {
         complaintId: generatedId,
-        userId: user?.uid || null,
         category: formData.category,
         title: formData.title,
         description: formData.description,

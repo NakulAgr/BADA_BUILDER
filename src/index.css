@@ -130,3 +130,51 @@ div[jsaction*="dismiss"] {
 div[style*="background-color: white"][style*="border: 1px solid"] {
   display: none !important;
 }
+
+/* Shared Modal Styles */
+.chat-modal-close {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #764ba2;
+  width: 50px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+  z-index: 10;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.chat-modal-close:hover {
+  background: #ffffff;
+  transform: scale(1.05);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+}
+
+.chat-modal-close svg {
+  width: 20px;
+  height: 20px;
+  display: block;
+  stroke: #764ba2;
+  stroke-width: 3;
+}
+
+
+.modal-content-scrollable {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (max-width: 768px) {
+  .chat-modal-close {
+    width: 50px;
+    height: 40px;
+  }
+}

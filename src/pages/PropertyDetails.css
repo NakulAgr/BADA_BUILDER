@@ -171,6 +171,115 @@
   justify-content: center;
 }
 
+/* Chat Contact Button */
+.chat-contact-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 1rem 1.5rem;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  justify-content: center;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.chat-contact-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+/* Chat with Owner Button - Green */
+.chat-with-owner-btn {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  padding: 1rem 1.5rem;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  justify-content: center;
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+}
+
+.chat-with-owner-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+}
+
+.chat-with-owner-btn:active {
+  transform: translateY(0);
+}
+
+/* Chat Modal */
+.chat-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  z-index: 999999;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 100px 20px 40px;
+  overscroll-behavior: contain;
+  overflow-y: auto;
+}
+
+.chat-modal-container {
+  width: 100%;
+  max-width: 700px;
+  max-height: calc(100vh - 140px);
+  background: white;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  z-index: 10000;
+}
+
+/* Ensure background scroll is blocked */
+body.modal-open {
+  overflow: hidden !important;
+}
+
+@media (max-width: 768px) {
+  .chat-modal-overlay {
+    padding: 20px;
+    align-items: center;
+  }
+
+  .chat-modal-container {
+    width: 90%;
+    max-width: 500px;
+    height: 75vh;
+    max-height: 600px;
+    border-radius: 24px;
+    margin-top: 0;
+  }
+
+  .chat-contact-btn {
+    padding: 0.875rem 1.25rem;
+    font-size: 0.9375rem;
+  }
+}
+
 /* RERA Box */
 .rera-box {
   background-color: #eff6ff;
@@ -430,6 +539,12 @@ a:focus-visible {
 }
 
 /* Image Optimization */
+.chat-list {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
 img {
   max-width: 100%;
   height: auto;

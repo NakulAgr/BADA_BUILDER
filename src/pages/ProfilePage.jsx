@@ -1,9 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { FiUser, FiMail, FiPhone, FiHash, FiBriefcase, FiHome, FiUsers, FiCalendar, FiUpload, FiTrash2, FiEdit3, FiTrendingUp, FiAlertCircle } from 'react-icons/fi';
+import { FiUser, FiMail, FiPhone, FiHash, FiBriefcase, FiHome, FiUsers, FiCalendar, FiUpload, FiTrash2, FiEdit3, FiTrendingUp, FiMessageSquare, FiX } from 'react-icons/fi';
 import { doc, updateDoc, collection, query, where, getDocs, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
+import { motion, AnimatePresence } from 'framer-motion';
+import ChatList from '../components/ChatList/ChatList';
+import ChatBox from '../components/ChatBox/ChatBox';
+import { generateChatId } from '../services/chatService';
 import './ProfilePage.css';
 
 // Cloudinary Configuration
@@ -53,11 +57,11 @@ const ProfilePage = () => {
     joinedLiveGroups: 0,
     bookedSiteVisits: 0,
     shortStayBookings: 0,
-    investments: 0,
-    complaints: 0,
-    complaintsResolved: 0
+    investments: 0
   });
   const [loadingActivity, setLoadingActivity] = useState(true);
+  const [showChatList, setShowChatList] = useState(false);
+  const [selectedChat, setSelectedChat] = useState(null);
   const fileInputRef = useRef(null);
 
   // Load profile photo from Firestore on component mount
@@ -162,7 +166,7 @@ const ProfilePage = () => {
     // Short Stay Bookings listener
     const shortStayBookingsRef = collection(db, 'short_stay_bookings');
     const shortStayBookingsQuery = query(shortStayBookingsRef, where('guestId', '==', currentUser.uid));
-    
+
     const unsubscribeShortStayBookings = onSnapshot(shortStayBookingsQuery, (snapshot) => {
       setActivityCounts(prev => ({
         ...prev,
@@ -172,34 +176,26 @@ const ProfilePage = () => {
       console.log('Short stay bookings not available yet');
     });
 
-    // Complaints listener
-    const complaintsRef = collection(db, 'complaints');
-    const complaintsQuery = query(complaintsRef, where('userId', '==', currentUser.uid));
-    
-    const unsubscribeComplaints = onSnapshot(complaintsQuery, (snapshot) => {
-      const total = snapshot.size;
-      const resolved = snapshot.docs.filter(doc => 
-        ['Resolved', 'Rejected'].includes(doc.data().status)
-      ).length;
-      
-      setActivityCounts(prev => ({
-        ...prev,
-        complaints: total,
-        complaintsResolved: resolved
-      }));
-    }, (error) => {
-      console.log('Complaints not available yet');
-    });
-
     return () => {
       unsubscribeProperties();
       unsubscribeBookings();
       unsubscribeLiveGroups();
       unsubscribeInvestments();
       unsubscribeShortStayBookings();
-      unsubscribeComplaints();
     };
   }, [currentUser]);
+
+  // Handle body scroll when chat modals are open
+  useEffect(() => {
+    if (showChatList || selectedChat) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [showChatList, selectedChat]);
 
   // Placeholder data - will be replaced with actual Firebase data
   const userData = {
@@ -251,20 +247,35 @@ const ProfilePage = () => {
       count: loadingActivity ? '...' : activityCounts.investments,
       path: '/profile/investments',
       color: 'orange'
-    },
+    }
+  ];
+
+  // Add My Chats to activity items
+  const activityItemsWithChat = [
     {
       id: 6,
-      title: 'Civic Complaints',
-      icon: <FiAlertCircle className="activity-icon" />,
-      count: loadingActivity ? '...' : activityCounts.complaints,
-      subtitle: `${activityCounts.complaintsResolved} Resolved`,
-      path: '/my-complaints',
-      color: 'red'
-    }
+      title: 'My Chats',
+      icon: <FiMessageSquare className="activity-icon" />,
+      count: '📬',
+      action: () => {
+        if (window.innerWidth > 768) {
+          navigate('/messages');
+        } else {
+          setShowChatList(true);
+        }
+      },
+      color: 'indigo'
+    },
+    ...activityItems
   ];
 
   const handleActivityClick = (path) => {
     navigate(path);
+  };
+
+  const handleChatSelect = (chat) => {
+    setSelectedChat(chat);
+    setShowChatList(false);
   };
 
   const handlePhotoClick = () => {
@@ -523,10 +534,10 @@ const ProfilePage = () => {
           </div>
 
           <div className="activity-grid">
-            {activityItems.map((item) => (
+            {activityItemsWithChat.map((item) => (
               <button
                 key={item.id}
-                onClick={() => handleActivityClick(item.path)}
+                onClick={() => item.action ? item.action() : handleActivityClick(item.path)}
                 className={`activity-card ${item.color}`}
               >
                 <div className="activity-icon-wrapper">
@@ -534,14 +545,70 @@ const ProfilePage = () => {
                 </div>
                 <h3 className="activity-card-title">{item.title}</h3>
                 <p className="activity-count">{item.count}</p>
-                {item.subtitle && (
-                  <p className="activity-subtitle-text">{item.subtitle}</p>
-                )}
                 <div className="activity-arrow">→</div>
               </button>
             ))}
           </div>
         </div>
+
+        {/* Chat List Modal */}
+        <AnimatePresence>
+          {showChatList && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="chat-modal-overlay"
+              onClick={() => setShowChatList(false)}
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                className="chat-modal-container"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="chat-modal-header">
+                  <h2>My Chats</h2>
+                  <button className="chat-modal-close" onClick={() => setShowChatList(false)} aria-label="Close Chat List">
+                    <FiX size={24} />
+                  </button>
+                </div>
+                <div className="modal-content-scrollable">
+                  <ChatList onChatSelect={handleChatSelect} />
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Chat Box Modal */}
+        <AnimatePresence>
+          {selectedChat && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="chat-modal-overlay"
+              onClick={() => setSelectedChat(null)}
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                className="chat-modal-container"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <ChatBox
+                  chatId={selectedChat.chatId}
+                  chatData={selectedChat}
+                  onClose={() => setSelectedChat(null)}
+                  isOwner={selectedChat.ownerId === currentUser.uid}
+                />
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
