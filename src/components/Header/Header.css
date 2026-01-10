@@ -11,6 +11,23 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.3);
   box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
   border-radius: 0 0 20px 20px;
+  width: 100%;
+}
+
+.header-content-wrapper {
+  max-width: none;
+  margin: 0 auto;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 2rem 0 0rem;
+}
+
+@media (max-width: 768px) {
+  .header-content-wrapper {
+    padding: 0 1rem;
+  }
 }
 
 /* Logo Styles */
@@ -29,14 +46,14 @@
 }
 
 .logo-container .logo-image {
-  height: 2.75rem;
+  height: 3rem;
   width: auto;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
 }
 
 @media (min-width: 768px) {
   .logo-container .logo-image {
-    height: 3rem;
+    height: 3.5rem;
   }
 }
 
@@ -46,10 +63,10 @@
   overflow: visible;
   color: #1a1a1a;
   font-weight: 600;
-  font-size: 14px;
+  font-size: 16px;
   letter-spacing: 0.01em;
   white-space: nowrap;
-  padding: 8px 8px;
+  padding: 10px 14px;
 }
 
 .nav-link:hover {
@@ -76,6 +93,21 @@
 
 .animate-fadeIn {
   animation: fadeIn 0.2s ease-out forwards;
+}
+
+/* Scale up buttons for better space usage */
+.header-content-wrapper button {
+  font-size: 16px !important;
+  padding-left: 2rem !important;
+  padding-right: 2rem !important;
+  padding-top: 0.75rem !important;
+  padding-bottom: 0.75rem !important;
+}
+
+/* Ensure mobile toggle doesn't scale as much if it's targeted */
+.mobile-menu-toggle-wrapper button {
+  padding: 8px !important;
+  font-size: inherit !important;
 }
 
 /* Custom scrollbar for dropdown menus */
@@ -1169,6 +1201,8 @@ body.modal-open {
   transition: transform 0.2s ease !important;
   border-radius: 50% !important;
   overflow: hidden !important;
+  width: 48px !important;
+  height: 48px !important;
 }
 
 .clean-avatar-btn:hover {

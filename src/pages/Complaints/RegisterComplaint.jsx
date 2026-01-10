@@ -4,7 +4,42 @@ import { addDoc, collection, serverTimestamp, query, where, getDocs, orderBy } f
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage, auth } from '../../firebase';
 import { FaClipboardList, FaClock, FaCheckCircle, FaMapMarkerAlt, FaCalendarAlt } from 'react-icons/fa';
+import { compressImage } from '../../utils/imageCompressor';
 import './RegisterComplaint.css';
+
+// --- Cloudinary Configuration ---
+const CLOUDINARY_CLOUD_NAME = "dooamkdih";
+const CLOUDINARY_UPLOAD_PRESET = "property_images"; // Reusing existing preset or change if needed
+
+/**
+ * Uploads an image/video file to Cloudinary using an unsigned preset.
+ */
+const uploadToCloudinary = async (file) => {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+
+  const resourceType = file.type.startsWith('image/') ? 'image' : 'video';
+  const url = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/${resourceType}/upload`;
+
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(`Cloudinary upload failed: ${errorData.error?.message || 'Unknown error'}`);
+    }
+
+    const data = await response.json();
+    return data.secure_url;
+  } catch (error) {
+    console.error("Error uploading to Cloudinary:", error);
+    throw error;
+  }
+};
 
 const RegisterComplaint = () => {
   const [activeView, setActiveView] = useState('register'); // register, ongoing, fulfilled
@@ -105,13 +140,26 @@ const RegisterComplaint = () => {
   };
 
   const uploadMediaFiles = async () => {
-    const mediaUrls = [];
-    for (const file of mediaFiles) {
-      const fileRef = ref(storage, `complaints/${Date.now()}_${file.name}`);
-      await uploadBytes(fileRef, file);
-      const url = await getDownloadURL(fileRef);
-      mediaUrls.push(url);
-    }
+    console.log(`☁️ Uploading ${mediaFiles.length} files...`);
+
+    const uploadPromises = mediaFiles.map(async (file) => {
+      // 1. Compress image if it's an image
+      let fileToUpload = file;
+      if (file.type.startsWith('image/')) {
+        try {
+          console.log(`📉 Compressing ${file.name}...`);
+          fileToUpload = await compressImage(file, 1280, 0.7);
+        } catch (err) {
+          console.warn(`Compression failed for ${file.name}, using original`, err);
+        }
+      }
+
+      // 2. Upload to Cloudinary
+      return uploadToCloudinary(fileToUpload);
+    });
+
+    const mediaUrls = await Promise.all(uploadPromises);
+    console.log('✅ All media uploaded successfully.');
     return mediaUrls;
   };
 
@@ -145,7 +193,7 @@ const RegisterComplaint = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
 
     setLoading(true);
@@ -173,6 +221,7 @@ const RegisterComplaint = () => {
         email: formData.email || null,
         mediaUrls: mediaUrls,
         status: 'Submitted',
+        userId: auth.currentUser?.uid || null,
         createdAt: serverTimestamp(),
         submittedDate: new Date().toISOString()
       });
@@ -229,7 +278,7 @@ const RegisterComplaint = () => {
                 required
               />
             </div>
-            <button 
+            <button
               className="next-btn"
               onClick={() => setStep(2)}
               disabled={!formData.category || !formData.title || !formData.description}
@@ -270,7 +319,7 @@ const RegisterComplaint = () => {
                   ) : (
                     <video src={URL.createObjectURL(file)} />
                   )}
-                  <button 
+                  <button
                     className="remove-media-btn"
                     onClick={() => removeMedia(index)}
                   >
@@ -283,7 +332,7 @@ const RegisterComplaint = () => {
               <button className="back-btn" onClick={() => setStep(1)}>
                 ← Back
               </button>
-              <button 
+              <button
                 className="next-btn"
                 onClick={() => setStep(3)}
                 disabled={mediaFiles.length < 5}
@@ -345,7 +394,7 @@ const RegisterComplaint = () => {
               <button className="back-btn" onClick={() => setStep(2)}>
                 ← Back
               </button>
-              <button 
+              <button
                 className="next-btn"
                 onClick={() => setStep(4)}
                 disabled={!formData.address || !formData.pincode}
@@ -409,7 +458,7 @@ const RegisterComplaint = () => {
               <button className="back-btn" onClick={() => setStep(3)}>
                 ← Back
               </button>
-              <button 
+              <button
                 className="submit-btn"
                 onClick={handleSubmit}
                 disabled={loading || !formData.fullName || !formData.phone || !formData.consent}
@@ -434,7 +483,7 @@ const RegisterComplaint = () => {
               Your complaint has been registered. The concerned authorities will review it shortly.
               Please save your Complaint ID for future reference.
             </p>
-            <button 
+            <button
               className="home-btn"
               onClick={() => window.location.href = '/'}
             >
@@ -482,11 +531,11 @@ const RegisterComplaint = () => {
           {complaint.status}
         </span>
       </div>
-      
+
       <h3 className="complaint-title">{complaint.title}</h3>
       <p className="complaint-category">📂 {complaint.category}</p>
       <p className="complaint-description">{complaint.description}</p>
-      
+
       <div className="complaint-meta">
         <div className="meta-item">
           <FaMapMarkerAlt className="meta-icon" />
@@ -556,7 +605,7 @@ const RegisterComplaint = () => {
                 <div className={`progress-step ${step >= 4 ? 'active' : ''}`}>4. Details</div>
               </div>
               <div className="progress-bar">
-                <div 
+                <div
                   className="progress-fill"
                   style={{ width: `${(step / 4) * 100}%` }}
                 />
@@ -576,7 +625,7 @@ const RegisterComplaint = () => {
           {step < 5 && (
             <div className="disclaimer-box">
               <p>
-                <strong>Note:</strong> Your phone number will be kept confidential. 
+                <strong>Note:</strong> Your phone number will be kept confidential.
                 All complaints are reviewed by authorities. False complaints may lead to legal action.
               </p>
             </div>
@@ -591,7 +640,7 @@ const RegisterComplaint = () => {
             <h2>⏳ Ongoing Complaints</h2>
             <p>Track the status of your active complaints</p>
           </div>
-          
+
           {loadingComplaints ? (
             <div className="loading-state">Loading complaints...</div>
           ) : ongoingComplaints.length === 0 ? (
@@ -599,7 +648,7 @@ const RegisterComplaint = () => {
               <FaClock className="empty-icon" />
               <h3>No Ongoing Complaints</h3>
               <p>You don't have any active complaints at the moment.</p>
-              <button 
+              <button
                 className="register-new-btn"
                 onClick={() => setActiveView('register')}
               >
@@ -621,7 +670,7 @@ const RegisterComplaint = () => {
             <h2>✅ Fulfilled Complaints</h2>
             <p>View your resolved and closed complaints</p>
           </div>
-          
+
           {loadingComplaints ? (
             <div className="loading-state">Loading complaints...</div>
           ) : fulfilledComplaints.length === 0 ? (
@@ -629,7 +678,7 @@ const RegisterComplaint = () => {
               <FaCheckCircle className="empty-icon" />
               <h3>No Fulfilled Complaints</h3>
               <p>You don't have any resolved complaints yet.</p>
-              <button 
+              <button
                 className="register-new-btn"
                 onClick={() => setActiveView('register')}
               >
@@ -641,6 +690,21 @@ const RegisterComplaint = () => {
               {fulfilledComplaints.map(complaint => renderComplaintCard(complaint))}
             </div>
           )}
+        </div>
+      )}
+      {/* Full Screen Loading Overlay */}
+      {loading && (
+        <div className="submission-loading-overlay">
+          <motion.div
+            className="loading-content"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+          >
+            <div className="loading-spinner"></div>
+            <h3>Submitting Complaint...</h3>
+            <p>Please wait while we upload your proof and register the complaint.</p>
+            <p className="loading-warning">Do not refresh or close this page.</p>
+          </motion.div>
         </div>
       )}
     </div>

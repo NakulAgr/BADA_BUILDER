@@ -4,7 +4,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../context/AuthContext';
 import './PropertyDetails.css';
-import { FiPhone, FiCheckCircle, FiInfo, FiMap, FiHome, FiMaximize2, FiBriefcase, FiUser, FiX, FiMessageSquare } from 'react-icons/fi';
+import { FiPhone, FiCheckCircle, FiInfo, FiMap, FiHome, FiMaximize2, FiBriefcase, FiUser, FiX, FiMessageSquare, FiPlay, FiPause } from 'react-icons/fi';
 import { FaChevronLeft, FaChevronRight, FaBed, FaBath, FaCouch } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 import ChatBox from '../components/ChatBox/ChatBox';
@@ -21,6 +21,12 @@ const PropertyDetails = () => {
   const [showChat, setShowChat] = useState(false);
   const [chatData, setChatData] = useState(null);
   const [chatStarted, setChatStarted] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  // Prepare dynamic data - declared early to avoid hoisting issues in hooks
+  const isDeveloper = property?.user_type === 'developer';
+  const propertyTitle = property?.project_name || property?.projectName || property?.title;
+  const propertyImages = property?.project_images || property?.images || (property?.image_url ? [property.image_url] : []) || [];
 
   // Get owner ID - check multiple possible field names
   const ownerId = property?.userId || property?.user_id || property?.ownerId;
@@ -83,6 +89,19 @@ const PropertyDetails = () => {
     document.body.style.overflow = 'hidden';
   };
 
+  // Slideshow Logic
+  useEffect(() => {
+    let interval;
+    if (isPlaying && propertyImages.length > 1) {
+      interval = setInterval(() => {
+        nextImage();
+      }, 4000); // 4 seconds per image
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isPlaying, currentImageIndex, propertyImages.length]);
+
   // Handle body scroll when chat modal is open
   useEffect(() => {
     if (showChat || isFullScreen) {
@@ -144,10 +163,7 @@ const PropertyDetails = () => {
     );
   }
 
-  // Prepare dynamic data
-  const isDeveloper = property.user_type === 'developer';
-  const propertyTitle = property.project_name || property.projectName || property.title;
-  const propertyImages = property.project_images || property.images || (property.image_url ? [property.image_url] : []) || [];
+
 
   const propertyTags = isDeveloper
     ? [property.scheme_type || property.type, property.possession_status].filter(Boolean)
@@ -223,7 +239,18 @@ const PropertyDetails = () => {
                 )}
 
                 {/* Image Counter */}
-                <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm font-semibold">
+                <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm font-semibold flex items-center gap-3">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsPlaying(!isPlaying);
+                    }}
+                    className="hover:text-blue-400 transition-colors p-1"
+                    aria-label={isPlaying ? "Pause Slideshow" : "Play Slideshow"}
+                  >
+                    {isPlaying ? <FiPause size={18} /> : <FiPlay size={18} />}
+                  </button>
+                  <span className="w-px h-4 bg-white/30"></span>
                   {currentImageIndex + 1} / {propertyImages.length}
                 </div>
 
