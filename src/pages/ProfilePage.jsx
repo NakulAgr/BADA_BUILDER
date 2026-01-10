@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { FiUser, FiMail, FiPhone, FiHash, FiBriefcase, FiHome, FiUsers, FiCalendar, FiUpload, FiTrash2, FiEdit3, FiTrendingUp } from 'react-icons/fi';
+import { FiUser, FiMail, FiPhone, FiHash, FiBriefcase, FiHome, FiUsers, FiCalendar, FiUpload, FiTrash2, FiEdit3, FiTrendingUp, FiAlertCircle } from 'react-icons/fi';
 import { doc, updateDoc, collection, query, where, getDocs, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
 import './ProfilePage.css';
@@ -53,7 +53,9 @@ const ProfilePage = () => {
     joinedLiveGroups: 0,
     bookedSiteVisits: 0,
     shortStayBookings: 0,
-    investments: 0
+    investments: 0,
+    complaints: 0,
+    complaintsResolved: 0
   });
   const [loadingActivity, setLoadingActivity] = useState(true);
   const fileInputRef = useRef(null);
@@ -170,12 +172,32 @@ const ProfilePage = () => {
       console.log('Short stay bookings not available yet');
     });
 
+    // Complaints listener
+    const complaintsRef = collection(db, 'complaints');
+    const complaintsQuery = query(complaintsRef, where('userId', '==', currentUser.uid));
+    
+    const unsubscribeComplaints = onSnapshot(complaintsQuery, (snapshot) => {
+      const total = snapshot.size;
+      const resolved = snapshot.docs.filter(doc => 
+        ['Resolved', 'Rejected'].includes(doc.data().status)
+      ).length;
+      
+      setActivityCounts(prev => ({
+        ...prev,
+        complaints: total,
+        complaintsResolved: resolved
+      }));
+    }, (error) => {
+      console.log('Complaints not available yet');
+    });
+
     return () => {
       unsubscribeProperties();
       unsubscribeBookings();
       unsubscribeLiveGroups();
       unsubscribeInvestments();
       unsubscribeShortStayBookings();
+      unsubscribeComplaints();
     };
   }, [currentUser]);
 
@@ -229,6 +251,15 @@ const ProfilePage = () => {
       count: loadingActivity ? '...' : activityCounts.investments,
       path: '/profile/investments',
       color: 'orange'
+    },
+    {
+      id: 6,
+      title: 'Civic Complaints',
+      icon: <FiAlertCircle className="activity-icon" />,
+      count: loadingActivity ? '...' : activityCounts.complaints,
+      subtitle: `${activityCounts.complaintsResolved} Resolved`,
+      path: '/my-complaints',
+      color: 'red'
     }
   ];
 
@@ -503,6 +534,9 @@ const ProfilePage = () => {
                 </div>
                 <h3 className="activity-card-title">{item.title}</h3>
                 <p className="activity-count">{item.count}</p>
+                {item.subtitle && (
+                  <p className="activity-subtitle-text">{item.subtitle}</p>
+                )}
                 <div className="activity-arrow">→</div>
               </button>
             ))}

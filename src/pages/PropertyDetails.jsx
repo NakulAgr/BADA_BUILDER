@@ -2,9 +2,15 @@ import { useState, useEffect } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase';
+<<<<<<< Updated upstream
 import './PropertyDetails.css';
 import { FiPhone, FiCheckCircle, FiInfo, FiMap, FiHome, FiMaximize2, FiBriefcase, FiUser, FiX } from 'react-icons/fi';
 import { FaChevronLeft, FaChevronRight, FaBed, FaBath, FaCouch } from 'react-icons/fa';
+=======
+import './ProjectDetails.css';
+import { FiPhone, FiCheckCircle, FiInfo, FiMap } from 'react-icons/fi';
+import { FaChevronLeft, FaChevronRight, FaExpand, FaPlay, FaPause } from 'react-icons/fa';
+>>>>>>> Stashed changes
 import { motion, AnimatePresence } from 'framer-motion';
 
 const PropertyDetails = () => {
@@ -14,6 +20,7 @@ const PropertyDetails = () => {
   const [property, setProperty] = useState(null);
   const [loading, setLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [isSlideshow, setIsSlideshow] = useState(false);
 
   useEffect(() => {
     const getPropertyData = async () => {
@@ -39,6 +46,20 @@ const PropertyDetails = () => {
 
     getPropertyData();
   }, [id, location.state]);
+
+  // Auto-slideshow effect
+  useEffect(() => {
+    if (!isSlideshow || !property) return;
+    
+    const propertyImages = property.project_images || property.images || (property.image_url ? [property.image_url] : []) || [];
+    if (propertyImages.length <= 1) return;
+
+    const interval = setInterval(() => {
+      setCurrentImageIndex((prev) => (prev + 1) % propertyImages.length);
+    }, 3000); // Change image every 3 seconds
+
+    return () => clearInterval(interval);
+  }, [isSlideshow, property]);
 
   const nextImage = () => {
     if (!propertyImages.length) return;
@@ -189,9 +210,129 @@ const PropertyDetails = () => {
                   </div>
                 )}
 
+<<<<<<< Updated upstream
                 {/* Image Counter */}
                 <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm font-semibold">
                   {currentImageIndex + 1} / {propertyImages.length}
+=======
+            {/* Brochure, Slideshow and Count Badge */}
+            <div className="absolute top-4 right-4 flex gap-3">
+              <span className="bg-black/50 backdrop-blur-md text-white px-3 py-1 rounded-full text-sm font-medium">
+                {currentImageIndex + 1} / {propertyImages.length}
+              </span>
+              {propertyImages.length > 1 && (
+                <button
+                  onClick={() => setIsSlideshow(!isSlideshow)}
+                  className={`p-2 backdrop-blur-md rounded-full text-white transition-all hover:scale-110 ${
+                    isSlideshow ? 'bg-green-500/80 hover:bg-green-600/80' : 'bg-black/50 hover:bg-black/70'
+                  }`}
+                  title={isSlideshow ? 'Pause Slideshow' : 'Play Slideshow'}
+                >
+                  {isSlideshow ? <FaPause size={16} /> : <FaPlay size={16} />}
+                </button>
+              )}
+              {(property.brochure_url || property.brochure) && (
+                <a
+                  href={property.brochure_url || property.brochure}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-4 py-1.5 bg-white text-black text-sm font-bold rounded-full shadow-lg hover:bg-gray-200 transition"
+                >
+                  Download Brochure
+                </a>
+              )}
+            </div>
+
+            {/* Thumbnails Strip */}
+            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2 overflow-x-auto max-w-[90%] p-2 bg-black/30 backdrop-blur-sm rounded-2xl scrollbar-hide">
+              {propertyImages.map((img, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setCurrentImageIndex(idx)}
+                  className={`relative w-16 h-12 flex-shrink-0 rounded-lg overflow-hidden border-2 transition-all ${currentImageIndex === idx ? 'border-blue-500 scale-110' : 'border-transparent opacity-70 hover:opacity-100'}`}
+                >
+                  <img src={img} alt={`Thumb ${idx}`} className="w-full h-full object-cover" />
+                </button>
+              ))}
+            </div>
+          </>
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-gray-900">
+            <p className="text-gray-500">No images available</p>
+          </div>
+        )}
+      </div>
+
+      {/* Title & Header Section */}
+      <div className="mt-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+        <div className="w-full md:w-auto text-left">
+          <h1 className="text-4xl font-extrabold tracking-tight mb-2">{propertyTitle}</h1>
+          <p className="text-gray-400 font-bold flex items-center gap-2">
+            <FiMap /> {property.project_location || property.location}
+          </p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {propertyTags.map((tag, i) => (
+              <span key={i} className="px-4 py-1.5 text-xs font-bold ui-bg text-white rounded-full uppercase tracking-wider">
+                {tag}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-3 w-full md:w-auto">
+          <button
+            onClick={() => navigate('/book-visit', { state: { property } })}
+            className="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold px-8 py-3 rounded-xl transition shadow-lg transform hover:-translate-y-1"
+          >
+            Book a Site Visit
+          </button>
+        </div>
+      </div>
+
+      {/* Price & Summary Stats */}
+      <div className="mt-10 grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Price Card */}
+        <div className="lg:col-span-1 ui-bg p-8 rounded-2xl shadow-xl flex flex-col justify-center">
+          <h2 className="text-gray-400 text-sm font-bold uppercase tracking-widest mb-2">Investment Range</h2>
+          <p className="text-3xl font-black text-white">{displayPrice}</p>
+          <p className="text-sm text-gray-500 mt-2 font-medium">
+            {property.scheme_type || property.type} {property.project_stats?.area && `• Project Area ${property.project_stats.area}`}
+          </p>
+        </div>
+
+        {/* Project Quick Highlights (Developer Only) */}
+        {isDeveloper && property.project_stats && (
+          <div className="lg:col-span-2 grid grid-cols-2 sm:grid-cols-4 gap-4">
+            {[
+              { label: 'Towers', value: property.project_stats.towers },
+              { label: 'Floors', value: property.project_stats.floors },
+              { label: 'Total Units', value: property.project_stats.units },
+              { label: 'Config', value: property.residential_options?.join('/') || 'Project' }
+            ].map((stat, i) => (
+              <div key={i} className="ui-bg p-4 rounded-2xl flex flex-col items-center justify-center text-center border border-gray-800">
+                <span className="text-gray-500 text-xs font-bold uppercase mb-1">{stat.label}</span>
+                <span className="text-xl font-black text-white">{stat.value || '--'}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="mt-12 grid grid-cols-1 lg:grid-cols-2 gap-10">
+        {/* Compliance & Status (Developer Specific) */}
+        {isDeveloper && (
+          <div className="space-y-6">
+            <h2 className="text-2xl font-extrabold">Project Compliance</h2>
+            <div className="ui-bg p-6 rounded-2xl border border-gray-800 space-y-4">
+              <div className="flex items-center justify-between py-2 border-b border-gray-800">
+                <span className="text-gray-400 font-bold flex items-center gap-2"><FiCheckCircle className="text-green-500" /> RERA Status</span>
+                <span className="font-bold">{property.rera_status === 'Yes' ? 'Registered' : 'N/A'}</span>
+              </div>
+              {property.rera_number && (
+                <div className="flex flex-col gap-1 py-1">
+                  <span className="text-gray-400 text-xs font-bold uppercase">RERA ID</span>
+                  <span className="font-mono text-sm bg-black p-2 rounded text-blue-400 break-all">{property.rera_number}</span>
+>>>>>>> Stashed changes
                 </div>
 
                 {/* Thumbnail Strip */}

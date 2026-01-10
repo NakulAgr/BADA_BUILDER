@@ -5,12 +5,27 @@ A comprehensive civic complaint registration and tracking system allowing citize
 
 ## Features Implemented
 
-### 1. Three-Tab Interface
+### 1. Three-Tab Interface (Register Complaint Page)
 - **Register New**: Submit new complaints with media proof
 - **Ongoing Complaints**: Track active complaints (Submitted, Under Review, In Progress)
 - **Fulfilled Complaints**: View resolved/rejected complaints
 
-### 2. Complaint Registration Flow (4 Steps)
+### 2. My Complaints Page (Dedicated Management Page)
+- **Full Complaint List**: View all registered complaints
+- **Statistics Dashboard**: 
+  - Total complaints count
+  - Ongoing complaints count
+  - Resolved complaints count
+  - Rejected complaints count
+- **Filter Tabs**: All, Ongoing, Fulfilled
+- **Complaint Management**:
+  - View complaint details
+  - Delete complaints
+  - Auto-generated complaint numbers (CMP{timestamp})
+  - Status tracking
+- **User Profile Integration**: Complaints card in profile showing total and resolved count
+
+### 3. Complaint Registration Flow (4 Steps)
 
 #### Step 1: Issue Details
 - Category selection (7 categories):
@@ -82,7 +97,8 @@ Features:
 #### Collection: `complaints`
 ```javascript
 {
-  complaintId: string,           // CMP{timestamp}
+  complaintId: string,           // CMP{timestamp} - Auto-generated
+  userId: string,                // Firebase Auth UID
   category: string,              // Selected category
   title: string,                 // Brief title
   description: string,           // Detailed description
@@ -142,13 +158,19 @@ Features:
 
 ## File Structure
 ```
-src/pages/Complaints/
-├── RegisterComplaint.jsx    # Main component with 3 tabs
-└── RegisterComplaint.css     # Styling for all views
+src/pages/
+├── Complaints/
+│   ├── RegisterComplaint.jsx    # Main component with 3 tabs
+│   └── RegisterComplaint.css     # Styling for registration
+├── MyComplaints.jsx              # Dedicated complaints management page
+└── MyComplaints.css              # Styling for management page
+
+src/pages/ProfilePage.jsx         # Updated with complaints card
 ```
 
 ## Routes
-- `/register-complaint` - Main complaints page
+- `/register-complaint` - Register and view complaints (3 tabs)
+- `/my-complaints` - Dedicated complaints management page
 
 ## Firebase Collections
 - `complaints` - All complaint records
@@ -211,16 +233,22 @@ src/pages/Complaints/
 ✅ 4-step complaint registration
 ✅ Media upload with preview
 ✅ Form validation
-✅ Firebase integration
-✅ Complaint tracking by phone number
+✅ Firebase integration with userId
+✅ Complaint tracking by userId
 ✅ Status-based filtering
 ✅ Responsive design
 ✅ Empty and loading states
 ✅ Success screen with complaint ID
+✅ **My Complaints page with full management**
+✅ **Auto-generated complaint numbers (CMP{timestamp})**
+✅ **Delete complaint functionality**
+✅ **Statistics dashboard**
+✅ **Profile page integration with complaints card**
+✅ **Filter tabs (All, Ongoing, Fulfilled)**
 
 ### Next Steps:
-- Add admin panel for complaint management
-- Implement notification system
-- Add complaint detail view
+- Add complaint detail view with full media gallery
+- Implement admin panel for complaint management
+- Add notification system
 - Integrate Google Maps for location
 - Add CAPTCHA and rate limiting

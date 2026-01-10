@@ -451,6 +451,10 @@
   color: #f97316;
 }
 
+.activity-card.red {
+  color: #ef4444;
+}
+
 .activity-card:hover {
   transform: translateY(-8px);
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
@@ -479,6 +483,10 @@
 
 .activity-card.orange:hover {
   background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+}
+
+.activity-card.red:hover {
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
 }
 
 .activity-icon-wrapper {
@@ -519,6 +527,13 @@
   color: currentColor;
   margin-bottom: 8px;
   line-height: 1;
+}
+
+.activity-subtitle-text {
+  font-size: 13px;
+  font-weight: 500;
+  color: #64748b;
+  margin-bottom: 8px;
 }
 
 .activity-arrow {
