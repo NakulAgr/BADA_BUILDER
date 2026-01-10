@@ -10,9 +10,6 @@ import { FaChevronLeft, FaChevronRight, FaBed, FaBath, FaCouch } from 'react-ico
 import './ProjectDetails.css';
 import { FiPhone, FiCheckCircle, FiInfo, FiMap } from 'react-icons/fi';
 import { FaChevronLeft, FaChevronRight, FaExpand, FaPlay, FaPause } from 'react-icons/fa';
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
 >>>>>>> Stashed changes
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -214,13 +211,10 @@ const PropertyDetails = () => {
                 )}
 
 <<<<<<< Updated upstream
-<<<<<<< Updated upstream
                 {/* Image Counter */}
                 <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm font-semibold">
                   {currentImageIndex + 1} / {propertyImages.length}
 =======
-=======
->>>>>>> Stashed changes
             {/* Brochure, Slideshow and Count Badge */}
             <div className="absolute top-4 right-4 flex gap-3">
               <span className="bg-black/50 backdrop-blur-md text-white px-3 py-1 rounded-full text-sm font-medium">
