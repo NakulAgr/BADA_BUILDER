@@ -261,8 +261,8 @@ body.modal-open {
 
 @media (max-width: 768px) {
   .chat-modal-overlay {
-    padding: 20px;
-    align-items: center;
+    padding: 135px 20px 20px;
+    align-items: flex-start;
   }
 
   .chat-modal-container {

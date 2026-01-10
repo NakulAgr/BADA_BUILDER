@@ -171,7 +171,7 @@ const Header = () => {
 
   if (loading) {
     return (
-      <header className="custom-header flex items-center px-3 md:px-6 py-3 bg-white shadow-sm sticky top-0 z-50">
+      <header className="custom-header flex items-center px-3 md:px-6 py-2.5 bg-white shadow-sm sticky top-0 z-50">
         <div className="header-content-wrapper flex flex-1 justify-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#58335e]"></div>
         </div>
@@ -254,17 +254,17 @@ const Header = () => {
 
   return (
     <>
-      <header className="custom-header sticky top-0 z-50 backdrop-blur-sm bg-white bg-opacity-95 shadow-sm px-3 md:px-6 py-3">
+      <header className="custom-header sticky top-0 z-50 backdrop-blur-sm bg-white bg-opacity-95 shadow-sm px-6 md:px-12 py-2.5">
         <div className="header-content-wrapper flex justify-between items-center">
           {/* Logo */}
           <div className="logo-container flex-shrink-0">
             <Link to="/" className="logo-link inline-block transition-transform duration-200 hover:scale-105">
-              <img src={logo} alt="Logo" className="logo-image h-10 md:h-12 w-auto" />
+              <img src={logo} alt="Logo" className="logo-image h-9 md:h-11 w-auto" />
             </Link>
           </div>
 
           {/* Desktop Navigation */}
-          <nav className="flex items-center space-x-3 hidden lg:flex font-semibold text-gray-900">
+          <nav className="flex items-center space-x-4 hidden lg:flex font-semibold text-gray-900">
             {/* ... navigation links ... */}
             <PreloaderLink
               to="/exhibition"
@@ -354,17 +354,17 @@ const Header = () => {
               to="/about"
               icon={<FiUsers />}
               text="Who are we"
-              className="nav-link relative py-2 px-2 text-gray-900 hover:text-[#58335e] transition-all duration-200 after:content-[''] after:absolute after:w-0 after:h-0.5 after:bg-[#58335e] after:left-0 after:bottom-0 after:transition-all after:duration-300 hover:after:w-full"
+              className="nav-link relative py-2 px-3 text-gray-900 hover:text-[#58335e] transition-all duration-200 after:content-[''] after:absolute after:w-0 after:h-0.5 after:bg-[#58335e] after:left-0 after:bottom-0 after:transition-all after:duration-300 hover:after:w-full"
             >
               Who are we
             </PreloaderLink>
           </nav>
 
           {/* Desktop Buttons */}
-          <div className="hidden lg:flex items-center gap-3 flex-shrink-0">
+          <div className="hidden lg:flex items-center gap-4 flex-shrink-0">
             <button
               onClick={() => setIsUserTypeModalOpen(true)}
-              className="bg-gradient-to-r from-green-600 to-green-700 text-white px-6 py-2.5 rounded-full shadow-md hover:shadow-lg hover:from-green-700 hover:to-green-800 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-green-600 focus:ring-opacity-50 font-medium text-sm tracking-wide transform hover:scale-105 active:scale-95 whitespace-nowrap"
+              className="bg-gradient-to-r from-green-600 to-green-700 text-white px-5 py-2.5 rounded-full shadow-md hover:shadow-lg hover:from-green-700 hover:to-green-800 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-green-600 focus:ring-opacity-50 font-medium text-sm tracking-wide transform hover:scale-105 active:scale-95 whitespace-nowrap"
             >
               Post Property
             </button>
@@ -447,7 +447,7 @@ const Header = () => {
               </div>
             ) : (
               <Link to="/login" onClick={handleLoginClick}>
-                <button className="bg-[#58335e] text-white px-6 py-2.5 rounded-full shadow-md hover:shadow-lg hover:bg-opacity-90 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#58335e] focus:ring-opacity-50 font-medium text-sm tracking-wide transform hover:scale-105 active:scale-95 whitespace-nowrap">
+                <button className="bg-[#58335e] text-white px-5 py-2.5 rounded-full shadow-md hover:shadow-lg hover:bg-opacity-90 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#58335e] focus:ring-opacity-50 font-medium text-sm tracking-wide transform hover:scale-105 active:scale-95 whitespace-nowrap">
                   Login
                 </button>
               </Link>

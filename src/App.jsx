@@ -45,6 +45,7 @@ import GoGlobal from './pages/Global/GoGlobal';
 import DataCentres from './pages/Investments/DataCentres';
 import DataCentreDetails from './pages/Investments/DataCentreDetails';
 import RegisterComplaint from './pages/Complaints/RegisterComplaint';
+import MyComplaints from './pages/Complaints/MyComplaints';
 import ProfilePage from './pages/ProfilePage';
 import MessagesPage from './pages/MessagesPage';
 import MyInvestments from './pages/MyInvestments';
@@ -152,6 +153,7 @@ function AppContent() {
           <Route path="/individual-plan" element={<IndividualPlan />} />
           <Route path="/post-property" element={<PostProperty />} />
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/my-complaints" element={<MyComplaints />} />
           <Route path="/messages" element={<MessagesPage />} />
           <Route path="/profile/investments" element={<MyInvestments />} />
           <Route path="/my-properties" element={<MyProperties />} />
@@ -179,7 +181,6 @@ function AppContent() {
           <Route path="/learn/stakeholder-communication" element={<REITStakeholderCommunication />} />
           <Route path="/learn/taxation-in-reits" element={<REITTaxation />} />
           <Route path="/learn/job-profiles-in-reits" element={<REITJobProfiles />} />
-          <Route path="/learn/types-of-reits-india" element={<REITJobProfiles />} />
           <Route path="/learn/types-of-reits-india" element={<TypesOfREITs />} />
           <Route path="/learn/work-of-job-profiles" element={<JobProfilesWork />} />
 

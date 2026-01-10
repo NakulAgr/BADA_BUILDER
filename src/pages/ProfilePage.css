@@ -455,6 +455,10 @@
   color: #6366f1;
 }
 
+.activity-card.rose {
+  color: #f43f5e;
+}
+
 .activity-card:hover {
   transform: translateY(-8px);
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
@@ -487,6 +491,10 @@
 
 .activity-card.indigo:hover {
   background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+}
+
+.activity-card.rose:hover {
+  background: linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%);
 }
 
 /* Chat Modal Styles */
@@ -540,9 +548,8 @@
 
 @media (max-width: 768px) {
   .chat-modal-overlay {
-    padding: 20px;
-    align-items: center;
-    /* Back to centered for mobile */
+    padding: 135px 20px 20px;
+    align-items: flex-start;
   }
 
   .chat-modal-container {
@@ -813,3 +820,6 @@
     transform: rotate(360deg);
   }
 }
+
+
+/* Any additional profile specific styles can follow here */

@@ -8,6 +8,7 @@ const ChatList = ({ onChatSelect }) => {
     const { currentUser } = useAuth();
     const [chats, setChats] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [activeTab, setActiveTab] = useState('all'); // 'all', 'buyers', 'sellers'
 
     useEffect(() => {
         if (!currentUser) return;
@@ -70,6 +71,19 @@ const ChatList = ({ onChatSelect }) => {
         return chat.unreadCount?.[currentUser?.uid] || 0;
     };
 
+    const filteredChats = chats.filter(chat => {
+        if (activeTab === 'all') return true;
+        if (activeTab === 'buyers') return chat.ownerId === currentUser?.uid;
+        if (activeTab === 'sellers') return chat.buyerId === currentUser?.uid;
+        return true;
+    });
+
+    const getEmptyStateMessage = () => {
+        if (activeTab === 'buyers') return "No client inquiries yet";
+        if (activeTab === 'sellers') return "No property owner chats yet";
+        return "Your property inquiries will appear here";
+    };
+
     if (loading) {
         return (
             <div className="chat-list-loading">
@@ -91,54 +105,87 @@ const ChatList = ({ onChatSelect }) => {
 
     return (
         <div className="chat-list-container">
-            <div className="chat-list">
-                {chats.map((chat) => {
-                    const otherParticipant = getOtherParticipant(chat);
-                    const unreadCount = getUnreadCount(chat);
+            <div className="chat-tabs-bar">
+                <button
+                    className={`chat-tab-btn tab-all ${activeTab === 'all' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('all')}
+                >
+                    All
+                </button>
+                <button
+                    className={`chat-tab-btn tab-buyers ${activeTab === 'buyers' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('buyers')}
+                >
+                    Buyers
+                </button>
+                <button
+                    className={`chat-tab-btn tab-sellers ${activeTab === 'sellers' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('sellers')}
+                >
+                    Sellers
+                </button>
+            </div>
 
-                    return (
-                        <div
-                            key={chat.id}
-                            className={`chat-item ${unreadCount > 0 ? 'chat-item-unread' : ''}`}
-                            onClick={() => onChatSelect(chat)}
-                        >
-                            <div className="chat-item-avatar">
-                                {chat.propertyImage ? (
-                                    <img src={chat.propertyImage} alt={chat.propertyTitle} />
-                                ) : (
-                                    <div className="chat-item-avatar-placeholder">
-                                        <FiUser />
+            <div className="chat-list">
+                {filteredChats.length > 0 ? (
+                    filteredChats.map((chat) => {
+                        const otherParticipant = getOtherParticipant(chat);
+                        const unreadCount = getUnreadCount(chat);
+
+                        return (
+                            <div
+                                key={chat.id}
+                                className={`chat-item ${unreadCount > 0 ? 'chat-item-unread' : ''}`}
+                                onClick={() => onChatSelect(chat)}
+                            >
+                                <div className="chat-item-avatar">
+                                    {chat.propertyImage ? (
+                                        <img src={chat.propertyImage} alt={chat.propertyTitle} />
+                                    ) : (
+                                        <div className="chat-item-avatar-placeholder">
+                                            <FiUser />
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="chat-item-content">
+                                    <div className="chat-item-header">
+                                        <h4 className="chat-item-title">{chat.propertyTitle}</h4>
+                                        <span className="chat-item-time">
+                                            {formatTimestamp(chat.lastMessageTime)}
+                                        </span>
+                                    </div>
+
+                                    <div className="chat-item-details">
+                                        <div className="chat-item-participant-row">
+                                            <p className="chat-item-participant">
+                                                <FiUser size={12} />
+                                                {otherParticipant.name}
+                                            </p>
+                                            <span className={`chat-item-role ${chat.buyerId !== currentUser?.uid ? 'role-client' : ''}`}>
+                                                {chat.buyerId === currentUser?.uid ? 'Property Owner' : 'Client'}
+                                            </span>
+                                        </div>
+                                        <p className="chat-item-last-message">
+                                            {chat.lastMessage || 'No messages yet'}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {unreadCount > 0 && (
+                                    <div className="chat-item-unread-badge">
+                                        {unreadCount}
                                     </div>
                                 )}
                             </div>
-
-                            <div className="chat-item-content">
-                                <div className="chat-item-header">
-                                    <h4 className="chat-item-title">{chat.propertyTitle}</h4>
-                                    <span className="chat-item-time">
-                                        {formatTimestamp(chat.lastMessageTime)}
-                                    </span>
-                                </div>
-
-                                <div className="chat-item-details">
-                                    <p className="chat-item-participant">
-                                        <FiUser size={12} />
-                                        {otherParticipant.name}
-                                    </p>
-                                    <p className="chat-item-last-message">
-                                        {chat.lastMessage || 'No messages yet'}
-                                    </p>
-                                </div>
-                            </div>
-
-                            {unreadCount > 0 && (
-                                <div className="chat-item-unread-badge">
-                                    {unreadCount}
-                                </div>
-                            )}
-                        </div>
-                    );
-                })}
+                        );
+                    })
+                ) : (
+                    <div className="chat-list-empty mini">
+                        <FiMessageSquare size={40} />
+                        <p>{getEmptyStateMessage()}</p>
+                    </div>
+                )}
             </div>
         </div>
     );

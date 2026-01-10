@@ -134,7 +134,7 @@ const ChatBox = ({
                         </p>
                     </div>
                 </div>
-                <button className="chat-modal-close" onClick={onClose}>
+                <button className="chat-close-btn" onClick={onClose}>
                     <FiX />
                 </button>
             </div>

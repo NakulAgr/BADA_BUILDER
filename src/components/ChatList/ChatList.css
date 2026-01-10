@@ -9,6 +9,66 @@
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
 }
 
+.chat-tabs-bar {
+    display: flex;
+    padding: 14px 20px;
+    background: white;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    gap: 12px;
+}
+
+.chat-tab-btn {
+    flex: 1;
+    padding: 10px 16px;
+    border: 2px solid #f1f5f9;
+    background: #f8fafc;
+    color: #64748b;
+    font-size: 13px;
+    font-weight: 700;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    white-space: nowrap;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.chat-tab-btn:hover {
+    background: #f1f5f9;
+    color: #334155;
+    transform: translateY(-2px);
+}
+
+.chat-tab-btn.active {
+    color: white;
+    border-color: transparent;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.chat-tab-btn.tab-all.active {
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.chat-tab-btn.tab-buyers.active {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.chat-tab-btn.tab-sellers.active {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+.chat-list-empty.mini {
+    padding: 40px 20px;
+}
+
+.chat-list-empty.mini svg {
+    margin-bottom: 12px;
+    opacity: 0.5;
+}
+
 .chat-list-header {
     display: flex;
     align-items: center;
@@ -197,6 +257,13 @@
     gap: 4px;
 }
 
+.chat-item-participant-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 2px;
+}
+
 .chat-item-participant {
     display: flex;
     align-items: center;
@@ -204,7 +271,23 @@
     margin: 0;
     font-size: 13px;
     color: #667eea;
-    font-weight: 500;
+    font-weight: 600;
+}
+
+.chat-item-role {
+    font-size: 10px;
+    color: #64748b;
+    background: #f1f5f9;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.chat-item-role.role-client {
+    color: #059669;
+    background: #ecfdf5;
 }
 
 .chat-item-last-message {

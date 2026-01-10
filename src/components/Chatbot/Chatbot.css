@@ -418,12 +418,12 @@
 
   .chatbot-window {
     position: fixed;
-    top: 0;
+    top: 135px;
     left: 0;
     right: 0;
     bottom: 0;
     width: auto;
-    height: 100dvh;
+    height: calc(100dvh - 135px);
     max-width: none;
     max-height: none;
     border-radius: 0;
