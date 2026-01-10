@@ -133,34 +133,36 @@ div[style*="background-color: white"][style*="border: 1px solid"] {
 
 /* Shared Modal Styles */
 .chat-modal-close {
-  background: rgba(255, 255, 255, 0.9);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: #764ba2;
-  width: 48px;
-  height: 38px;
+  background: #ffffff;
+  border: none;
+  color: #ff4d4d;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   flex-shrink: 0;
   z-index: 10;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .chat-modal-close:hover {
-  background: #e07c7c;
+  background: #fffafa;
   transform: scale(1.1);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
 }
 
 .chat-modal-close svg {
-  width: 26px;
-  height: 26px;
+  width: 28px !important;
+  height: 28px !important;
+  min-width: 28px !important;
+  min-height: 28px !important;
   display: block;
-  stroke: #740fda;
-  stroke-width: 2.5;
+  stroke: #ff4d4d;
+  stroke-width: 5 !important;
 }
 
 
