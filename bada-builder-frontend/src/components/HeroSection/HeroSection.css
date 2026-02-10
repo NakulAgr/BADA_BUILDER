@@ -1,0 +1,201 @@
+/* ===========================
+   HOME HERO SECTION - COMPACT & MODERN
+   =========================== */
+
+.home-hero-section {
+  position: relative;
+  height: 65vh !important;
+  min-height: 500px !important;
+  max-height: 600px !important;
+  width: 100%;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+  background: #0F172A;
+  color: #fff;
+  z-index: 50;
+}
+
+/* Subtle gradient overlay - very light */
+.home-hero-gradient-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg,
+      rgba(0, 0, 0, 0.25) 0%,
+      rgba(0, 0, 0, 0.1) 50%,
+      rgba(0, 0, 0, 0.25) 100%);
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* Wrapper for all content */
+.home-hero-wrapper {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  max-width: 1200px;
+  padding: 0 24px;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
+}
+
+
+
+/* Search bar positioner - handles the overlap */
+.home-hero-search-positioner {
+  position: absolute;
+  bottom: 17%;
+  left: 50%;
+  transform: translateX(-50%) translateY(50%);
+  max-width: 1100px;
+  width: 90%;
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+}
+
+/* Search container */
+.home-hero-search-container {
+  position: relative;
+  width: 100%;
+}
+
+
+
+@keyframes gradientShift {
+
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+/* ===========================
+   RESPONSIVE DESIGN
+   =========================== */
+
+/* Tablet */
+@media (max-width: 1024px) {
+  .home-hero-section {
+    height: 45vh !important;
+    min-height: 350px !important;
+  }
+
+  .home-hero-content h1 {
+    font-size: 44px;
+  }
+
+  .home-hero-content p {
+    font-size: 17px;
+    margin-bottom: 28px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .home-hero-section {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+  }
+
+  .home-hero-content {
+    padding: 0 20px;
+  }
+
+  .home-hero-content h1 {
+    font-size: 36px;
+    margin-bottom: 12px;
+    letter-spacing: -0.01em;
+  }
+
+  .home-hero-content p {
+    font-size: 16px;
+    margin-bottom: 24px;
+    line-height: 1.4;
+  }
+
+  /* Lighter overlay on mobile */
+  .home-hero-gradient-overlay {
+    background: linear-gradient(180deg,
+        rgba(0, 0, 0, 0.2) 0%,
+        rgba(0, 0, 0, 0.05) 50%,
+        rgba(0, 0, 0, 0.2) 100%);
+  }
+}
+
+/* Small Mobile */
+@media (max-width: 480px) {
+  .home-hero-section {
+    height: auto !important;
+    min-height: 0 !important;
+  }
+
+  .home-hero-content h1 {
+    font-size: 30px;
+  }
+
+  .home-hero-content p {
+    font-size: 15px;
+    margin-bottom: 20px;
+  }
+}
+
+/* Landscape mobile */
+@media (max-width: 768px) and (orientation: landscape) {
+  .home-hero-section {
+    height: 70vh;
+    min-height: 350px;
+  }
+
+  .home-hero-content h1 {
+    font-size: 32px;
+  }
+
+  .home-hero-content p {
+    font-size: 15px;
+    margin-bottom: 20px;
+  }
+}
+
+/* High resolution displays */
+@media (min-width: 1920px) {
+  .home-hero-section {
+    max-height: 650px;
+  }
+
+  .home-hero-content h1 {
+    font-size: 60px;
+  }
+
+  .home-hero-content p {
+    font-size: 20px;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+
+  .home-hero-content,
+  .home-hero-search-container {
+    animation: none;
+    transition: none;
+  }
+
+  .home-hero-search-container::before {
+    animation: none;
+  }
+}
